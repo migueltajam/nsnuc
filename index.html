@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0e0b26">
+  <meta name="theme-color" content="#2a1626">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>¡Atrapa!</title>
+  <title>No soy ni un casi · ¡Atrapa!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -18,23 +18,29 @@
     <canvas id="game"></canvas>
 
     <header id="hud" class="hidden">
-      <div id="score" class="hud-score">0</div>
-      <div id="lives" class="hud-lives"></div>
+      <div class="hud-score-box">
+        <span class="hud-label">PUNTOS</span>
+        <div id="score" class="hud-score">000000</div>
+      </div>
+      <span id="level" class="hud-level">NIVEL 1</span>
+      <div id="lives" class="hud-lives" role="img" aria-label="3 vidas de 3"></div>
       <button id="btn-pause" class="hud-pause" aria-label="Pausa">II</button>
     </header>
 
     <section id="screen-start" class="screen">
       <div class="panel">
+        <div class="logo-sign">
+          <img class="logo" src="lettering.png" alt="No soy ni un casi">
+        </div>
         <h1>¡ATRAPA!</h1>
-        <p>Desliza el dedo por la pantalla para mover la barra.</p>
+        <p>Desliza el dedo por la pantalla para moverte con la cesta.</p>
         <ul class="legend">
-          <li><img class="sprite" data-sprite="apple" alt=""><img class="sprite" data-sprite="banana" alt=""><span>+10</span></li>
-          <li><img class="sprite" data-sprite="grapes" alt=""><span>+20</span></li>
-          <li><img class="sprite" data-sprite="star" alt=""><span>+50</span></li>
-          <li><img class="sprite" data-sprite="heart" alt=""><span>+1 VIDA</span></li>
-          <li class="danger"><img class="sprite" data-sprite="bomb" alt=""><span>¡EVÍTALA!</span></li>
+          <li><img class="sprite" data-sprite="corazon" alt=""><span>+10</span></li>
+          <li><img class="sprite" data-sprite="beso" alt=""><span>+20</span></li>
+          <li><img class="sprite" data-sprite="vida" alt=""><span>+1 VIDA</span></li>
+          <li class="danger"><img class="sprite" data-sprite="calabaza" alt=""><span>¡EVÍTALA!</span></li>
         </ul>
-        <p class="hint">Si se cae una fruta, pierdes una vida.</p>
+        <p class="hint">Si se te cae un corazón o un beso, pierdes una vida.</p>
         <button id="btn-start" class="btn">JUGAR</button>
         <p class="best">RÉCORD <span id="best-start">0</span></p>
       </div>
