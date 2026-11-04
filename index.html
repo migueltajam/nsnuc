@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0b26">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>¡Atrapa!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <header id="hud" class="hidden">
+      <div id="score" class="hud-score">0</div>
+      <div id="lives" class="hud-lives"></div>
+      <button id="btn-pause" class="hud-pause" aria-label="Pausa">II</button>
+    </header>
+
+    <section id="screen-start" class="screen">
+      <div class="panel">
+        <h1>¡ATRAPA!</h1>
+        <p>Desliza el dedo por la pantalla para mover la barra.</p>
+        <ul class="legend">
+          <li><img class="sprite" data-sprite="apple" alt=""><img class="sprite" data-sprite="banana" alt=""><span>+10</span></li>
+          <li><img class="sprite" data-sprite="grapes" alt=""><span>+20</span></li>
+          <li><img class="sprite" data-sprite="star" alt=""><span>+50</span></li>
+          <li><img class="sprite" data-sprite="heart" alt=""><span>+1 VIDA</span></li>
+          <li class="danger"><img class="sprite" data-sprite="bomb" alt=""><span>¡EVÍTALA!</span></li>
+        </ul>
+        <p class="hint">Si se cae una fruta, pierdes una vida.</p>
+        <button id="btn-start" class="btn">JUGAR</button>
+        <p class="best">RÉCORD <span id="best-start">0</span></p>
+      </div>
+    </section>
+
+    <section id="screen-pause" class="screen hidden">
+      <div class="panel">
+        <h2>PAUSA</h2>
+        <button id="btn-resume" class="btn">CONTINUAR</button>
+        <button id="btn-quit" class="btn btn-secondary">SALIR</button>
+      </div>
+    </section>
+
+    <section id="screen-over" class="screen hidden">
+      <div class="panel">
+        <h2>GAME OVER</h2>
+        <p class="final">PUNTOS<strong id="final-score">0</strong></p>
+        <p class="best">RÉCORD <span id="best-over">0</span></p>
+        <p id="new-record" class="new-record hidden">¡NUEVO RÉCORD!</p>
+        <button id="btn-restart" class="btn">OTRA VEZ</button>
+        <button id="btn-menu" class="btn btn-secondary">MENÚ</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
