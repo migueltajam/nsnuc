@@ -3,7 +3,8 @@
 
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
-  // Toda la escena se dibuja en este buffer de baja resolución y luego se escala sin suavizado.
+  // Los objetos y el jugador se dibujan en este buffer de baja resolución y luego se escalan sin suavizado.
+  // La fachada se pinta aparte, a resolución de pantalla, para que el lettering del letrero se vea nítido.
   const buffer = document.createElement('canvas');
   const g = buffer.getContext('2d');
   const $ = (id) => document.getElementById(id);
@@ -11,6 +12,7 @@
   const ui = {
     hud: $('hud'),
     score: $('score'),
+    level: $('level'),
     lives: $('lives'),
     finalScore: $('final-score'),
     bestStart: $('best-start'),
@@ -26,184 +28,194 @@
 
   // ---------- Paleta ----------
 
-  const OUTLINE = '#181425';
-  const HIGHLIGHT = '#fdf6e3';
-  const RAMPS = {
-    red: ['#5a1a2a', '#a22633', '#e43b44', '#ff7a6b'],
-    yellow: ['#b86f50', '#f77622', '#feae34', '#fee761'],
-    gold: ['#f77622', '#feae34', '#fee761', '#fff6c2'],
-    purple: ['#2a1845', '#5a3c8a', '#8b5cc8', '#c39bea'],
-    green: ['#193c3e', '#265c42', '#3e8948', '#63c74d'],
-    brown: ['#3e2731', '#733e39', '#b86f50'],
-    pink: ['#68386c', '#b55088', '#f6757a', '#ffb3c1'],
-    steel: ['#1f1d33', '#2b2f4a', '#3a4466', '#5a6988'],
-    grey: ['#3a4466', '#5a6988', '#8b9bb4', '#c0cbdc'],
-    moon: ['#8b9bb4', '#c0cbdc', '#e8e8f0', '#ffffff'],
+  const OUTLINE = '#290f1f'; // reborde de 1 píxel de los objetos y del jugador (igual que en el diseño)
+  const COLORS = {
+    corazon: ['#ff3d6e', '#e01f55', '#ff9fb8', '#ffffff'],
+    beso: ['#d8406c', '#ec6a92', '#8a1f42', '#ffc2d4'],
+    vida: ['#fee761', '#feae34', '#f77622', '#ffffff'],
+    calabaza: ['#f07a1e', '#d9631a', '#c25510', '#5a9a3a', '#ffb066'],
   };
-  const SKY = ['#0e0b26', '#1d1645', '#33205e', '#5a2a77', '#8a3b7f', '#c4577a', '#f08a6b'];
-  const PADDLE_BODY = ['#fee761', '#feae34', '#f77622', '#b86f50'];
-  const PADDLE_CAP = ['#c0cbdc', '#8b9bb4', '#5a6988', '#3a4466'];
-  const EXPLOSION = ['#fee761', '#feae34', '#f77622', '#e43b44', '#5a6988'];
-
-  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => v / 16);
-  const bayer = (x, y) => BAYER[(y & 3) * 4 + (x & 3)];
+  const SKY_TOP = '#5b9bd5'; // color de cielo para el espacio sobrante en pantallas altas
+  const ROAD = '#4e4a56';
+  const MARGIN = '#2a1626';
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   const rand = (min, max) => Math.random() * (max - min) + min;
-  const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
-  const hash = (x, y) => {
-    const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-    return s - Math.floor(s);
-  };
   const vibrate = (pattern) => navigator.vibrate && navigator.vibrate(pattern);
 
-  const rgbCache = new Map();
   function rgb(hex) {
-    let c = rgbCache.get(hex);
-    if (!c) {
-      const n = parseInt(hex.slice(1), 16);
-      c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-      rgbCache.set(hex, c);
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  // ---------- Datos de píxeles exportados del diseño ----------
+  // Cada rectángulo: [x, y, ancho, alto, color, opacidad], en las coordenadas del diseño (195 x 422).
+
+  const ART = {"sprites":{"corazon":[[1.0,0.0,2.0,1.0,"#ff3d6e",1.0],[4.0,0.0,2.0,1.0,"#ff3d6e",1.0],[0.0,1.0,7.0,2.0,"#ff3d6e",1.0],[1.0,3.0,5.0,1.0,"#ff3d6e",1.0],[2.0,4.0,3.0,1.0,"#e01f55",1.0],[3.0,5.0,1.0,1.0,"#e01f55",1.0],[5.0,2.0,1.0,2.0,"#e01f55",1.0],[1.0,1.0,1.0,1.0,"#ffffff",1.0],[2.0,1.0,1.0,1.0,"#ff9fb8",1.0]],"beso":[[2.0,0.0,2.0,1.0,"#d8406c",1.0],[5.0,0.0,2.0,1.0,"#d8406c",1.0],[1.0,1.0,7.0,1.0,"#d8406c",1.0],[0.0,2.0,9.0,1.0,"#d8406c",1.0],[2.0,2.0,5.0,1.0,"#8a1f42",1.0],[1.0,3.0,7.0,1.0,"#ec6a92",1.0],[2.0,4.0,5.0,1.0,"#d24f7a",1.0],[3.0,3.0,1.0,1.0,"#ffc2d4",1.0],[2.0,1.0,1.0,1.0,"#f28aaa",1.0]],"calabaza":[[5.0,0.0,2.0,3.0,"#7a5a32",1.0],[5.0,0.0,1.0,1.0,"#a07a48",1.0],[8.0,0.0,2.0,1.0,"#7fae4a",1.0],[7.0,1.0,3.0,1.0,"#5a9a3a",1.0],[3.0,0.0,1.0,1.0,"#5a9a3a",1.0],[3.0,1.0,2.0,1.0,"#5a9a3a",1.0],[2.0,2.0,7.0,1.0,"#f07a1e",1.0],[0.0,3.0,11.0,4.0,"#f07a1e",1.0],[1.0,7.0,9.0,1.0,"#d9631a",1.0],[3.0,8.0,5.0,1.0,"#c25510",1.0],[4.0,2.0,3.0,5.0,"#f58f34",1.0],[3.0,3.0,1.0,5.0,"#c25510",1.0],[7.0,3.0,1.0,5.0,"#c25510",1.0],[2.0,3.0,1.0,4.0,"#d9631a",1.0],[8.0,3.0,1.0,4.0,"#d9631a",1.0],[10.0,4.0,1.0,3.0,"#d9631a",1.0],[1.0,3.0,1.0,2.0,"#ffb066",1.0],[5.0,3.0,1.0,2.0,"#ffc98a",1.0]]},"player":{"items":[["p","brazo",[[90.0,384.0],[82.0,371.0],[84.0,355.0]]],["p","brazo",[[105.0,384.0],[113.0,371.0],[111.0,355.0]]],["p","brazo-s",[[91.0,381.0],[85.0,371.0],[86.0,357.0]]],["p","brazo-s",[[104.0,381.0],[110.0,371.0],[109.0,357.0]]],["r",81.0,353.0,5.0,2.0,"#e4eefa",1.0],["r",109.0,353.0,5.0,2.0,"#e4eefa",1.0],["r",109.0,355.0,5.0,1.0,"#2a2224",1.0],["r",80.0,344.0,35.0,3.0,"#8a5a2b",1.0],["r",82.0,347.0,31.0,7.0,"#c08848",1.0],["r",82.0,349.0,31.0,1.0,"#9a6a34",1.0],["r",82.0,352.0,31.0,1.0,"#9a6a34",1.0],["r",88.0,347.0,1.0,7.0,"#9a6a34",1.0],["r",95.0,347.0,1.0,7.0,"#9a6a34",1.0],["r",102.0,347.0,1.0,7.0,"#9a6a34",1.0],["r",109.0,347.0,1.0,7.0,"#9a6a34",1.0],["r",83.0,347.0,2.0,2.0,"#d8a060",1.0],["r",81.0,344.0,8.0,1.0,"#a87440",1.0],["r",81.0,348.0,5.0,5.0,"#f2c9a8",1.0],["r",109.0,348.0,5.0,5.0,"#f2c9a8",1.0],["r",81.0,352.0,5.0,1.0,"#e0aa88",1.0],["r",109.0,352.0,5.0,1.0,"#e0aa88",1.0],["r",88.0,381.0,19.0,20.0,"url(#rayas)",1.0],["r",105.0,381.0,2.0,20.0,"#000000",0.08],["r",94.0,376.0,7.0,5.0,"#e6b494",1.0],["r",92.0,379.0,4.0,3.0,"#e4eefa",1.0],["r",99.0,379.0,4.0,3.0,"#e4eefa",1.0],["r",93.0,382.0,2.0,1.0,"#e4eefa",1.0],["r",100.0,382.0,2.0,1.0,"#e4eefa",1.0],["r",94.0,383.0,1.0,18.0,"#f4f1ea",1.0],["r",100.0,383.0,1.0,18.0,"#f4f1ea",1.0],["r",94.0,385.0,1.0,1.0,"#c8d8ea",1.0],["r",100.0,388.0,1.0,1.0,"#c8d8ea",1.0],["r",94.0,392.0,1.0,1.0,"#c8d8ea",1.0],["r",100.0,395.0,1.0,1.0,"#c8d8ea",1.0],["r",96.0,380.0,3.0,3.0,"#d68a9a",1.0],["r",95.0,383.0,5.0,17.0,"#cf7d90",1.0],["r",95.0,400.0,1.0,2.0,"#f4f1ea",1.0],["r",99.0,400.0,1.0,2.0,"#f4f1ea",1.0],["r",96.0,400.0,3.0,2.0,"#cf7d90",1.0],["r",97.0,402.0,1.0,1.0,"#cf7d90",1.0],["r",97.0,385.0,1.0,3.0,"#ffffff",1.0],["r",96.0,386.0,3.0,1.0,"#ffffff",1.0],["r",96.0,389.0,1.0,1.0,"#d0d4dc",1.0],["r",97.0,390.0,1.0,1.0,"#d0d4dc",1.0],["r",98.0,389.0,1.0,1.0,"#d0d4dc",1.0],["r",97.0,392.0,1.0,3.0,"#ffffff",1.0],["r",96.0,393.0,3.0,1.0,"#ffffff",1.0],["r",96.0,396.0,1.0,1.0,"#d0d4dc",1.0],["r",97.0,397.0,1.0,1.0,"#d0d4dc",1.0],["r",98.0,396.0,1.0,1.0,"#d0d4dc",1.0],["r",96.0,398.0,1.0,1.0,"#a8c6ea",1.0],["r",98.0,398.0,1.0,1.0,"#a8c6ea",1.0],["r",96.0,399.0,3.0,1.0,"#a8c6ea",1.0],["r",97.0,400.0,1.0,1.0,"#a8c6ea",1.0],["r",88.0,401.0,19.0,13.0,"#4f74a8",1.0],["r",88.0,401.0,19.0,1.0,"#3a5686",1.0],["r",97.0,405.0,1.0,9.0,"#3a5686",1.0],["r",89.0,402.0,2.0,11.0,"#6a8ec0",1.0],["r",104.0,402.0,2.0,12.0,"#3f5f92",1.0],["r",87.0,410.0,10.0,4.0,"#4f74a8",1.0],["r",98.0,410.0,10.0,4.0,"#4f74a8",1.0],["r",87.0,413.0,10.0,1.0,"#3a5686",1.0],["r",98.0,413.0,10.0,1.0,"#3a5686",1.0],["r",86.0,414.0,10.0,5.0,"#1f1b1e",1.0],["r",99.0,414.0,10.0,5.0,"#1f1b1e",1.0],["r",85.0,419.0,11.0,1.0,"#0c0a0c",1.0],["r",99.0,419.0,11.0,1.0,"#0c0a0c",1.0],["r",90.0,414.0,2.0,1.0,"#8a5a3a",1.0],["r",103.0,414.0,2.0,1.0,"#8a5a3a",1.0],["r",87.0,416.0,2.0,1.0,"#4a4448",1.0],["r",100.0,416.0,2.0,1.0,"#4a4448",1.0],["r",91.0,364.0,13.0,10.0,"#f2c9a8",1.0],["r",92.0,374.0,11.0,2.0,"#f2c9a8",1.0],["r",93.0,376.0,9.0,1.0,"#f2c9a8",1.0],["r",91.0,367.0,1.0,7.0,"#e4b292",1.0],["r",103.0,367.0,1.0,7.0,"#e4b292",1.0],["r",90.0,369.0,1.0,3.0,"#ecbc9c",1.0],["r",104.0,369.0,1.0,3.0,"#ecbc9c",1.0],["r",104.0,372.0,1.0,1.0,"#e6e8ee",1.0],["r",105.0,371.0,1.0,1.0,"#c8ccd4",1.0],["r",94.0,368.0,2.0,1.0,"#6b4a30",1.0],["r",99.0,368.0,2.0,1.0,"#6b4a30",1.0],["r",95.0,370.0,1.0,1.0,"#4a3020",1.0],["r",99.0,370.0,1.0,1.0,"#4a3020",1.0],["r",95.0,373.0,5.0,1.0,"#a07a5a",1.0],["r",93.0,376.0,9.0,1.0,"#d4aa8a",1.0],["r",90.0,361.0,15.0,4.0,"#6b4a30",1.0],["r",92.0,360.0,11.0,1.0,"#6b4a30",1.0],["r",90.0,361.0,2.0,8.0,"#7a5a40",1.0],["r",103.0,361.0,2.0,8.0,"#7a5a40",1.0],["r",92.0,364.0,1.0,3.0,"#8a6a50",1.0],["r",102.0,364.0,1.0,3.0,"#8a6a50",1.0],["r",92.0,365.0,10.0,1.0,"#6b4a30",1.0],["r",95.0,366.0,2.0,1.0,"#8a6442",1.0],["r",90.0,359.0,15.0,1.0,"#f2c9a8",0.0],["r",93.0,360.0,3.0,1.0,"#6b4a30",1.0],["r",97.0,359.0,4.0,1.0,"#6b4a30",1.0],["r",91.0,362.0,3.0,2.0,"#8a6442",1.0],["r",98.0,362.0,4.0,2.0,"#8a6442",1.0],["r",94.0,360.0,1.0,1.0,"#d8b47e",1.0],["r",98.0,359.0,2.0,1.0,"#d8b47e",1.0],["r",95.0,361.0,2.0,1.0,"#d8b47e",1.0],["r",100.0,361.0,2.0,1.0,"#d8b47e",1.0],["r",96.0,363.0,1.0,1.0,"#c8a26c",1.0]],"shadows":[[68.0,419.0,18.0,2.0,"#1e1420",0.18],[83.0,419.0,30.0,2.0,"#1e1420",0.32]]}};
+
+  const HUD_HEART = [[1, 0, 2, 1], [4, 0, 2, 1], [0, 1, 7, 2], [1, 3, 5, 1], [2, 4, 3, 1], [3, 5, 1, 1]];
+
+  // ---------- Construcción de sprites ----------
+
+  function bbox(rects) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [x, y, w, h] of rects) {
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x + w);
+      y1 = Math.max(y1, y + h);
     }
-    return c;
+    return { x0, y0, x1, y1 };
   }
 
-  // Sombreado esférico con luz arriba-izquierda y tramado ordenado entre tonos.
-  function shade(ramp, x, y, cx, cy, r, specular = true) {
-    const lx = cx - r * 0.38;
-    const ly = cy - r * 0.42;
-    const d = dist(x, y, lx, ly);
-    if (specular && d < r * 0.22) return HIGHLIGHT;
-    const s = 1 - Math.min(1, d / (r * 1.75));
-    const i = Math.floor(s * ramp.length + bayer(x | 0, y | 0) - 0.5);
-    return ramp[clamp(i, 0, ramp.length - 1)];
-  }
-
-  // ---------- Sprites procedurales ----------
-
-  const SPRITE_SIZE = 16;
-  const SPRITE_PX = SPRITE_SIZE + 2;
-
-  const GRAPES = [[4.4, 6], [8, 6], [11.6, 6], [6.2, 9.2], [9.8, 9.2], [8, 12.4]];
-  const STAR = Array.from({ length: 10 }, (_, i) => {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const r = i % 2 ? 3.2 : 7.8;
-    return [8 + Math.cos(a) * r, 8.8 + Math.sin(a) * r];
-  });
-
-  function inPolygon(x, y, pts) {
-    let inside = false;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      const [xi, yi] = pts[i];
-      const [xj, yj] = pts[j];
-      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-    return inside;
-  }
-
-  function inEllipse(x, y, cx, cy, rx, ry) {
-    const dx = (x - cx) / rx;
-    const dy = (y - cy) / ry;
-    return dx * dx + dy * dy <= 1;
-  }
-
-  const SPRITE_DEFS = {
-    apple(x, y) {
-      if (x >= 7.5 && x < 9 && y >= 1.5 && y < 5.5) return shade(RAMPS.brown, x, y, 8, 3, 2, false);
-      if (inEllipse(x, y, 10.8, 3, 2.6, 1.3)) return shade(RAMPS.green, x, y, 10.8, 3, 2.6, false);
-      if (dist(x, y, 5.8, 9.6) <= 5.2 || dist(x, y, 10.2, 9.6) <= 5.2) {
-        return shade(RAMPS.red, x, y, 8, 9.6, 6.2);
-      }
-      return null;
-    },
-    banana(x, y) {
-      if (dist(x, y, 8, 7.5) > 7 || dist(x, y, 6, 5) <= 6.3) return null;
-      if (dist(x, y, 11, 1.2) < 2 || dist(x, y, 1.2, 9.1) < 2) return shade(RAMPS.brown, x, y, 6, 6, 4, false);
-      return shade(RAMPS.yellow, x, y, 7, 7.5, 7, false);
-    },
-    grapes(x, y) {
-      if (x >= 7.5 && x < 8.8 && y >= 1 && y < 4.5) return shade(RAMPS.brown, x, y, 8, 2.5, 2, false);
-      if (inEllipse(x, y, 10.6, 2.6, 2.4, 1.2)) return shade(RAMPS.green, x, y, 10.6, 2.6, 2.4, false);
-      for (const [gx, gy] of GRAPES) {
-        if (dist(x, y, gx, gy) <= 2.05) return shade(RAMPS.purple, x, y, gx, gy, 2.05);
-      }
-      return null;
-    },
-    star(x, y) {
-      return inPolygon(x, y, STAR) ? shade(RAMPS.gold, x, y, 8, 8.8, 7) : null;
-    },
-    heart(x, y) {
-      const X = (x - 8) / 5.8;
-      const Y = -(y - 8) / 5.8;
-      const a = X * X + Y * Y - 1;
-      return a * a * a - X * X * Y * Y * Y <= 0 ? shade(RAMPS.pink, x, y, 8, 7.5, 6.5) : null;
-    },
-    bomb(x, y) {
-      if (x >= 12.5 && x < 14 && y >= 2 && y < 4.5) return shade(RAMPS.brown, x, y, 13, 3, 2, false);
-      if (x >= 9.5 && x < 12.5 && y >= 3.5 && y < 6.5) return shade(RAMPS.grey, x, y, 10, 4, 3, false);
-      if (dist(x, y, 7.5, 9.8) <= 5.6) return shade(RAMPS.steel, x, y, 7.5, 9.8, 5.6);
-      return null;
-    },
-  };
-
-  function makeSprite(w, h, sample, outline = OUTLINE) {
-    const W2 = w + 2;
-    const H2 = h + 2;
-    const c = document.createElement('canvas');
-    c.width = W2;
-    c.height = H2;
+  // Añade un borde de 1 píxel alrededor de todo lo opaco (vecinos en 8 direcciones, como el filtro del diseño).
+  function addOutline(c, color = OUTLINE) {
     const cg = c.getContext('2d');
-    const img = cg.createImageData(W2, H2);
-    const cells = new Array(W2 * H2);
-    for (let y = 0; y < H2; y++) {
-      for (let x = 0; x < W2; x++) cells[y * W2 + x] = sample(x - 0.5, y - 0.5);
-    }
-    const at = (x, y) => (x < 0 || y < 0 || x >= W2 || y >= H2 ? null : cells[y * W2 + x]);
-    for (let y = 0; y < H2; y++) {
-      for (let x = 0; x < W2; x++) {
-        let col = at(x, y);
-        if (!col && outline && (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1))) col = outline;
-        if (!col) continue;
-        const [r, gg, b] = rgb(col);
-        const i = (y * W2 + x) * 4;
-        img.data[i] = r;
-        img.data[i + 1] = gg;
-        img.data[i + 2] = b;
-        img.data[i + 3] = 255;
+    const { width: W, height: H } = c;
+    const img = cg.getImageData(0, 0, W, H);
+    const d = img.data;
+    const solid = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) solid[i] = d[i * 4 + 3] > 0 ? 1 : 0;
+    const [r, gg, b] = rgb(color);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (solid[y * W + x]) continue;
+        let near = false;
+        for (let dy = -1; dy <= 1 && !near; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && ny >= 0 && nx < W && ny < H && solid[ny * W + nx]) { near = true; break; }
+          }
+        }
+        if (!near) continue;
+        const i = (y * W + x) * 4;
+        d[i] = r; d[i + 1] = gg; d[i + 2] = b; d[i + 3] = 255;
       }
     }
     cg.putImageData(img, 0, 0);
     return c;
   }
 
-  const sprites = {};
-  for (const [name, fn] of Object.entries(SPRITE_DEFS)) {
-    sprites[name] = makeSprite(SPRITE_SIZE, SPRITE_SIZE, fn);
+  // Sprite de objeto: cada píxel del diseño se dibuja a 2x (como en el diseño) y se le pone reborde.
+  function makeItemSprite(rects, recolor = null, mult = 2) {
+    const b = bbox(rects);
+    const c = document.createElement('canvas');
+    c.width = (b.x1 - b.x0) * mult + 2;
+    c.height = (b.y1 - b.y0) * mult + 2;
+    const cg = c.getContext('2d');
+    for (const [x, y, w, h, fill, op] of rects) {
+      cg.globalAlpha = op;
+      cg.fillStyle = recolor && recolor[fill] ? recolor[fill] : fill;
+      cg.fillRect(1 + (x - b.x0) * mult, 1 + (y - b.y0) * mult, w * mult, h * mult);
+    }
+    cg.globalAlpha = 1;
+    return addOutline(c);
   }
 
-  function makeCloud(w, h, blobs) {
-    return makeSprite(w, h, (x, y) => {
-      if (y > h - 1.5) return null;
-      for (const [cx, cy, r] of blobs) {
-        if (dist(x, y, cx, cy) <= r) {
-          const t = (y - (cy - r)) / (r * 2);
-          return t + bayer(x | 0, y | 0) * 0.35 < 0.45 ? '#f6757a' : '#b55088';
+  // Camisa de rayas verticales: columna par clara, impar oscura (patrón "rayas" del diseño).
+  const stripe = (designX) => (Math.round(designX) % 2 === 0 ? '#b8d4f0' : '#9fc0e6');
+
+  // El jugador se monta en el mismo orden que en el diseño: brazos (líneas), cesta, cuerpo, cabeza y pelo.
+  function makePlayer() {
+    const pts = [];
+    for (const it of ART.player.items) {
+      if (it[0] === 'r') pts.push([it[1], it[2], it[3], it[4]]);
+      else for (const [px, py] of it[2]) pts.push([px - 3, py - 3, 6, 6]);
+    }
+    const b = bbox(pts);
+    const ox = Math.floor(b.x0) - 1;
+    const oy = Math.floor(b.y0) - 1;
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(b.x1) - ox + 1;
+    c.height = Math.ceil(b.y1) - oy + 1;
+    const cg = c.getContext('2d');
+
+    const mask = document.createElement('canvas');
+    mask.width = c.width;
+    mask.height = c.height;
+    const mg = mask.getContext('2d');
+
+    for (const it of ART.player.items) {
+      if (it[0] === 'r') {
+        const [, x, y, w, h, fill, op] = it;
+        cg.globalAlpha = op;
+        if (fill === 'url(#rayas)') {
+          for (let col = 0; col < w; col++) {
+            cg.fillStyle = stripe(x + col);
+            cg.fillRect(x + col - ox, y - oy, 1, h);
+          }
+        } else {
+          cg.fillStyle = fill;
+          cg.fillRect(x - ox, y - oy, w, h);
+        }
+        cg.globalAlpha = 1;
+        continue;
+      }
+      // Polilínea: se rasteriza a una máscara y se pasa a píxeles duros.
+      const [, cls, line] = it;
+      const thick = cls === 'brazo';
+      mg.clearRect(0, 0, mask.width, mask.height);
+      mg.lineWidth = thick ? 5 : 1;
+      mg.lineJoin = 'round';
+      mg.lineCap = 'round';
+      mg.strokeStyle = '#000';
+      mg.beginPath();
+      line.forEach(([px, py], i) => (i ? mg.lineTo(px - ox, py - oy) : mg.moveTo(px - ox, py - oy)));
+      mg.stroke();
+      const md = mg.getImageData(0, 0, mask.width, mask.height).data;
+      for (let y = 0; y < mask.height; y++) {
+        for (let x = 0; x < mask.width; x++) {
+          if (md[(y * mask.width + x) * 4 + 3] < (thick ? 128 : 100)) continue;
+          cg.fillStyle = thick ? stripe(x + ox) : '#8fb0d8';
+          cg.fillRect(x, y, 1, 1);
         }
       }
-      return null;
-    }, null);
+    }
+    return { canvas: addOutline(c), ox, oy };
   }
 
-  const CLOUD_SPRITES = [
-    makeCloud(28, 10, [[6, 7, 3.5], [12, 5, 4.5], [19, 6, 4], [24, 7.5, 2.8]]),
-    makeCloud(20, 8, [[5, 5.5, 3], [10, 4, 3.8], [15, 5.5, 3]]),
-  ];
+  function makeHudHeart(color, highlight) {
+    const c = document.createElement('canvas');
+    c.width = 7;
+    c.height = 6;
+    const cg = c.getContext('2d');
+    cg.fillStyle = color;
+    for (const [x, y, w, h] of HUD_HEART) cg.fillRect(x, y, w, h);
+    if (highlight) {
+      cg.fillStyle = '#ffffff';
+      cg.fillRect(1, 1, 1, 1);
+    }
+    return c.toDataURL();
+  }
+
+  // El corazón dorado (vida extra) es el corazón del juego con la paleta cambiada.
+  const GOLD = { '#ff3d6e': '#feae34', '#e01f55': '#f77622', '#ff9fb8': '#fee761' };
+
+  const sprites = {
+    corazon: makeItemSprite(ART.sprites.corazon),
+    beso: makeItemSprite(ART.sprites.beso),
+    vida: makeItemSprite(ART.sprites.corazon, GOLD),
+    calabaza: makeItemSprite(ART.sprites.calabaza),
+  };
+  const player = makePlayer();
+  const HUD_FULL = makeHudHeart('#ff3d6e', true);
+  const HUD_EMPTY = makeHudHeart('#5a4258', false);
 
   const spriteURLs = {};
   for (const [name, c] of Object.entries(sprites)) spriteURLs[name] = c.toDataURL();
   document.querySelectorAll('img[data-sprite]').forEach((img) => {
     img.src = spriteURLs[img.dataset.sprite];
   });
+
+  // ---------- Fachada (fondo exportado del diseño) ----------
+
+  const facade = new Image();
+  let facadeReady = false;
+  facade.onload = () => {
+    facadeReady = true;
+    buildBackground();
+  };
+  facade.src = 'fachada.svg';
 
   // ---------- Fuente bitmap 3x5 para textos flotantes ----------
 
@@ -245,24 +257,26 @@
   // ---------- Configuración del juego ----------
 
   const ITEM_TYPES = [
-    { sprite: 'apple', points: 10, weight: 5, kind: 'good', colors: RAMPS.red },
-    { sprite: 'banana', points: 10, weight: 4, kind: 'good', colors: RAMPS.yellow },
-    { sprite: 'grapes', points: 20, weight: 2, kind: 'good', colors: RAMPS.purple },
-    { sprite: 'star', points: 50, weight: 0.8, kind: 'good', colors: RAMPS.gold, speedMul: 1.35 },
-    { sprite: 'heart', points: 0, weight: 0.25, kind: 'life', colors: RAMPS.pink },
-    { sprite: 'bomb', points: 0, weight: 1.2, kind: 'bomb', colors: EXPLOSION },
+    { sprite: 'corazon', points: 10, weight: 5, kind: 'good', colors: COLORS.corazon },
+    { sprite: 'beso', points: 20, weight: 3, kind: 'good', colors: COLORS.beso },
+    { sprite: 'vida', points: 0, weight: 0.25, kind: 'life', colors: COLORS.vida },
+    { sprite: 'calabaza', points: 0, weight: 1.2, kind: 'bomb', colors: COLORS.calabaza },
   ];
 
   const START_LIVES = 3;
   const MAX_LIVES = 3;
-  const BEST_KEY = 'atrapa-best';
+  const BEST_KEY = 'nsnuc-best';
   const ITEM_R = 8;
+  const LEVEL_TIME = 20; // segundos por nivel (solo se muestra en el HUD)
 
-  // Campo de juego fijo (9:16) para que la dificultad sea igual en cualquier pantalla.
-  const FIELD_W = 180;
-  const FIELD_H = 320;
-  const FIELD_GROUND = 20;
-  const PADDLE_W = 44;
+  // Campo de juego fijo: el tamaño del diseño (195 x 422) para que la fachada encaje píxel a píxel.
+  const FIELD_W = 195;
+  const FIELD_H = 422;
+  const GROUND_Y = 418; // línea donde un objeto se da por perdido (la calzada)
+  const BASKET_Y = 344; // borde superior de la cesta
+  const BASKET_W = 35;
+  const BASKET_CX = 97.5; // centro de la cesta en el diseño
+  const SPAWN_Y = 22; // los objetos aparecen sobre el tejado, bajo el HUD
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
   const BASE_FALL_TIME = 3.4;
@@ -274,12 +288,11 @@
   let LH = 0;
   let scale = 1;
   let fieldX = 0;
+  let fieldY = 0;
   let groundY = 0;
   let background = null;
-  let stars = [];
-  let clouds = [];
 
-  const paddle = { x: 0, y: 0, w: 0, h: 6, targetX: 0, squash: 0 };
+  const paddle = { x: 0, y: 0, w: BASKET_W, h: 4, targetX: 0, squash: 0, moving: 0 };
   let items = [];
   let particles = [];
   let texts = [];
@@ -287,6 +300,7 @@
   let state = 'menu'; // menu | playing | paused | over
   let score = 0;
   let lives = START_LIVES;
+  let level = 1;
   let elapsed = 0;
   let clock = 0;
   let spawnTimer = 0;
@@ -328,94 +342,53 @@
     ctx.imageSmoothingEnabled = false;
     g.imageSmoothingEnabled = false;
 
-    // El espacio sobrante va sobre todo arriba (zona del HUD); abajo solo lo justo
+    // El espacio sobrante va sobre todo arriba (cielo bajo el HUD); abajo solo lo justo
     // para no chocar con la barra de gestos del móvil.
     const cssToLogical = dpr / scale;
     const extraH = LH - FIELD_H;
-    const bottomPad = Math.min(extraH, Math.round(40 * cssToLogical));
-    const fieldY = LH - FIELD_H - bottomPad;
+    const bottomPad = Math.max(0, Math.min(extraH, Math.round(24 * cssToLogical)));
+    fieldY = LH - FIELD_H - bottomPad;
     fieldX = Math.floor((LW - FIELD_W) / 2);
-    groundY = fieldY + FIELD_H - FIELD_GROUND;
+    groundY = fieldY + GROUND_Y;
 
-    paddle.w = PADDLE_W;
-    paddle.y = groundY - 14;
-    paddle.x = fieldX + clamp(relX * FIELD_W, paddle.w / 2, FIELD_W - paddle.w / 2);
+    paddle.y = fieldY + BASKET_Y;
+    paddle.x = fieldX + clamp(relX * FIELD_W, minX(), maxX());
     paddle.targetX = paddle.x;
 
     buildBackground();
-    initScenery();
   }
+
+  // El jugador no puede salirse del campo: los codos sobresalen de la cesta.
+  const minX = () => BASKET_CX - player.ox;
+  const maxX = () => FIELD_W - (player.ox + player.canvas.width - BASKET_CX);
 
   function buildBackground() {
     background = document.createElement('canvas');
-    background.width = LW;
-    background.height = LH;
+    background.width = canvas.width;
+    background.height = canvas.height;
     const bg = background.getContext('2d');
-    const img = bg.createImageData(LW, LH);
+    bg.imageSmoothingEnabled = false;
 
-    const moonX = Math.round(LW * 0.76);
-    const moonY = Math.round(LH * 0.13);
-    const moonR = 9;
-    const farBase = LH * 0.2;
-    const nearBase = LH * 0.09;
+    const fx = fieldX * scale;
+    const fy = fieldY * scale;
+    const fw = FIELD_W * scale;
+    const fh = FIELD_H * scale;
 
-    for (let y = 0; y < LH; y++) {
-      for (let x = 0; x < LW; x++) {
-        let col;
-        const far = groundY - (farBase + Math.sin(x * 0.05) * 8 + Math.sin(x * 0.13 + 1) * 4 + Math.sin(x * 0.31) * 1.5);
-        const near = groundY - (nearBase + Math.sin(x * 0.07 + 2) * 6 + Math.sin(x * 0.19) * 3);
-        const gy = y - groundY;
+    bg.fillStyle = MARGIN;
+    bg.fillRect(0, 0, background.width, background.height);
+    // El cielo sigue hacia arriba y la calzada hacia abajo, solo dentro del ancho del campo.
+    bg.fillStyle = SKY_TOP;
+    bg.fillRect(fx, 0, fw, Math.max(0, fy) + scale);
+    bg.fillStyle = ROAD;
+    bg.fillRect(fx, fy + fh - scale, fw, background.height - fy - fh + scale);
+    if (facadeReady) bg.drawImage(facade, fx, fy, fw, fh);
 
-        if (gy >= 0) {
-          if (gy === 0) col = '#63c74d';
-          else if (gy === 1) col = bayer(x, y) < 0.5 ? '#63c74d' : '#3e8948';
-          else if (gy === 2) col = '#3e8948';
-          else if (gy === 3) col = bayer(x, y) < 0.5 ? '#265c42' : '#733e39';
-          else {
-            const h = hash(x >> 1, y >> 1);
-            col = h > 0.93 ? '#b86f50' : bayer(x, y) < 0.25 + gy * 0.01 ? '#3e2731' : '#733e39';
-          }
-        } else if (y >= near) {
-          col = y < near + 1 ? '#3a2466' : '#211640';
-        } else if (y >= far) {
-          col = y < far + 1 ? '#6a3f8f' : bayer(x, y) < 0.2 ? '#33205e' : '#43286f';
-        } else if (dist(x + 0.5, y + 0.5, moonX, moonY) <= moonR) {
-          const crater =
-            dist(x, y, moonX + 2, moonY - 3) < 2 ||
-            dist(x, y, moonX - 3, moonY + 2) < 1.6 ||
-            dist(x, y, moonX + 3, moonY + 4) < 1.2;
-          col = shade(RAMPS.moon, x + 0.5, y + 0.5, moonX, moonY, moonR, false);
-          if (crater) col = '#8b9bb4';
-        } else {
-          const t = (y / groundY) * (SKY.length - 1);
-          col = SKY[clamp(Math.floor(t + bayer(x, y)), 0, SKY.length - 1)];
-          if (y < groundY * 0.6 && hash(x, y) > 0.994) col = hash(y, x) > 0.5 ? '#c0cbdc' : '#5a6988';
-        }
-
-        const [r, gg, b] = rgb(col);
-        const i = (y * LW + x) * 4;
-        img.data[i] = r;
-        img.data[i + 1] = gg;
-        img.data[i + 2] = b;
-        img.data[i + 3] = 255;
-      }
+    // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
+    if (fx > 0) {
+      bg.fillStyle = OUTLINE;
+      bg.fillRect(fx - scale, 0, scale, background.height);
+      bg.fillRect(fx + fw, 0, scale, background.height);
     }
-    bg.putImageData(img, 0, 0);
-  }
-
-  function initScenery() {
-    stars = Array.from({ length: 14 }, () => ({
-      x: Math.floor(rand(0, LW)),
-      y: Math.floor(rand(0, groundY * 0.5)),
-      phase: rand(0, Math.PI * 2),
-      speed: rand(1.5, 4),
-    }));
-    clouds = Array.from({ length: 4 }, () => ({
-      sprite: CLOUD_SPRITES[Math.floor(rand(0, CLOUD_SPRITES.length))],
-      x: rand(-30, LW),
-      y: rand(LH * 0.12, LH * 0.45),
-      speed: rand(2, 6),
-    }));
   }
 
   // ---------- Entrada ----------
@@ -477,6 +450,7 @@
   function startGame() {
     score = 0;
     lives = START_LIVES;
+    level = 1;
     elapsed = 0;
     spawnTimer = 0.6;
     items = [];
@@ -484,7 +458,7 @@
     texts = [];
     shake = 0;
     flash = 0;
-    paddle.x = paddle.targetX = fieldX + FIELD_W / 2;
+    paddle.x = paddle.targetX = fieldX + BASKET_CX;
     updateHud();
     state = 'playing';
     lastTime = performance.now();
@@ -533,15 +507,17 @@
   }
 
   function updateHud() {
-    ui.score.textContent = score;
+    ui.score.textContent = String(score).padStart(6, '0');
+    ui.level.textContent = `NIVEL ${level}`;
     ui.lives.replaceChildren(
-      ...Array.from({ length: Math.max(0, lives) }, () => {
+      ...Array.from({ length: MAX_LIVES }, (_, i) => {
         const img = document.createElement('img');
-        img.src = spriteURLs.heart;
+        img.src = i < lives ? HUD_FULL : HUD_EMPTY;
         img.alt = '';
         return img;
       })
     );
+    ui.lives.setAttribute('aria-label', `${Math.max(0, lives)} vidas de ${MAX_LIVES}`);
   }
 
   function bumpScore() {
@@ -560,8 +536,6 @@
     return Math.max(0.25, BASE_SPAWN_INTERVAL / Math.pow(speedFactor(), 0.7));
   }
 
-  // La velocidad se calcula para que el tiempo hasta la barra sea el mismo en cualquier pantalla,
-  // aunque en móviles alargados los objetos aparezcan más arriba del campo.
   function fallSpeed(spawnY) {
     return ((paddle.y - spawnY) / BASE_FALL_TIME) * speedFactor();
   }
@@ -583,10 +557,11 @@
 
   function spawn() {
     const type = pickType();
-    const y = -ITEM_R - 2;
+    const y = fieldY + SPAWN_Y;
+    const half = sprites[type.sprite].width / 2;
     items.push({
       type,
-      x: fieldX + rand(ITEM_R + 2, FIELD_W - ITEM_R - 2),
+      x: fieldX + rand(half + 2, FIELD_W - half - 2),
       y,
       vy: fallSpeed(y) * (type.speedMul || 1) * rand(0.85, 1.15),
     });
@@ -628,19 +603,19 @@
         updateHud();
         bumpScore();
         burst(x, y, it.type.colors, 10, 70);
-        addText(x, y - 8, `+${it.type.points}`, '#fee761');
+        addText(x, y - 8, `+${it.type.points}`, '#ffd2dc');
         vibrate(15);
         break;
       case 'life':
         lives = Math.min(MAX_LIVES, lives + 1);
         updateHud();
         burst(x, y, it.type.colors, 12, 70);
-        addText(x, y - 8, '+1', '#ffb3c1');
+        addText(x, y - 8, '+1', '#fee761');
         vibrate(25);
         break;
       case 'bomb':
-        burst(x, y, EXPLOSION, 28, 120, 2);
-        addText(x, y - 8, '-1', '#e43b44');
+        burst(x, y, it.type.colors, 28, 120, 2);
+        addText(x, y - 8, '-1', '#ff3d6e');
         shake = 0.35;
         flash = 0.3;
         vibrate([60, 40, 60]);
@@ -652,7 +627,7 @@
   function onMiss(it) {
     if (it.type.kind !== 'good') return;
     burst(it.x, groundY, it.type.colors, 8, 50);
-    addText(it.x, groundY - 12, '-1', '#e43b44');
+    addText(it.x, groundY - 12, '-1', '#ff3d6e');
     flash = 0.2;
     vibrate(40);
     loseLife();
@@ -660,12 +635,19 @@
 
   function update(dt) {
     elapsed += dt;
+    const newLevel = 1 + Math.floor(elapsed / LEVEL_TIME);
+    if (newLevel !== level) {
+      level = newLevel;
+      updateHud();
+    }
 
     const keySpeed = FIELD_W * 1.2;
     if (keys.left) paddle.targetX -= keySpeed * dt;
     if (keys.right) paddle.targetX += keySpeed * dt;
-    paddle.targetX = clamp(paddle.targetX, fieldX + paddle.w / 2, fieldX + FIELD_W - paddle.w / 2);
-    paddle.x += (paddle.targetX - paddle.x) * Math.min(1, dt * 25);
+    paddle.targetX = clamp(paddle.targetX, fieldX + minX(), fieldX + maxX());
+    const step = (paddle.targetX - paddle.x) * Math.min(1, dt * 25);
+    paddle.x += step;
+    paddle.moving = Math.abs(step) > 0.15 ? 0.12 : Math.max(0, paddle.moving - dt);
 
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
@@ -723,103 +705,28 @@
       t.y -= 20 * dt;
       if (t.life <= 0) texts.splice(i, 1);
     }
-
-    for (const c of clouds) {
-      c.x += c.speed * dt;
-      if (c.x > LW + 4) {
-        c.x = -c.sprite.width - rand(0, 40);
-        c.y = rand(LH * 0.12, LH * 0.45);
-      }
-    }
   }
 
   // ---------- Dibujo ----------
 
-  function drawScenery() {
-    g.drawImage(background, 0, 0);
-
-    for (const s of stars) {
-      const v = Math.sin(clock * s.speed + s.phase);
-      if (v < 0.2) continue;
-      g.fillStyle = v > 0.85 ? '#ffffff' : '#c0cbdc';
-      g.fillRect(s.x, s.y, 1, 1);
-      if (v > 0.92) {
-        g.fillStyle = '#8b9bb4';
-        g.fillRect(s.x - 1, s.y, 1, 1);
-        g.fillRect(s.x + 1, s.y, 1, 1);
-        g.fillRect(s.x, s.y - 1, 1, 1);
-        g.fillRect(s.x, s.y + 1, 1, 1);
-      }
+  function drawPlayer() {
+    const dx = Math.round(paddle.x - fieldX - BASKET_CX);
+    // Sombras en el suelo (no se mueven con el rebote).
+    for (const [x, y, w, h, fill, op] of ART.player.shadows) {
+      g.globalAlpha = op;
+      g.fillStyle = fill;
+      g.fillRect(fieldX + x + dx, fieldY + y, w, h);
     }
-
-    for (const c of clouds) g.drawImage(c.sprite, Math.round(c.x), Math.round(c.y));
-
-    drawFieldBounds();
-  }
-
-  function drawFieldBounds() {
-    if (fieldX <= 1) return;
-    const right = fieldX + FIELD_W;
-    g.fillStyle = 'rgba(14, 11, 38, 0.5)';
-    g.fillRect(0, 0, fieldX, LH);
-    g.fillRect(right, 0, LW - right, LH);
-    g.fillStyle = OUTLINE;
-    g.fillRect(fieldX - 1, 0, 1, LH);
-    g.fillRect(right, 0, 1, LH);
-    g.fillStyle = '#5a6988';
-    g.fillRect(fieldX - 2, 0, 1, LH);
-    g.fillRect(right + 1, 0, 1, LH);
-  }
-
-  function drawPaddle() {
-    const sq = paddle.squash > 0.5 ? 1 : 0;
-    const w = paddle.w;
-    const h = paddle.h - sq;
-    const x = Math.round(paddle.x - w / 2);
-    const y = Math.round(paddle.y) + sq;
-    const capW = 4;
-
-    g.fillStyle = 'rgba(24, 20, 37, 0.5)';
-    g.fillRect(x + 2, groundY + 1, w - 4, 2);
-
-    g.fillStyle = OUTLINE;
-    g.fillRect(x, y - 1, w, h + 2);
-    g.fillRect(x - 1, y, w + 2, h);
-
-    for (let i = 0; i < h; i++) {
-      const inset = i === 0 || i === h - 1 ? 1 : 0;
-      const t = i / (h - 1);
-      g.fillStyle = PADDLE_BODY[Math.round(t * (PADDLE_BODY.length - 1))];
-      g.fillRect(x + capW, y + i, w - capW * 2, 1);
-      g.fillStyle = PADDLE_CAP[Math.round(t * (PADDLE_CAP.length - 1))];
-      g.fillRect(x + inset, y + i, capW - inset, 1);
-      g.fillRect(x + w - capW, y + i, capW - inset, 1);
-    }
-
-    g.fillStyle = OUTLINE;
-    g.fillRect(x + capW, y, 1, h);
-    g.fillRect(x + w - capW - 1, y, 1, h);
-
-    g.fillStyle = HIGHLIGHT;
-    g.fillRect(x + capW + 2, y + 1, Math.max(2, Math.floor(w * 0.25)), 1);
-    g.fillRect(x + 1, y + 1, 1, 1);
-    g.fillRect(x + w - capW + 1, y + 1, 1, 1);
+    g.globalAlpha = 1;
+    // Rebote de 1 píxel al atrapar algo y pasitos al moverse.
+    const bob = paddle.squash > 0.5 ? 1 : paddle.moving > 0 && Math.floor(clock * 12) % 2 ? -1 : 0;
+    g.drawImage(player.canvas, fieldX + player.ox + dx, fieldY + player.oy + bob);
   }
 
   function drawItems() {
-    const half = SPRITE_PX / 2;
     for (const it of items) {
-      const sx = Math.round(it.x - half);
-      const sy = Math.round(it.y - half);
-      g.drawImage(sprites[it.type.sprite], sx, sy);
-
-      if (it.type.kind === 'bomb') {
-        const flick = Math.floor(clock * 16) % 2;
-        g.fillStyle = flick ? '#fee761' : '#f77622';
-        g.fillRect(sx + 14, sy + 1 + flick, 1, 1);
-        g.fillStyle = '#e43b44';
-        g.fillRect(sx + 15 - flick, sy + flick, 1, 1);
-      }
+      const s = sprites[it.type.sprite];
+      g.drawImage(s, Math.round(it.x - s.width / 2), Math.round(it.y - s.height / 2));
     }
   }
 
@@ -835,13 +742,13 @@
   }
 
   function render() {
-    drawScenery();
+    g.clearRect(0, 0, LW, LH);
+    drawPlayer();
     drawItems();
-    drawPaddle();
     drawEffects();
 
     if (flash > 0) {
-      g.fillStyle = `rgba(228, 59, 68, ${Math.min(0.5, flash * 1.5)})`;
+      g.fillStyle = `rgba(255, 61, 110, ${Math.min(0.45, flash * 1.5)})`;
       g.fillRect(0, 0, LW, LH);
     }
 
@@ -851,8 +758,9 @@
       ox = Math.round(rand(-2, 2)) * scale;
       oy = Math.round(rand(-2, 2)) * scale;
     }
-    ctx.fillStyle = OUTLINE;
+    ctx.fillStyle = MARGIN;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (background) ctx.drawImage(background, ox, oy);
     ctx.drawImage(buffer, ox, oy, LW * scale, LH * scale);
   }
 
