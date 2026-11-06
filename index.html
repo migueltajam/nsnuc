@@ -11,38 +11,56 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <meta name="description" content="No soy ni un casi: un arcade de besos, calabazas y récords. Juega en el móvil, descubre el 17 y supera tu puntuación.">
 </head>
 <body>
   <div id="app">
-    <canvas id="game"></canvas>
+    <canvas id="game" aria-label="Juego de atrapar besos y corazones"></canvas>
 
     <header id="hud" class="hidden">
       <div class="hud-score-box">
         <span class="hud-label">PUNTOS</span>
         <div id="score" class="hud-score">000000</div>
       </div>
-      <span id="level" class="hud-level">NIVEL 1</span>
+      
+      <div class="hud-middle">
+        <span id="level" class="hud-level">NIVEL 1</span>
+
+        <span id="world-clock" class="hud-world-clock">
+          ☀ 17:00
+        </span>
+
+        <span id="combo-hud" class="hud-combo hidden">
+          COMBO x1
+        </span>
+      </div>
+
       <div id="lives" class="hud-lives" role="img" aria-label="3 vidas de 3"></div>
-      <button id="btn-pause" class="hud-pause" aria-label="Pausa">II</button>
+      <button class="sound-toggle hud-sound" aria-label="Silenciar música y efectos" aria-pressed="false" title="Activar/desactivar sonido">♪</button>
+      <button id="btn-pause" class="hud-pause" aria-label="Pausa">Ⅱ</button>
     </header>
 
     <section id="screen-start" class="screen">
       <div class="panel">
         <div class="logo-sign">
-          <img class="logo" src="lettering.png" alt="No soy ni un casi">
+          <img class="logo" src="./assets/images/lettering.png" alt="No soy ni un casi">
         </div>
         <h1>¡ATRAPA!</h1>
-        <p>Desliza el dedo por la pantalla para moverte con la cesta.</p>
+        <p>Desliza el dedo para mover a Miguel y recoger besos.</p>
         <ul class="legend">
           <li><img class="sprite" data-sprite="corazon" alt=""><span>+10</span></li>
           <li><img class="sprite" data-sprite="beso" alt=""><span>+20</span></li>
           <li><img class="sprite" data-sprite="vida" alt=""><span>+1 VIDA</span></li>
           <li class="danger"><img class="sprite" data-sprite="calabaza" alt=""><span>¡EVÍTALA!</span></li>
         </ul>
-        <p class="hint">Si se te cae un corazón o un beso, pierdes una vida.</p>
-        <button id="btn-start" class="btn">JUGAR</button>
-        <p class="best">RÉCORD <span id="best-start">0</span></p>
+        <p class="hint">Solo las calabazas restan vidas. ¡Encadena besos para conseguir combos!</p>
+        <label class="nickname-label" for="nickname">TU APODO</label>
+        <input id="nickname" name="nickname" class="nickname-input" type="text" minlength="2" maxlength="16" placeholder="MIGUEL17" autocomplete="nickname" spellcheck="false">
+        <p id="nickname-error" class="nickname-error hidden" role="alert"></p>
+        <button id="btn-start" class="btn">JUGAR <span aria-hidden="true">▶</span></button>
+        <button class="sound-toggle sound-menu" aria-label="Silenciar música y efectos" aria-pressed="false">♪ SONIDO: ON</button>
+        <p class="best">RÉCORD LOCAL <span id="best-start">0</span></p>
       </div>
     </section>
 
@@ -50,22 +68,54 @@
       <div class="panel">
         <h2>PAUSA</h2>
         <button id="btn-resume" class="btn">CONTINUAR</button>
+        <button class="sound-toggle sound-menu" aria-label="Silenciar música y efectos" aria-pressed="false">♪ SONIDO: ON</button>
         <button id="btn-quit" class="btn btn-secondary">SALIR</button>
       </div>
     </section>
 
     <section id="screen-over" class="screen hidden">
       <div class="panel">
+        <p class="over-eyebrow">FIN DE LA PARTIDA</p>
         <h2>GAME OVER</h2>
-        <p class="final">PUNTOS<strong id="final-score">0</strong></p>
-        <p class="best">RÉCORD <span id="best-over">0</span></p>
+        <p class="final">TU PUNTUACIÓN<strong id="final-score">0</strong></p>
+        <div id="record-celebration" class="record-celebration hidden" aria-hidden="true">★ ★ ★</div>
+        <div class="stats-grid" aria-label="Estadísticas de la partida">
+          <div class="stat"><span>BESOS</span><strong id="stat-kisses">0</strong></div>
+          <div class="stat"><span>CORAZONES</span><strong id="stat-hearts">0</strong></div>
+          <div class="stat"><span>TIEMPO</span><strong id="stat-time">0:00</strong></div>
+          <div class="stat"><span>MEJOR COMBO</span><strong id="stat-combo">0</strong></div>
+        </div>
+        <p class="best">RÉCORD LOCAL <span id="best-over">0</span></p>
         <p id="new-record" class="new-record hidden">¡NUEVO RÉCORD!</p>
         <button id="btn-restart" class="btn">OTRA VEZ</button>
         <button id="btn-menu" class="btn btn-secondary">MENÚ</button>
+        <div class="leaderboard-section">
+          <h3>TOP 10 · DEMO</h3>
+          <p class="leaderboard-note">Solo en este dispositivo. El ranking online con pre-save se conectará después.</p>
+          <ol id="leaderboard" class="leaderboard" aria-label="Clasificación local de prueba"></ol>
+        </div>
+        <div class="achievements-section">
+          <h3>LOGROS SECRETOS <span id="achievement-counter">0/6</span></h3>
+          <ul id="achievements" class="achievements" aria-label="Logros desbloqueados"></ul>
+        </div>
       </div>
     </section>
-  </div>
 
-  <script src="game.js"></script>
+    <div id="countdown" class="countdown hidden" role="status" aria-live="polite" aria-atomic="true">
+      <span id="countdown-value">3</span>
+      <small>PREPÁRATE</small>
+    </div>
+    <div id="easter-egg" class="easter-egg hidden" role="status" aria-live="polite">
+      <span class="egg-top">SECRETO DESBLOQUEADO</span>
+      <div class="jersey" aria-hidden="true"><small>HAMŠÍK</small><strong>17</strong></div>
+      <strong class="egg-title">EL DORSAL 17</strong>
+      <small>17 SEGUNDOS SIN ATRAPAR NADA</small>
+    </div>
+    <div id="achievement-toast" class="achievement-toast hidden" role="status" aria-live="polite">
+      <span class="achievement-toast-icon">🏆</span>
+      <div><small>LOGRO DESBLOQUEADO</small><strong id="achievement-toast-name">EN RACHA</strong></div>
+    </div>
+  </div>
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
