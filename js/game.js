@@ -1,7 +1,7 @@
 import {
   OUTLINE, SKY_TOP, ROAD, MARGIN, clamp, rand, vibrate,
   ITEM_TYPES, START_LIVES, MAX_LIVES, BEST_KEY, ITEM_R, LEVEL_TIME,
-  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y,
+  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND,
   BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
@@ -88,29 +88,55 @@ facade.onload = () => {
 
   // ---------- Tamaño y escena ----------
 
+  // Altura de la zona segura inferior (barra de gestos del iPhone en modo app), en px CSS.
+  const safeBottomProbe = document.createElement('div');
+  safeBottomProbe.style.cssText =
+    'position:fixed;left:0;bottom:0;width:1px;height:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none';
+  document.body.appendChild(safeBottomProbe);
+
+  // true: la pantalla es un poco más ancha que la escena y se prolonga la fachada a los lados.
+  let extendSides = false;
+
   function resize() {
     const relX = LW ? (paddle.x - fieldX) / FIELD_W : 0.5;
-    // DPR limitado a 2: ahorra memoria y batería en móviles de 3x/4x.
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Resolución real del móvil (hasta 3x): con escala fraccional los píxeles quedan uniformes.
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const bounds = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.round(bounds.width * dpr));
     canvas.height = Math.max(1, Math.round(bounds.height * dpr));
-    // En pantallas muy bajas se permite escala fraccional: nunca se corta el personaje.
-    const ratio = Math.min(canvas.width / FIELD_W, canvas.height / FIELD_H);
-    scale = ratio < 2 ? ratio : Math.floor(ratio);
-    LW = Math.ceil(canvas.width / scale);
-    LH = Math.ceil(canvas.height / scale);
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const bottomPadPx = (safeBottomProbe.offsetHeight + 4) * dpr;
+    const usableH = Math.max(1, H - bottomPadPx);
+
+    // 1. Ocupar todo el ancho si cabe la escena recortando como mucho MAX_TOP_CROP de cielo.
+    // 2. Si no, encajar esa altura y prolongar la fachada a los lados (franjas pequeñas).
+    // 3. En pantallas anchas (escritorio, horizontal) se muestra la escena entera con márgenes.
+    const fillWidth = W / FIELD_W;
+    const fitCropped = usableH / (FIELD_H - MAX_TOP_CROP);
+    if (fillWidth <= fitCropped) {
+      scale = fillWidth;
+      extendSides = false;
+    } else if ((W - fitCropped * FIELD_W) / 2 <= W * MAX_SIDE_EXTEND) {
+      scale = fitCropped;
+      extendSides = true;
+    } else {
+      const contain = Math.min(fillWidth, usableH / FIELD_H);
+      scale = contain < 2 ? contain : Math.floor(contain);
+      extendSides = false;
+    }
+
+    LW = Math.ceil(W / scale);
+    LH = Math.ceil(H / scale);
     buffer.width = LW;
     buffer.height = LH;
     ctx.imageSmoothingEnabled = false;
     g.imageSmoothingEnabled = false;
 
-    // El espacio sobrante va sobre todo arriba (cielo bajo el HUD); abajo solo lo justo
-    // para no chocar con la barra de gestos del móvil.
-    const cssToLogical = dpr / scale;
-    const extraH = LH - FIELD_H;
-    const bottomPad = Math.max(0, Math.min(extraH, Math.round(24 * cssToLogical)));
-    fieldY = LH - FIELD_H - bottomPad;
+    // La calle queda pegada abajo; lo que sobre (móviles altos) va al cielo, bajo el HUD,
+    // y lo que falte (móviles bajos) se recorta del cielo.
+    fieldY = Math.floor(LH - FIELD_H - bottomPadPx / scale);
     fieldX = Math.floor((LW - FIELD_W) / 2);
     groundY = fieldY + GROUND_Y;
 
@@ -370,9 +396,18 @@ facade.onload = () => {
     return ITEM_TYPES[0];
   }
 
+  // Borde inferior del HUD en unidades del juego: si el cielo está recortado,
+  // los objetos aparecen justo debajo del marcador y no escondidos tras él.
+  function hudBottom() {
+    const hud = ui.hud.getBoundingClientRect();
+    if (!hud.height) return 0;
+    const rect = canvas.getBoundingClientRect();
+    return ((hud.bottom - rect.top) / rect.height) * canvas.height / scale;
+  }
+
   function spawn() {
     const type = pickType();
-    const y = fieldY + SPAWN_Y;
+    const y = Math.max(fieldY + SPAWN_Y, hudBottom() + 2);
     const half = sprites[type.sprite].width / 2;
     items.push({
       type,
@@ -658,6 +693,19 @@ facade.onload = () => {
       ox,
       oy
     );
+
+    // 3b. Si sobra un poco de ancho, la fachada se prolonga hacia los lados estirando
+    // una columna de cada borde (ya con el cielo, la noche y la calle aplicados).
+    if (extendSides) {
+      const left = Math.round(fieldX * scale + ox);
+      const right = Math.round((fieldX + FIELD_W) * scale + ox);
+      const srcL = Math.round((fieldX + 2.5) * scale + ox);
+      const srcR = Math.round((fieldX + FIELD_W - 0.5) * scale + ox);
+      if (left > 0) ctx.drawImage(canvas, srcL, 0, 1, canvas.height, 0, 0, left, canvas.height);
+      if (right < canvas.width) {
+        ctx.drawImage(canvas, srcR, 0, 1, canvas.height, right, 0, canvas.width - right, canvas.height);
+      }
+    }
 
     // 4. Personaje, objetos y efectos del juego.
     // Siempre quedan por delante del escenario.

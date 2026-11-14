@@ -658,6 +658,13 @@ El juego está diseñado principalmente para dispositivos móviles.
 
 Se está trabajando en la continuidad visual del escenario para pantallas con diferentes proporciones.
 
+**Cómo se adapta la escena a la pantalla** (`resize()` en `js/game.js`, ajustes en `js/config.js`):
+
+1. La escena ocupa todo el ancho del móvil, con la calle pegada abajo.
+2. En móviles más bajos que el diseño se recorta cielo por arriba (como mucho `MAX_TOP_CROP` = 40 unidades, que quedan bajo el HUD) y los objetos aparecen justo debajo del marcador.
+3. Si aun así sobra un poco de ancho (móviles bajos con barras del navegador), la fachada se prolonga hacia los lados hasta `MAX_SIDE_EXTEND` (16 % por lado).
+4. En pantallas anchas (escritorio, horizontal) se muestra la escena entera con márgenes.
+
 Problemas identificados:
 
 - Franjas de color fijo sobre el cielo.
@@ -738,7 +745,7 @@ La solución requiere pruebas en varias resoluciones antes de considerarla cerra
 - [ ] Validar que las barandillas queden delante de los maceteros.
 - [ ] Afinar la iluminación de madrugada.
 - [ ] Mejorar la integración de las plantas.
-- [ ] Corregir las franjas en móviles altos.
+- [x] Corregir las franjas en móviles altos.
 - [ ] Revisar las transiciones del cielo.
 - [ ] Verificar que no haya detalles visuales que dificulten jugar.
 

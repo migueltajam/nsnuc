@@ -40,6 +40,12 @@
   export const BASKET_W = 35;
   export const BASKET_CX = 97.5; // centro de la cesta en el diseño
   export const SPAWN_Y = 22; // los objetos aparecen sobre el tejado, bajo el HUD
+  // En móviles más bajos que el diseño se puede recortar hasta esta altura del cielo
+  // (queda bajo el HUD) para que la escena ocupe todo el ancho de la pantalla.
+  export const MAX_TOP_CROP = 40;
+  // Si aun así sobra ancho, la fachada se prolonga hacia los lados hasta esta fracción
+  // del ancho por cada lado; más allá (escritorio, horizontal) se muestran márgenes.
+  export const MAX_SIDE_EXTEND = 0.16;
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
   export const BASE_FALL_TIME = 3.4;
