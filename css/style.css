@@ -621,6 +621,32 @@ html, body { touch-action: manipulation; }
 #screen-over .record-celebration { margin-top: -10px; line-height: 1; }
 #screen-over .final strong { margin-top: 8px; }
 
+/* ===== Marcador en vaquero, con la tipografía del juego ===== */
+#hud {
+  background: linear-gradient(to bottom, rgba(26, 36, 64, .72) 0%, rgba(26, 36, 64, .34) 48%, rgba(26, 36, 64, 0) 100%);
+}
+#hud .hud-label, #hud .hud-score, #hud .hud-level, #hud .hud-world-clock, #hud .hud-combo {
+  text-shadow: 0 2px 0 var(--denim-ink);
+}
+.hud-label { font-size: 10px; letter-spacing: 1px; color: var(--cream); padding: 0 2px 3px; box-shadow: inset 0 -3px 0 var(--embroidery); }
+.hud-score { font-size: 20px; color: var(--cream); }
+.hud-middle .hud-level { font-size: 10px; color: var(--gold); }
+.hud-world-clock { font-size: 10px; color: var(--shirt-mid); }
+.hud-combo { font-size: 10px; color: var(--gold); }
+.hud-combo.combo-hot { color: var(--embroidery-light); }
+.hud-sound, .hud-pause {
+  width: 38px; height: 38px; margin: 4px; border: none;
+  background: var(--denim); color: var(--cream); font-size: 20px;
+  box-shadow: 0 -3px 0 0 var(--denim-ink), 0 3px 0 0 var(--denim-ink),
+    -3px 0 0 0 var(--denim-ink), 3px 0 0 0 var(--denim-ink),
+    inset 0 3px 0 0 var(--denim-light), inset 0 -4px 0 0 var(--denim-dark);
+}
+.hud-sound[aria-pressed="true"] { color: #8ea6cc; }
+@media (max-width: 370px) {
+  .hud-score { font-size: 16px; }
+  .hud-sound, .hud-pause { width: 34px; height: 34px; }
+}
+
 /* El marco vaquero (con su pespunte) queda fijo y solo se desliza el contenido de dentro:
    así nada pasa por encima del bordado. */
 .screen .panel { padding: 14px; overflow: hidden; }
