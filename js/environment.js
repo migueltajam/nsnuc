@@ -1433,6 +1433,12 @@ const RIGHT_DECOR = [
     { awning: 9, tall: 10 },                                 // 4
     { pots: [3, 11], vines: 12 },                            // 8
     { floorPot: [1, 12] }                                    // 12
+  ],
+  // Columna extra de las pantallas anchas: como la primera pero sin toldo
+  [
+    { pots: [2, 21], first: 1 },
+    { tall: 25, tallDx: 15 },
+    { pots: [2, 22], vines: 16 }
   ]
 ];
 
@@ -1733,7 +1739,7 @@ function drawRightBuilding(g, facade, x1, night) {
       fillRect(g, '#59607a', x, y, 16, 44);
       fillRect(g, '#7a82a0', x + 2, y + 2, 2, 10);
       fillRect(g, '#6b4e3c', x + 7, y, 2, 44);
-      const d = RIGHT_DECOR[c % 4][f];
+      const d = RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f];
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
       if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
@@ -1869,12 +1875,12 @@ function drawStreetTree(g, x) {
 
 function drawStreetProps(g, x0, x1) {
   // Izquierda: bolardos a los lados del portal y de la floristería, sin tapar puertas
-  for (const bx of [-74, FLORIST_X - 10]) if (bx - 9 >= x0) drawBollard(g, bx);
+  for (const bx of [-74, FLORIST_X - 10, -268]) if (bx - 9 >= x0) drawBollard(g, bx);
   // Pizarra a un lado de la floristería, dentro de su ancho
   if (FLORIST_X + FLORIST_W - 30 >= x0) drawFlowerChalkboard(g, FLORIST_X + FLORIST_W - 30);
   // Derecha: la señal de la canción y un par de bolardos
   if (FIELD_W + 46 <= x1) drawSongSign(g, FIELD_W + 34);
-  for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176]) if (bx + 4 <= x1) drawBollard(g, bx);
+  for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176, FIELD_W + 250]) if (bx + 4 <= x1) drawBollard(g, bx);
   if (TREE_X + 16 <= x1) drawStreetTree(g, TREE_X);
 }
 
@@ -1987,10 +1993,16 @@ function drawRoofs(g, x0, x1, night) {
   if (rightColumnX(2) + 16 <= x1) drawDormer(g, rightColumnX(2));
   if (m + 62 <= x1) { drawWhiteChimney(g, m + 34); drawWhiteChimney(g, m + 49); }
   if (rightColumnX(3) + 16 <= x1) drawDormer(g, rightColumnX(3));
+  // Tercer tramo (pantallas de ordenador): buhardilla y chimenea de ladrillo
+  if (rightColumnX(4) + 16 <= x1) drawDormer(g, rightColumnX(4));
+  if (FIELD_W + 2 * RIGHT_MODULE + 46 <= x1) drawBrickChimney(g, FIELD_W + 2 * RIGHT_MODULE + 34, 13);
 }
 
+// Los edificios de los lados se pintan a 1 píxel por unidad en un lienzo aparte y se
+// escalan de una vez: así no aparecen líneas entre las piezas de muro en ninguna tarjeta gráfica.
+let sideCanvas = null;
 export function renderSideBuildings(
-  ctx,
+  out,
   facade,
   fieldX,
   fieldY,
@@ -2018,15 +2030,19 @@ export function renderSideBuildings(
   const x0 = -Math.max(left, MAX_SIDE_UNITS);
   const x1 = FIELD_W + Math.max(right, MAX_SIDE_UNITS);
 
+  sideCanvas ||= document.createElement('canvas');
+  const sw = x1 - x0;
+  const sh = bottom - top;
+  if (sideCanvas.width !== sw || sideCanvas.height !== sh) {
+    sideCanvas.width = sw;
+    sideCanvas.height = sh;
+  }
+  const ctx = sideCanvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, sw, sh);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.translate(shakeX, shakeY);
-  ctx.scale(scale, scale);
-  ctx.translate(fieldX, fieldY);
-  // Nada se sale de la calle: ni muros ni sillares por fuera del margen
-  ctx.beginPath();
-  ctx.rect(-left, top, FIELD_W + left + right, bottom - top);
-  ctx.clip();
+  ctx.translate(-x0, -top);
 
   // Cielo con el mismo degradado que el del juego
   const base = colorForHour(hour);
@@ -2139,4 +2155,16 @@ export function renderSideBuildings(
   }
 
   ctx.restore();
+
+  // Lo pintado se lleva a la pantalla de una sola vez, recortado donde termina la calle
+  out.save();
+  out.imageSmoothingEnabled = false;
+  out.translate(shakeX, shakeY);
+  out.scale(scale, scale);
+  out.translate(fieldX, fieldY);
+  out.beginPath();
+  out.rect(-left, top, FIELD_W + left + right, bottom - top);
+  out.clip();
+  out.drawImage(sideCanvas, x0, top);
+  out.restore();
 }

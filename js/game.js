@@ -155,7 +155,28 @@ facade.onload = () => {
     paddle.x = fieldX + clamp(relX * FIELD_W, minX(), maxX());
     paddle.targetX = paddle.x;
 
+    placeHud(W, dpr);
     buildBackground();
+  }
+
+  // El marcador va siempre encima de la calle, nunca sobre los márgenes oscuros.
+  // En ordenador se agranda un poco el marcador y los menús para pantallas grandes.
+  function placeHud(W, dpr) {
+    let leftUnits = 0;
+    let rightUnits = 0;
+    if (extendSides) {
+      const side = (u) => (u > MAX_SIDE_UNITS + SIDE_TOLERANCE ? MAX_SIDE_UNITS : u);
+      leftUnits = side(fieldX + 2);
+      rightUnits = side(W / scale - fieldX - FIELD_W + 2);
+    }
+    const leftPx = Math.max(0, (fieldX - leftUnits) * scale / dpr);
+    const rightPx = Math.max(0, (W / scale - fieldX - FIELD_W - rightUnits) * scale / dpr);
+    const root = document.documentElement.style;
+    root.setProperty('--street-left', `${Math.floor(leftPx)}px`);
+    root.setProperty('--street-right', `${Math.floor(rightPx)}px`);
+    const desktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const zoom = desktop ? clamp(window.innerHeight / 820, 1, 1.5) : 1;
+    root.setProperty('--ui-zoom', zoom.toFixed(3));
   }
 
   // El jugador no puede salirse del campo: los codos sobresalen de la cesta.
