@@ -226,18 +226,8 @@ const AWNINGS = [
   { x: 136, y: 157, w: 30, h: 8, colorA: '#6d8590', colorB: '#ddd5c5' }
 ];
 
-// Una sola cuerda de ropa, discreta
-const LAUNDRY_LINES = [
-  {
-    x1: 76, y1: 150,
-    x2: 124, y2: 145,
-    items: [
-      { x: 89,  w: 5, h: 5, color: '#f0e6d8' },
-      { x: 98,  w: 4, h: 6, color: '#e2a3a0' },
-      { x: 109, w: 5, h: 7, color: '#94aecb' }
-    ]
-  }
-];
+// Sin cuerdas de ropa entre balcones (se confundían con un objeto del juego).
+const LAUNDRY_LINES = [];
 
 // Silueta detrás de una sola ventana puntual
 const SHADOW_PEOPLE = [
@@ -1183,12 +1173,9 @@ const DIGITS = {
   7: ['111', '001', '010', '010', '010']
 };
 
-// Portal típico de Madrid: piedra, puerta de hierro y cristal y el número 17.
+// Portal típico de Madrid: puerta de hierro y cristal con el número 17.
 function drawPortal(g, x, night) {
-  // Recercado de granito rosado
-  fillRect(g, '#b49a90', x, 312, 40, 70);
-  for (let i = 0; i < 40; i++) fillRect(g, i % 3 ? '#a48a81' : '#c7aea4', x + (i * 7) % 39, 314 + (i * 11) % 66, 1, 1);
-  // Marco de hierro
+  // Marco de hierro directamente sobre el muro del edificio
   fillRect(g, '#25242a', x + 4, 317, 32, 65);
   // Montante de cristal con la placa del número
   fillRect(g, '#7e8494', x + 6, 319, 28, 10);
