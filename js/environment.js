@@ -1736,6 +1736,117 @@ function drawStreetProps(g, x0, x1) {
   if (TREE_X + 16 <= x1) drawStreetTree(g, TREE_X);
 }
 
+// ---------------- Tejados variados de los edificios de los lados ----------------
+// Solo la parte alta: buhardillas como las del edificio central, chimeneas, una antena
+// y, en el edificio crema, un ático retranqueado con terraza.
+let roofExtras = []; // zonas por encima del tejado que también se oscurecen de noche
+let roofLit = []; // ventanas del tejado que se encienden de noche
+
+function drawDormer(g, x, wide = false) {
+  // Buhardilla copiada del edificio central: tejadillo de pizarra escalonado y ventanita
+  const w = wide ? 24 : 16;
+  fillRect(g, '#6f6880', x + 4, 36, w - 8, 2);
+  fillRect(g, '#6f6880', x + 2, 38, w - 4, 2);
+  fillRect(g, '#6f6880', x, 40, w, 2);
+  fillRect(g, '#6f6880', x - 2, 42, w + 4, 2);
+  fillRect(g, '#d6bb87', x, 44, w, 18);
+  const panes = wide ? [x + 4, x + 13] : [x + 4];
+  for (const px of panes) {
+    fillRect(g, '#837383', px, 47, 8, 12);
+    fillRect(g, '#75614f', px + 3, 47, 1, 12);
+    fillRect(g, '#ebc494', px + 1, 48, 1, 5);
+    roofLit.push([px, 47, 8, 12]);
+  }
+  roofExtras.push([x - 2, 36, w + 4, 8]);
+}
+
+function drawBrickChimney(g, x, h = 14) {
+  // Chimenea de ladrillo como la del edificio central
+  const y = 46 - h;
+  fillRect(g, '#7f5246', x, y, 13, 3);
+  fillRect(g, '#a36a5a', x + 2, y + 3, 8, h - 3);
+  fillRect(g, '#c98a72', x + 10, y + 3, 1, h - 3);
+  for (let yy = y + 7; yy < 46; yy += 4) fillRect(g, '#7f5246', x + 2, yy, 8, 1);
+  roofExtras.push([x, y, 13, h]);
+}
+
+function drawWhiteChimney(g, x) {
+  // Remate encalado de chimenea, como los de los tejados de Madrid
+  fillRect(g, '#4a4450', x - 1, 33, 14, 2);
+  fillRect(g, '#efe6d4', x, 35, 12, 11);
+  fillRect(g, '#d3c6ac', x + 9, 35, 3, 11);
+  fillRect(g, '#4a4450', x + 3, 38, 6, 3);
+  roofExtras.push([x - 1, 33, 14, 13]);
+}
+
+function drawAntenna(g, x) {
+  fillRect(g, '#4a4450', x, 22, 1, 24);
+  fillRect(g, '#4a4450', x - 5, 25, 11, 1);
+  fillRect(g, '#4a4450', x - 3, 29, 7, 1);
+  fillRect(g, '#4a4450', x - 4, 33, 9, 1);
+  roofExtras.push([x - 5, 22, 11, 24]);
+}
+
+function drawAttic(g, x, w, night) {
+  // Ático retranqueado sobre el tejado con terraza delante
+  const wall = '#e8dcc0', trim = '#f5efe2', shade = '#c9bc9f';
+  fillRect(g, '#7f717e', x - 2, 24, w + 4, 2);
+  fillRect(g, trim, x - 2, 26, w + 4, 3);
+  fillRect(g, shade, x, 29, w, 1);
+  fillRect(g, wall, x, 30, w, 32);
+  // Puertas de terraza con persiana verde, alternando subidas y a medias
+  for (let i = 0, px = x + 9; px + 12 <= x + w - 6; i++, px += 30) {
+    fillRect(g, trim, px - 2, 34, 16, 24);
+    fillRect(g, '#6b4e3c', px, 36, 12, 22);
+    fillRect(g, '#59607a', px + 1, 37, 10, 21);
+    fillRect(g, '#6b4e3c', px + 6, 37, 1, 21);
+    fillRect(g, '#7a82a0', px + 2, 38, 1, 6);
+    roofLit.push([px + 1, 37, 10, 21]);
+    if (i % 2 === 0) {
+      fillRect(g, '#7c9a74', px, 36, 12, 9);
+      for (let sx = px + 1; sx < px + 12; sx += 3) fillRect(g, '#8eaa86', sx, 36, 1, 9);
+      fillRect(g, '#6a8763', px, 44, 12, 1);
+    }
+  }
+  // Suelo de la terraza y barandilla de hierro sobre la cornisa
+  fillRect(g, '#b8a888', x - 6, 61, w + 12, 1);
+  // Macetas y una mesita
+  const pots = [[x - 3, '#b5684a'], [x + w - 14, '#c9504a'], [x + w + 1, '#b5684a']];
+  for (const [px, c] of pots) {
+    fillRect(g, c, px, 56, 5, 5);
+    fillRect(g, '#5f8a4e', px - 1, 51, 7, 5);
+    fillRect(g, '#7fa65f', px, 50, 4, 2);
+  }
+  fillRect(g, '#f2d16b', x + w + 2, 50, 2, 1);
+  fillRect(g, '#e0708e', x - 2, 50, 2, 1);
+  fillRect(g, '#3a363e', x - 6, 52, w + 12, 1);
+  for (let bx = x - 6; bx <= x + w + 6; bx += 3) fillRect(g, '#3a363e', bx, 52, 1, 10);
+  roofExtras.push([x - 2, 24, w + 4, 22]);
+}
+
+function drawRoofs(g, x0, x1, night) {
+  roofExtras = [];
+  roofLit = [];
+  // Edificio amarillo (continuación del central): buhardillas sobre cada columna,
+  // chimenea de ladrillo y una antena
+  for (let k = 0; leftColumnX(k) - 8 >= x0; k++) {
+    const lx = leftColumnX(k);
+    drawDormer(g, lx + (k % 2 ? 6 : 10), k % 2 === 1);
+  }
+  if (-116 >= x0) drawBrickChimney(g, -116, 12);
+  if (-28 >= x0) drawAntenna(g, -16);
+  if (-218 >= x0) drawBrickChimney(g, -218, 16);
+  // Edificio crema: primer tramo con ático y terraza (fuera del marcador),
+  // segundo tramo con buhardillas y remates encalados
+  const ax = FIELD_W + 14;
+  const aw = RIGHT_MODULE - 26;
+  if (ax + aw + 8 <= x1) drawAttic(g, ax, aw, night);
+  const m = FIELD_W + RIGHT_MODULE;
+  if (rightColumnX(2) + 16 <= x1) drawDormer(g, rightColumnX(2));
+  if (m + 62 <= x1) { drawWhiteChimney(g, m + 34); drawWhiteChimney(g, m + 49); }
+  if (rightColumnX(3) + 16 <= x1) drawDormer(g, rightColumnX(3));
+}
+
 export function renderSideBuildings(
   ctx,
   facade,
@@ -1793,6 +1904,7 @@ export function renderSideBuildings(
 
   if (left > 2) drawLeftBuilding(ctx, facade, x0, night);
   if (right > 2) drawRightBuilding(ctx, facade, x1, night);
+  drawRoofs(ctx, x0, x1, night);
 
   // Acera, bordillo y calzada continuos
   const slice = getSidewalkSlice(facade);
@@ -1849,6 +1961,18 @@ export function renderSideBuildings(
   if (night > 0.35 && x0 < FLORIST_X + FLORIST_W) {
     ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
     ctx.fillRect(FLORIST_X + 3, 328, FLORIST_W - 6, 44);
+  }
+  if (roofExtras.length) {
+    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    if (night > 0.08) {
+      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    }
+  }
+  if (night > 0.35) {
+    ctx.fillStyle = `rgba(255,196,110,${(night * 0.6).toFixed(3)})`;
+    roofLit.forEach(([rx, ry, rw, rh], i) => { if (i % 3 !== 1) ctx.fillRect(rx, ry, rw, rh); });
   }
   if (night > 0.35 && BAR_X + BAR_W + 4 <= x1) {
     ctx.fillStyle = `rgba(255,190,110,${(night * 0.35).toFixed(3)})`;
