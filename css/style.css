@@ -513,3 +513,18 @@ html, body { touch-action: manipulation; }
   }
   #app > :not(.rotate-lock) { visibility: hidden; }
 }
+
+/* Ordenador: el marcador se queda sobre la calle (no en los márgenes) y, en pantallas
+   grandes, marcador y menús crecen un poco. --street-left/right y --ui-zoom los pone game.js. */
+#hud {
+  /* con zoom, las distancias del propio elemento también se multiplican: se compensan */
+  left: calc(var(--street-left, 0px) / var(--ui-zoom, 1));
+  right: calc(var(--street-right, 0px) / var(--ui-zoom, 1));
+  zoom: var(--ui-zoom, 1);
+}
+.screen .panel { zoom: var(--ui-zoom, 1); }
+.only-mouse { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .only-mouse { display: block; }
+  .only-touch { display: none; }
+}

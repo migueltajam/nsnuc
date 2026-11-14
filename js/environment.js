@@ -1989,8 +1989,11 @@ function drawRoofs(g, x0, x1, night) {
   if (rightColumnX(3) + 16 <= x1) drawDormer(g, rightColumnX(3));
 }
 
+// Los edificios de los lados se pintan a 1 píxel por unidad en un lienzo aparte y se
+// escalan de una vez: así no aparecen líneas entre las piezas de muro en ninguna tarjeta gráfica.
+let sideCanvas = null;
 export function renderSideBuildings(
-  ctx,
+  out,
   facade,
   fieldX,
   fieldY,
@@ -2018,15 +2021,19 @@ export function renderSideBuildings(
   const x0 = -Math.max(left, MAX_SIDE_UNITS);
   const x1 = FIELD_W + Math.max(right, MAX_SIDE_UNITS);
 
+  sideCanvas ||= document.createElement('canvas');
+  const sw = x1 - x0;
+  const sh = bottom - top;
+  if (sideCanvas.width !== sw || sideCanvas.height !== sh) {
+    sideCanvas.width = sw;
+    sideCanvas.height = sh;
+  }
+  const ctx = sideCanvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, sw, sh);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.translate(shakeX, shakeY);
-  ctx.scale(scale, scale);
-  ctx.translate(fieldX, fieldY);
-  // Nada se sale de la calle: ni muros ni sillares por fuera del margen
-  ctx.beginPath();
-  ctx.rect(-left, top, FIELD_W + left + right, bottom - top);
-  ctx.clip();
+  ctx.translate(-x0, -top);
 
   // Cielo con el mismo degradado que el del juego
   const base = colorForHour(hour);
@@ -2139,4 +2146,16 @@ export function renderSideBuildings(
   }
 
   ctx.restore();
+
+  // Lo pintado se lleva a la pantalla de una sola vez, recortado donde termina la calle
+  out.save();
+  out.imageSmoothingEnabled = false;
+  out.translate(shakeX, shakeY);
+  out.scale(scale, scale);
+  out.translate(fieldX, fieldY);
+  out.beginPath();
+  out.rect(-left, top, FIELD_W + left + right, bottom - top);
+  out.clip();
+  out.drawImage(sideCanvas, x0, top);
+  out.restore();
 }
