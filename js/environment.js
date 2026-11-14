@@ -1185,15 +1185,16 @@ function getSidewalkSlice(facade) {
 
 // Columnas de ventanas de los laterales. Se repiten hacia fuera todo lo que haga
 // falta, así la calle llena también tablets y pantallas anchas.
-const LEFT_X = -50;          // primera columna del edificio amarillo
-const LEFT_STEP = 74;        // distancia entre columnas hacia la izquierda
+// Como en el edificio central: dos columnas de balcones por tramo de fachada
+// y un hueco grande en medio. El amarillo repite tramos de 195 hacia la izquierda
+// (columnas en +24 y +133); el crema, tramos de 112 hacia la derecha (+16 y +80).
 const LEFT_FLOORS = [80, 158, 236];
-const leftColumnX = (k) => LEFT_X - LEFT_STEP * k;
+const leftColumnX = (k) => -FIELD_W * (Math.floor(k / 2) + 1) + (k % 2 === 0 ? 133 : 24);
+const LEFT_X = leftColumnX(0);  // primera columna, junto al edificio central
 
-const RIGHT_X = FIELD_W + 16; // primera columna del edificio crema
-const RIGHT_STEP = 34;
+const RIGHT_MODULE = 112;
 const RIGHT_FLOORS = [86, 164, 242];
-const rightColumnX = (c) => RIGHT_X + RIGHT_STEP * c;
+const rightColumnX = (c) => FIELD_W + RIGHT_MODULE * Math.floor(c / 2) + (c % 2 === 0 ? 16 : 80);
 
 // Ventanas que se encienden de noche (solo los cristales altos: los bajos quedan tras el balcón).
 function leftLit(x0) {
@@ -1310,30 +1311,95 @@ function drawBalconyBike(g, x, y) {
   fillRect(g, c, x + 11, y - 5, 3, 1);
 }
 
-// Puerta de madera de planta baja.
-function drawWoodenDoor(g, x) {
-  fillRect(g, '#e6dccb', x, 334, 26, 48);
-  fillRect(g, '#7a5e4c', x + 4, 340, 18, 42);
-  fillRect(g, '#7a5e4c', x + 6, 338, 14, 2);
-  fillRect(g, '#5e4738', x + 12, 340, 2, 42);
-  fillRect(g, '#6c5242', x + 6, 345, 5, 12);
-  fillRect(g, '#6c5242', x + 15, 345, 5, 12);
-  fillRect(g, '#6c5242', x + 6, 362, 5, 16);
-  fillRect(g, '#6c5242', x + 15, 362, 5, 16);
-  fillRect(g, '#c9b37e', x + 10, 360, 1, 2);
-  fillRect(g, '#c9b37e', x + 15, 360, 1, 2);
-  fillRect(g, '#cfc6bb', x + 2, 380, 22, 2);
-}
+// Floristería junto al portal 17, inspirada en una floristería de barrio de Madrid:
+// toldo granate con festón crema, estanterías llenas de macetas y cubos de flores en la acera.
+const FLORIST_W = 90;
+const FLOWER_COLORS = ['#e0708e', '#d84a5a', '#f2d16b', '#f4efe6', '#b98ab0', '#ef9a6a', '#ffb3c6'];
+const POT_COLORS = ['#b5684a', '#e9e4da', '#c9504a', '#d9a648', '#9a9ca0'];
 
-// Ventana de planta baja con reja.
-function drawGroundWindow(g, x, night) {
-  fillRect(g, '#e6dccb', x, 322, 26, 26);
-  fillRect(g, night > 0.5 ? '#c99a5c' : '#5f6576', x + 3, 325, 20, 20);
-  fillRect(g, night > 0.5 ? '#e0b46e' : '#8a91a5', x + 5, 327, 2, 8);
-  for (let bx = x + 4; bx < x + 23; bx += 3) fillRect(g, '#2a2628', bx, 324, 1, 23);
-  fillRect(g, '#2a2628', x + 2, 324, 22, 1);
-  fillRect(g, '#2a2628', x + 2, 346, 22, 1);
-  fillRect(g, '#cfc1ab', x - 1, 348, 28, 2);
+function drawFlorist(g, x, night) {
+  const w = FLORIST_W;
+  // Hueco de la tienda y fondo del interior
+  fillRect(g, '#2a2826', x, 314, w, 68);
+  fillRect(g, night > 0.5 ? '#4a3a2a' : '#26332b', x + 3, 328, w - 6, 44);
+  // Estanterías con macetas de tamaños distintos y alguna planta que cuelga
+  for (const [i, sy] of [336, 347, 358].entries()) {
+    fillRect(g, '#6b5440', x + 3, sy, w - 6, 1);
+    fillRect(g, '#4a3a2c', x + 3, sy + 1, w - 6, 1);
+    let px = x + 5 + (i % 2) * 2;
+    for (let n = i * 7; px < x + w - 8; n++) {
+      const big = (n * 5 + i) % 4 === 0;
+      const pw = big ? 5 : 3;
+      const ph = big ? 4 : 3;
+      if ((n * 7 + i * 3) % 9 !== 0) {
+        fillRect(g, POT_COLORS[(n * 3 + i) % POT_COLORS.length], px, sy - ph, pw, ph);
+        fillRect(g, (n + i) % 3 ? '#5f8a4e' : '#7fa65f', px - (big ? 1 : 0), sy - ph - 3, pw + (big ? 2 : 0), 3);
+        fillRect(g, FLOWER_COLORS[(n * 3 + i) % FLOWER_COLORS.length], px + (n % 2), sy - ph - 4, 2, 2);
+        if (big) fillRect(g, FLOWER_COLORS[(n * 5 + 2) % FLOWER_COLORS.length], px + 3, sy - ph - 5, 2, 2);
+        if (i === 0 && n % 5 === 2) fillRect(g, '#6f9a5c', px + 1, sy + 2, 1, 6);
+      }
+      px += pw + 1 + ((n * 3) % 3 === 0 ? 1 : 0);
+    }
+  }
+  // Macetas colgantes bajo el toldo
+  for (const hx of [x + 16, x + 44, x + 70]) {
+    fillRect(g, '#4a3a2c', hx + 2, 328, 1, 3);
+    fillRect(g, '#c9a070', hx, 331, 5, 3);
+    fillRect(g, '#5f8a4e', hx - 1, 329, 7, 2);
+    fillRect(g, '#6f9a5c', hx, 334, 1, 4);
+    fillRect(g, '#6f9a5c', hx + 4, 334, 1, 3);
+  }
+  // Plantas grandes a los lados, ya en la acera
+  fillRect(g, '#a8775f', x - 6, 372, 7, 10);
+  fillRect(g, '#5f8a4e', x - 8, 362, 11, 10);
+  fillRect(g, '#7fa65f', x - 6, 359, 6, 4);
+  fillRect(g, '#e0708e', x - 5, 360, 2, 2);
+  fillRect(g, '#a8775f', x + w - 1, 374, 6, 8);
+  fillRect(g, '#7fa65f', x + w - 3, 365, 10, 9);
+  fillRect(g, '#f2d16b', x + w + 1, 366, 2, 2);
+  // Grada en la acera con cubos de flores
+  fillRect(g, '#5a4636', x + 2, 366, w - 4, 3);
+  fillRect(g, '#4a3a2c', x + 2, 374, w - 4, 2);
+  for (let bx = x + 4, n = 0; bx < x + w - 6; bx += 7, n++) {
+    const by = n % 2 ? 368 : 375;
+    fillRect(g, '#8f949a', bx, by, 5, 7);
+    fillRect(g, '#a9aeb4', bx, by, 5, 1);
+    fillRect(g, '#5f8a4e', bx, by - 3, 5, 3);
+    fillRect(g, FLOWER_COLORS[n % FLOWER_COLORS.length], bx, by - 5, 2, 2);
+    fillRect(g, FLOWER_COLORS[(n + 2) % FLOWER_COLORS.length], bx + 3, by - 4, 2, 2);
+    fillRect(g, FLOWER_COLORS[(n + 4) % FLOWER_COLORS.length], bx + 1, by - 6, 2, 1);
+  }
+  // Postes oscuros
+  fillRect(g, '#1f1c1b', x, 314, 3, 68);
+  fillRect(g, '#1f1c1b', x + w - 3, 314, 3, 68);
+  // Toldo granate con festón crema
+  fillRect(g, '#5e1e28', x - 2, 312, w + 4, 3);
+  fillRect(g, '#7a2833', x - 2, 315, w + 4, 10);
+  fillRect(g, '#8c3440', x - 2, 315, w + 4, 1);
+  for (let sx = x - 2; sx < x + w + 2; sx += 6) {
+    fillRect(g, '#7a2833', sx, 325, 6, 2);
+    fillRect(g, '#7a2833', sx + 1, 327, 4, 1);
+    fillRect(g, '#e8d9c0', sx, 325, 1, 2);
+  }
+  fillRect(g, '#e8d9c0', x - 2, 324, w + 4, 1);
+  // Emblema: una rosa dentro de un círculo, sin nombre
+  const lx = x + 8;
+  fillRect(g, '#e8d9c0', lx + 1, 316, 5, 1);
+  fillRect(g, '#e8d9c0', lx + 1, 322, 5, 1);
+  fillRect(g, '#e8d9c0', lx, 317, 1, 5);
+  fillRect(g, '#e8d9c0', lx + 6, 317, 1, 5);
+  fillRect(g, '#ffb3c6', lx + 2, 317, 3, 2);
+  fillRect(g, '#e0708e', lx + 3, 318, 1, 1);
+  fillRect(g, '#9ec48a', lx + 3, 319, 1, 2);
+  fillRect(g, '#9ec48a', lx + 2, 320, 1, 1);
+  // Filete crema decorativo a lo largo del toldo
+  fillRect(g, '#c98a8f', lx + 10, 319, w - 22, 1);
+  // Ramito colgante en el poste
+  fillRect(g, '#c9a070', x + w - 9, 330, 6, 3);
+  fillRect(g, '#5f8a4e', x + w - 9, 327, 6, 3);
+  fillRect(g, '#e0708e', x + w - 8, 326, 2, 2);
+  fillRect(g, '#f2d16b', x + w - 5, 327, 2, 2);
+  fillRect(g, '#4a3a2c', x + w - 7, 323, 1, 4);
 }
 
 function drawLeftBuilding(g, facade, x0, night) {
@@ -1386,12 +1452,8 @@ function drawLeftBuilding(g, facade, x0, night) {
     fillRect(g, '#d3bd8c', x0, 309, -x0, 43);
   }
   drawZocalo(g, facade, x0, 0);
-  drawPortal(g, -52, night);
-  for (let k = 1; leftColumnX(k) + 46 >= x0; k++) {
-    const lx = leftColumnX(k);
-    if (k % 2) drawWoodenDoor(g, lx + 6, night);
-    else drawGroundWindow(g, lx + 6, night);
-  }
+  drawPortal(g, LEFT_X - 2, night);
+  if (x0 < LEFT_X - 6) drawFlorist(g, LEFT_X - 98, night);
 }
 
 function drawRightBuilding(g, facade, x1, night) {
@@ -1411,12 +1473,14 @@ function drawRightBuilding(g, facade, x1, night) {
     fillRect(g, '#8f7f6c', x0, 68, w, 2);
   }
   fillRect(g, wall, x0, 70, w, 282);
-  // Sillares almohadillados en la esquina, junto al edificio central
-  for (let y = 70, k = 0; y < 352; y += 9, k++) {
-    const qw = k % 2 ? 7 : 10;
-    fillRect(g, '#d9c69a', x0, y, qw, 8);
-    fillRect(g, '#c8b385', x0, y + 8, qw, 1);
-    for (let d = 0; d < 6; d++) fillRect(g, '#c4ae80', x0 + 1 + (d * 3 + k) % (qw - 1), y + 1 + (d * 5 + k) % 6, 1, 1);
+  // Sillares almohadillados en la esquina de cada tramo
+  for (let qx = x0; qx < x1; qx += RIGHT_MODULE) {
+    for (let y = 70, k = 0; y < 352; y += 9, k++) {
+      const qw = k % 2 ? 7 : 10;
+      fillRect(g, '#d9c69a', qx, y, qw, 8);
+      fillRect(g, '#c8b385', qx, y + 8, qw, 1);
+      for (let d = 0; d < 6; d++) fillRect(g, '#c4ae80', qx + 1 + (d * 3 + k) % (qw - 1), y + 1 + (d * 5 + k) % 6, 1, 1);
+    }
   }
   // Impostas blancas
   for (const y of [146, 224, 302]) {
@@ -1555,6 +1619,10 @@ export function renderSideBuildings(
         ctx.fillRect(wx, wy, ww, wh);
       }
     }
+  }
+  if (night > 0.35 && x0 < LEFT_X - 6) {
+    ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
+    ctx.fillRect(LEFT_X - 95, 328, FLORIST_W - 6, 44);
   }
   if (night > 0.3 && left > 2) {
     for (const [lx, ly] of STRING_LIGHTS) {
