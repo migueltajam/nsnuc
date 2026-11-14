@@ -1199,7 +1199,7 @@ const rightColumnX = (c) => FIELD_W + RIGHT_MODULE * Math.floor(c / 2) + (c % 2 
 // Ventanas que se encienden de noche (solo los cristales altos: los bajos quedan tras el balcón).
 function leftLit(x0) {
   const out = [];
-  for (let k = 0; leftColumnX(k) + 46 >= x0; k++) {
+  for (let k = 0; leftColumnX(k) - 8 >= x0; k++) {
     LEFT_FLOORS.forEach((y, i) => {
       if ((k * 3 + i + 1) % 4 === 0 || (k === 0 && i === 1)) return;
       for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) out.push([leftColumnX(k) + gx, y + gy, gw, gh]);
@@ -1209,7 +1209,7 @@ function leftLit(x0) {
 }
 function rightLit(x1) {
   const out = [];
-  for (let c = 0; rightColumnX(c) - 8 <= x1; c++) {
+  for (let c = 0; rightColumnX(c) + 21 <= x1; c++) {
     RIGHT_FLOORS.forEach((y, f) => {
       if ((f * 5 + c * 3 + 1) % 4 === 0) out.push([rightColumnX(c), y + 2, 16, 22]);
     });
@@ -1313,7 +1313,9 @@ function drawBalconyBike(g, x, y) {
 
 // Floristería junto al portal 17, inspirada en una floristería de barrio de Madrid:
 // toldo granate con festón crema, estanterías llenas de macetas y cubos de flores en la acera.
-const FLORIST_W = 90;
+const FLORIST_W = 102;
+// Centrada entre el final del tramo (-195) y el portal 17, bajo la ventana de ese tramo.
+const FLORIST_X = -186;
 const FLOWER_COLORS = ['#e0708e', '#d84a5a', '#f2d16b', '#f4efe6', '#b98ab0', '#ef9a6a', '#ffb3c6'];
 const POT_COLORS = ['#b5684a', '#e9e4da', '#c9504a', '#d9a648', '#9a9ca0'];
 
@@ -1411,7 +1413,8 @@ function drawLeftBuilding(g, facade, x0, night) {
     fillRect(g, '#d3bd8c', x0, 46, -x0, 265);
   }
 
-  for (let k = 0; leftColumnX(k) + 46 >= x0; k++) {
+  // Solo columnas que caben enteras: nada de balcones cortados por el borde
+  for (let k = 0; leftColumnX(k) - 8 >= x0; k++) {
     const lx = leftColumnX(k);
     const set = k === 0 ? 0 : 1 + ((k - 1) % 3);
     LEFT_FLOORS.forEach((y, i) => {
@@ -1453,7 +1456,7 @@ function drawLeftBuilding(g, facade, x0, night) {
   }
   drawZocalo(g, facade, x0, 0);
   drawPortal(g, LEFT_X - 2, night);
-  if (x0 < LEFT_X - 6) drawFlorist(g, LEFT_X - 98, night);
+  if (x0 < FLORIST_X + FLORIST_W) drawFlorist(g, FLORIST_X, night);
 }
 
 function drawRightBuilding(g, facade, x1, night) {
@@ -1487,7 +1490,7 @@ function drawRightBuilding(g, facade, x1, night) {
     fillRect(g, trim, x0 + 10, y, w, 4);
     fillRect(g, trimShade, x0 + 10, y + 4, w, 1);
   }
-  for (let c = 0; rightColumnX(c) - 8 <= x1; c++) {
+  for (let c = 0; rightColumnX(c) + 21 <= x1; c++) {
     const x = rightColumnX(c);
     RIGHT_FLOORS.forEach((y, f) => {
       // Recercado blanco y ventana
@@ -1515,6 +1518,97 @@ function drawRightBuilding(g, facade, x1, night) {
   }
   // Planta baja: solo pared, con el zócalo de granito
   drawZocalo(g, facade, x0, x1);
+}
+
+// Bolardo antiaparcamiento como los de la acera del edificio central.
+function drawBollard(g, x) {
+  fillRect(g, 'rgba(42,22,38,0.22)', x - 9, 399, 10, 2);
+  fillRect(g, '#2f2c30', x, 386, 4, 15);
+  fillRect(g, '#4a464c', x - 1, 385, 6, 2);
+  fillRect(g, '#6a666c', x + 3, 387, 1, 13);
+}
+
+const DIGIT_FONT = {
+  1: ['010', '110', '010', '010', '111'],
+  7: ['111', '001', '010', '010', '010']
+};
+
+// Señal de calle con guiño a la canción: zona residencial con una pareja y un corazón,
+// y debajo una señal de velocidad con el número 17.
+function drawSongSign(g, x) {
+  // Poste
+  fillRect(g, 'rgba(42,22,38,0.22)', x - 10, 399, 11, 2);
+  fillRect(g, '#8f949a', x, 330, 2, 71);
+  fillRect(g, '#b4b9bf', x, 330, 1, 71);
+  // Señal azul rectangular
+  const sx = x - 11, sy = 312;
+  fillRect(g, '#f2f2ee', sx, sy, 24, 18);
+  fillRect(g, '#2f5fa8', sx + 1, sy + 1, 22, 16);
+  // Pareja de la mano y corazón
+  const w = '#f2f2ee';
+  fillRect(g, w, sx + 7, sy + 7, 2, 2);
+  fillRect(g, w, sx + 7, sy + 9, 2, 4);
+  fillRect(g, w, sx + 6, sy + 13, 1, 3);
+  fillRect(g, w, sx + 9, sy + 13, 1, 3);
+  fillRect(g, w, sx + 14, sy + 8, 2, 2);
+  fillRect(g, w, sx + 14, sy + 10, 2, 3);
+  fillRect(g, w, sx + 13, sy + 13, 1, 3);
+  fillRect(g, w, sx + 16, sy + 13, 1, 3);
+  fillRect(g, w, sx + 9, sy + 10, 5, 1);
+  fillRect(g, '#ff6f94', sx + 10, sy + 3, 2, 1);
+  fillRect(g, '#ff6f94', sx + 13, sy + 3, 2, 1);
+  fillRect(g, '#ff6f94', sx + 10, sy + 4, 5, 1);
+  fillRect(g, '#ff6f94', sx + 11, sy + 5, 3, 1);
+  fillRect(g, '#ff6f94', sx + 12, sy + 6, 1, 1);
+  // Señal redonda con el 17
+  const cx = x + 1, cy = 340;
+  const rows = [[-3, 6], [-5, 10], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-5, 10], [-3, 6]];
+  rows.forEach(([dx, rw], i) => fillRect(g, '#d43a3a', cx + dx, cy - 5 + i, rw, 1));
+  const inner = [[-2, 4], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-2, 4]];
+  inner.forEach(([dx, rw], i) => fillRect(g, '#f6f4ee', cx + dx, cy - 4 + i, rw, 1));
+  [['1', cx - 4], ['7', cx]].forEach(([d, dx]) => {
+    DIGIT_FONT[d].forEach((row, ry) => {
+      for (let rx = 0; rx < 3; rx++) if (row[rx] === '1') fillRect(g, '#1f1b1e', dx + rx, cy - 3 + ry, 1, 1);
+    });
+  });
+}
+
+// Pizarra de caballete frente a la floristería, con un cardo seco dibujado
+// como las flores de la portada.
+function drawFlowerChalkboard(g, x) {
+  fillRect(g, 'rgba(42,22,38,0.22)', x - 9, 399, 26, 2);
+  // Caballete de madera
+  fillRect(g, '#7a5a3e', x, 380, 2, 21);
+  fillRect(g, '#7a5a3e', x + 19, 380, 2, 21);
+  fillRect(g, '#8a6a48', x, 378, 21, 2);
+  fillRect(g, '#8a6a48', x, 396, 21, 2);
+  fillRect(g, '#2f3a34', x + 2, 380, 17, 16);
+  // Cardo seco en tiza: tallo con hojas y cabeza malva con pinchos
+  fillRect(g, '#9fbf8a', x + 10, 387, 1, 8);
+  fillRect(g, '#9fbf8a', x + 7, 391, 3, 1);
+  fillRect(g, '#9fbf8a', x + 6, 390, 1, 1);
+  fillRect(g, '#9fbf8a', x + 11, 389, 3, 1);
+  fillRect(g, '#9fbf8a', x + 14, 388, 1, 1);
+  fillRect(g, '#e8e2c8', x + 8, 385, 5, 2);
+  fillRect(g, '#d98ab4', x + 7, 383, 7, 2);
+  fillRect(g, '#d98ab4', x + 8, 382, 5, 1);
+  fillRect(g, '#b56a9a', x + 6, 382, 1, 1);
+  fillRect(g, '#b56a9a', x + 14, 382, 1, 1);
+  fillRect(g, '#b56a9a', x + 8, 381, 1, 1);
+  fillRect(g, '#b56a9a', x + 12, 381, 1, 1);
+  fillRect(g, '#b56a9a', x + 10, 381, 1, 1);
+  // Rayitas de tiza
+  fillRect(g, '#cfd6d0', x + 4, 393, 4, 1);
+  fillRect(g, '#cfd6d0', x + 13, 393, 4, 1);
+}
+
+function drawStreetProps(g, x0, x1) {
+  // Izquierda: bolardos a los lados del portal y de la floristería, sin tapar puertas
+  if (-74 - 9 >= x0) drawBollard(g, -74);
+  if (FLORIST_X + 30 >= x0) drawFlowerChalkboard(g, FLORIST_X + 40);
+  // Derecha: la señal de la canción y un par de bolardos
+  if (FIELD_W + 46 <= x1) drawSongSign(g, FIELD_W + 34);
+  if (FIELD_W + 74 <= x1) drawBollard(g, FIELD_W + 70);
 }
 
 export function renderSideBuildings(
@@ -1597,6 +1691,8 @@ export function renderSideBuildings(
     }
   }
 
+  drawStreetProps(ctx, x0, x1);
+
   // Misma luz que la escena: noche, tinte azul, resplandor de la calle y ventanas encendidas
   const darkness = Math.min(0.9, night * 0.56 + dusk * 0.07);
   for (const [a, b, roof, lit] of [[x0, 0, 43, leftLit(x0)], [FIELD_W, x1, 43, rightLit(x1)]]) {
@@ -1620,11 +1716,11 @@ export function renderSideBuildings(
       }
     }
   }
-  if (night > 0.35 && x0 < LEFT_X - 6) {
+  if (night > 0.35 && x0 < FLORIST_X + FLORIST_W) {
     ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
-    ctx.fillRect(LEFT_X - 95, 328, FLORIST_W - 6, 44);
+    ctx.fillRect(FLORIST_X + 3, 328, FLORIST_W - 6, 44);
   }
-  if (night > 0.3 && left > 2) {
+  if (night > 0.3 && LEFT_X - 8 >= x0) {
     for (const [lx, ly] of STRING_LIGHTS) {
       ctx.fillStyle = `rgba(255,214,120,${(0.25 * night).toFixed(3)})`;
       ctx.fillRect(lx, ly, 3, 4);
