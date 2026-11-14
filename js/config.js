@@ -47,6 +47,9 @@
   // crema a la derecha) hasta esta fracción del ancho por cada lado. Con 0.5 la calle
   // llena siempre la pantalla: móviles, tablets y escritorio.
   export const MAX_SIDE_EXTEND = 0.5;
+  // Como mucho se ve esta anchura de calle a cada lado (lo que cabe en una tablet en
+  // horizontal). En pantallas más anchas, lo que sobra queda como margen.
+  export const MAX_SIDE_UNITS = 230;
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
   export const BASE_FALL_TIME = 3.4;

@@ -1,4 +1,4 @@
-import { FIELD_W, FIELD_H, clamp } from './config.js';
+import { FIELD_W, FIELD_H, MAX_SIDE_UNITS, clamp } from './config.js';
 
 const DAY_SECONDS = 180;
 const START_HOUR = 17;
@@ -1487,8 +1487,8 @@ function drawRightBuilding(g, facade, x1, night) {
   }
   // Impostas blancas
   for (const y of [146, 224, 302]) {
-    fillRect(g, trim, x0 + 10, y, w, 4);
-    fillRect(g, trimShade, x0 + 10, y + 4, w, 1);
+    fillRect(g, trim, x0 + 10, y, w - 10, 4);
+    fillRect(g, trimShade, x0 + 10, y + 4, w - 10, 1);
   }
   for (let c = 0; rightColumnX(c) + 21 <= x1; c++) {
     const x = rightColumnX(c);
@@ -1632,8 +1632,8 @@ export function renderSideBuildings(
   const night = nightAmount(hour);
   const dusk = duskAmount(hour);
 
-  const left = Math.ceil(fieldX) + 2;
-  const right = Math.ceil(canvasWidth / scale - fieldX - FIELD_W) + 2;
+  const left = Math.min(Math.ceil(fieldX) + 2, MAX_SIDE_UNITS);
+  const right = Math.min(Math.ceil(canvasWidth / scale - fieldX - FIELD_W) + 2, MAX_SIDE_UNITS);
   if (left <= 2 && right <= 2) return;
   const top = -Math.max(0, Math.ceil(fieldY) + 3);
   const bottom = Math.ceil(canvasHeight / scale - fieldY) + 3;
@@ -1680,7 +1680,12 @@ export function renderSideBuildings(
   for (const [a, b] of [[x0, 0], [FIELD_W, x1]]) {
     if (b - a <= 0) continue;
     if (slice) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(a, 382, b - a, FIELD_H - 382);
+      ctx.clip();
       for (let x = Math.floor(a / 28) * 28; x < b; x += 28) ctx.drawImage(slice, x, 382);
+      ctx.restore();
     } else {
       fillRect(ctx, '#72686d', a, 382, b - a, FIELD_H - 382);
     }
