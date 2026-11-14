@@ -1462,12 +1462,13 @@ function drawLeftBuilding(g, facade, x0, night) {
 // Bar de barrio en la planta baja del edificio crema, inspirado en un bar rojo de Malasaña:
 // rótulo rojo con un emblema dorado (sin nombre) y cristalera con marcos rojos.
 const BAR_W = 92;
-// Centrado bajo el segundo tramo del edificio crema (ventanas en 323 y 387).
-const BAR_X = FIELD_W + RIGHT_MODULE + RIGHT_MODULE / 2 - BAR_W / 2;
-const BAR_RED = '#c4161c';
-const BAR_RED_DARK = '#8e0f17';
-const BAR_RED_LIGHT = '#e0393a';
-const BAR_GOLD = '#e2b14a';
+// Centrado en la esquina de sillares que separa los dos tramos del edificio crema.
+const BAR_X = FIELD_W + RIGHT_MODULE - BAR_W / 2;
+// Verde botella apagado y dorado viejo, a juego con las persianas verdes del edificio
+const BAR_RED = '#4f6a5c';
+const BAR_RED_DARK = '#34483f';
+const BAR_RED_LIGHT = '#6a8676';
+const BAR_GOLD = '#cfae72';
 // Huecos de cristal: [x relativo, ancho]
 const BAR_PANES = [[4, 29], [39, 14], [59, 29]];
 
@@ -1519,7 +1520,7 @@ function drawBar(g, x, night) {
   // Zócalo rojo bajo los escaparates y umbral
   for (const [px, pw] of [BAR_PANES[0], BAR_PANES[2]]) {
     fillRect(g, BAR_RED_DARK, x + px, 370, pw, 1);
-    fillRect(g, '#a5141b', x + px, 371, pw, 9);
+    fillRect(g, '#45604f', x + px, 371, pw, 9);
   }
   fillRect(g, '#9a9488', x + 37, 380, 18, 2);
   // Rótulo rojo corrido
@@ -1692,6 +1693,37 @@ function drawFlowerChalkboard(g, x) {
   fillRect(g, '#cfd6d0', x + 13, 393, 4, 1);
 }
 
+// Árbol joven de calle madrileña, con su alcorque y copa ligera de hojas claras.
+const TREE_X = BAR_X + BAR_W + 36;
+const TREE_LEAVES = ['#6f9a52', '#86b062', '#9ec47a', '#5c8446', '#7fa65f'];
+function drawStreetTree(g, x) {
+  // Alcorque
+  fillRect(g, '#5a5048', x - 7, 389, 16, 5);
+  fillRect(g, '#3e3530', x - 6, 390, 14, 3);
+  fillRect(g, 'rgba(42,22,38,0.22)', x - 12, 399, 14, 2);
+  // Tronco fino y ramas
+  fillRect(g, '#5e4a3c', x, 296, 2, 96);
+  fillRect(g, '#7a6250', x, 296, 1, 96);
+  const branches = [[-1, 316, -9, 12], [2, 310, 10, 13], [-1, 300, -6, 12], [2, 298, 6, 12], [0, 290, 1, 14]];
+  for (const [bx, by, dx, len] of branches) {
+    for (let i = 0; i < len; i++) fillRect(g, '#5e4a3c', x + bx + Math.round(dx * i / len), by - i, 1, 1);
+  }
+  // Copa: racimos de hojas claras, algo sueltos para que se vean las ramas
+  const clusters = [[-17, 296, 12, 12], [7, 290, 13, 13], [-10, 280, 13, 11], [-1, 268, 12, 11],
+    [-20, 308, 10, 8], [10, 302, 11, 9], [-5, 290, 10, 9], [6, 276, 10, 10], [-14, 286, 8, 8]];
+  clusters.forEach(([cx, cy, cw, ch], k) => {
+    for (let yy = 0; yy < ch; yy++) {
+      for (let xx = 0; xx < cw; xx++) {
+        const dx = (xx - (cw - 1) / 2) / (cw / 2), dy = (yy - (ch - 1) / 2) / (ch / 2);
+        const r = dx * dx + dy * dy;
+        if (r > 1) continue;
+        const h = (xx * 7 + yy * 13 + k * 5) % 11;
+        if (h < (r > 0.55 ? 5 : 9)) fillRect(g, TREE_LEAVES[(xx * 2 + yy * 3 + k) % 5], x + cx + xx, cy + yy, 1, 1);
+      }
+    }
+  });
+}
+
 function drawStreetProps(g, x0, x1) {
   // Izquierda: bolardos a los lados del portal y de la floristería, sin tapar puertas
   for (const bx of [-74, FLORIST_X - 10]) if (bx - 9 >= x0) drawBollard(g, bx);
@@ -1700,6 +1732,7 @@ function drawStreetProps(g, x0, x1) {
   // Derecha: la señal de la canción y un par de bolardos
   if (FIELD_W + 46 <= x1) drawSongSign(g, FIELD_W + 34);
   for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176]) if (bx + 4 <= x1) drawBollard(g, bx);
+  if (TREE_X + 16 <= x1) drawStreetTree(g, TREE_X);
 }
 
 export function renderSideBuildings(
