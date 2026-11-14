@@ -1270,16 +1270,16 @@ function drawInteriorShutters(g, x, y, ajarPane) {
   }
 }
 
-function drawTableAndChair(g, x, y) {
-  fillRect(g, '#9a6a3e', x + 20, y + 41, 13, 2);
-  fillRect(g, '#7a5230', x + 21, y + 43, 1, 10);
-  fillRect(g, '#7a5230', x + 31, y + 43, 1, 10);
+function drawTableAndChair(g, x, y, top = '#9a6a3e', leg = '#7a5230', hi = '#b48450') {
+  fillRect(g, top, x + 20, y + 41, 13, 2);
+  fillRect(g, leg, x + 21, y + 43, 1, 10);
+  fillRect(g, leg, x + 31, y + 43, 1, 10);
   fillRect(g, '#b5684a', x + 25, y + 37, 4, 4);
   fillRect(g, '#7f9a64', x + 24, y + 34, 6, 3);
-  fillRect(g, '#9a6a3e', x + 9, y + 38, 2, 15);
-  fillRect(g, '#9a6a3e', x + 9, y + 46, 8, 2);
-  fillRect(g, '#7a5230', x + 16, y + 48, 1, 5);
-  fillRect(g, '#b48450', x + 9, y + 40, 2, 1);
+  fillRect(g, top, x + 9, y + 38, 2, 15);
+  fillRect(g, top, x + 9, y + 46, 8, 2);
+  fillRect(g, leg, x + 16, y + 48, 1, 5);
+  fillRect(g, hi, x + 9, y + 40, 2, 1);
 }
 
 function drawBlanket(g, x, y, color, fold, edge) {
@@ -1290,7 +1290,13 @@ function drawBlanket(g, x, y, color, fold, edge) {
   fillRect(g, '#e9e1d2', x - 1, y + 46, 18, 1);
 }
 
-function drawGeraniums(g, x, y) {
+function drawGeraniums(g, x, y, hang = false) {
+  if (hang) {
+    // Jardinera colgada por fuera del pasamanos (que está en y + 36)
+    fillRect(g, '#2a2628', x + 1, y + 35, 1, 3);
+    fillRect(g, '#2a2628', x + 14, y + 35, 1, 3);
+    y += 6;
+  }
   fillRect(g, '#b5684a', x, y + 31, 16, 5);
   fillRect(g, '#6f8f5c', x - 1, y + 27, 18, 4);
   fillRect(g, '#7f9a64', x + 3, y + 26, 9, 1);
@@ -1555,31 +1561,36 @@ function drawLeftBuilding(g, facade, x0, night) {
     LEFT_FLOORS.forEach((y, i) => {
       rects(g, VANO, lx, y);
       // Lo que va detrás de la barandilla
-      if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, true); drawTableAndChair(g, lx, y); }
+      if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, false); drawTableAndChair(g, lx, y, '#f4efe4', '#c9c1b2', '#ffffff'); }
       if (set === 1 && i === 1) drawInteriorShutters(g, lx, y, false);
       if (set === 1 && i === 2) drawTallPlant(g, lx + 30, y + 53, 21 + k);
-      if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(g, lx + 22, y); }
+      if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(g, lx + 22, y, true); }
       if (set === 3 && i === 0) drawTableAndChair(g, lx, y);
       if (set === 3 && i === 2) drawInteriorShutters(g, lx, y, true);
       drawBalcony(g, lx - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
       // Lo que cuelga de la barandilla o va en la repisa
-      if (set === 0 && i === 1) { drawBlanket(g, lx, y, '#5b7bb5', '#46629a', '#8aa6d6'); drawGeraniums(g, lx + 24, y); }
+      if (set === 0 && i === 1) { drawBlanket(g, lx, y, '#5b7bb5', '#46629a', '#8aa6d6'); drawGeraniums(g, lx + 24, y, true); }
       if (set === 0 && i === 2) {
-        fillRect(g, '#a8775f', lx + 30, y + 30, 6, 6);
-        fillRect(g, '#6f8f5c', lx + 32, y + 22, 2, 8);
-        fillRect(g, '#6f8f5c', lx + 30, y + 25, 2, 3);
-        fillRect(g, '#6f8f5c', lx + 34, y + 24, 2, 3);
+        // Cactus en maceta colgada del pasamanos
+        fillRect(g, '#2a2628', lx + 30, y + 35, 1, 3);
+        fillRect(g, '#2a2628', lx + 35, y + 35, 1, 3);
+        fillRect(g, '#a8775f', lx + 30, y + 37, 6, 6);
+        fillRect(g, 'rgba(42,22,38,0.25)', lx + 30, y + 42, 6, 1);
+        fillRect(g, '#6f8f5c', lx + 32, y + 28, 2, 9);
+        fillRect(g, '#6f8f5c', lx + 30, y + 31, 2, 3);
+        fillRect(g, '#6f8f5c', lx + 34, y + 30, 2, 3);
+        fillRect(g, '#ff9fbe', lx + 32, y + 27, 2, 1);
         for (let n = 0; n < STRING_LIGHTS.length - 1; n++) fillRect(g, '#4a4450', STRING_LIGHTS[n][0], STRING_LIGHTS[n][1], 4, 1);
         for (const [sx, sy] of STRING_LIGHTS) fillRect(g, '#f4e6c0', sx + 1, sy + 1, 1, 2);
       }
       if (set === 1 && i === 0) {
-        drawPotRow(g, lx + 19, y + 36, 5, 50 + k);
+        drawPotRow(g, lx + 19, y + 36, 5, 50 + k, 6, { hang: true });
         drawVines(g, lx - 4, y + 54, 46, 60 + k, 12);
       }
-      if (set === 2 && i === 0) { drawGeraniums(g, lx, y); drawVines(g, lx - 4, y + 54, 22, 70 + k, 14); }
+      if (set === 2 && i === 0) { drawGeraniums(g, lx, y, true); drawVines(g, lx - 4, y + 54, 22, 70 + k, 14); }
       if (set === 2 && i === 2) drawBlanket(g, lx + 18, y, '#d98aa6', '#c2708e', '#efb3c8');
-      if (set === 1 && i === 2) { drawPotRow(g, lx + 8, y + 36, 2, 40 + k); drawVines(g, lx + 20, y + 54, 20, 45 + k, 16); }
-      if (set === 3 && i === 1) { drawPotRow(g, lx + 19, y + 36, 3, 80 + k); drawVines(g, lx + 8, y + 54, 24, 90 + k, 10); }
+      if (set === 1 && i === 2) { drawPotRow(g, lx + 8, y + 36, 2, 40 + k, 6, { hang: true }); drawVines(g, lx + 20, y + 54, 20, 45 + k, 16); }
+      if (set === 3 && i === 1) { drawPotRow(g, lx + 19, y + 36, 3, 80 + k, 6, { hang: true }); drawVines(g, lx + 8, y + 54, 24, 90 + k, 10); }
     });
   }
 
