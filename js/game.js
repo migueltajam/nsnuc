@@ -1,7 +1,7 @@
 import {
   OUTLINE, SKY_TOP, ROAD, MARGIN, clamp, rand, vibrate,
   ITEM_TYPES, START_LIVES, MAX_LIVES, BEST_KEY, ITEM_R, LEVEL_TIME,
-  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND, MAX_SIDE_UNITS,
+  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND, MAX_SIDE_UNITS, SIDE_TOLERANCE,
   BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
@@ -194,14 +194,15 @@ facade.onload = () => {
     // edificios laterales: así no asoma una línea del fondo en la unión.
     const cap = MAX_SIDE_UNITS * scale;
     if (extendSides && facadeReady && fx > 0) {
-      const l = Math.max(0, Math.floor(fx - cap));
+      // Solo un par de unidades: lo justo para tapar la unión, sin asomar por los bordes
+      const l = Math.max(0, Math.floor(fx - 2 * scale));
       bg.drawImage(facade, 0, 0, 1, FIELD_H, l, fy, Math.ceil(fx) + 1 - l, fh);
       const r0 = Math.floor(fx + fw) - 1;
-      const r1 = Math.min(background.width, Math.ceil(fx + fw + cap));
+      const r1 = Math.min(background.width, Math.ceil(fx + fw + 2 * scale));
       bg.drawImage(facade, FIELD_W - 1, 0, 1, FIELD_H, r0, fy, r1 - r0, fh);
     }
     // Si la pantalla es más ancha que la calle, filo oscuro donde termina
-    if (extendSides && fx > cap) {
+    if (extendSides && fx > cap + SIDE_TOLERANCE * scale) {
       bg.fillStyle = OUTLINE;
       bg.fillRect(Math.floor(fx - cap) - scale, 0, scale, background.height);
       bg.fillRect(Math.ceil(fx + fw + cap), 0, scale, background.height);
