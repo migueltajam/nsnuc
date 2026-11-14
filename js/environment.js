@@ -1221,7 +1221,8 @@ function rightLit(x1) {
 const STRING_LIGHTS = [];
 for (let i = 0; i < 12; i++) {
   const x = LEFT_X - 4 + i * 4;
-  STRING_LIGHTS.push([x, 236 + 31 + Math.round(Math.sin((i / 11) * Math.PI) * 3)]);
+  // Cuelgan de la barandilla (arriba en 272) formando dos guirnaldas
+  STRING_LIGHTS.push([x, 236 + 36 + Math.round(Math.abs(Math.sin((i / 11) * Math.PI * 2)) * 4)]);
 }
 
 const DIGITS = {
@@ -1292,8 +1293,131 @@ function drawBlanket(g, x, y, color, fold, edge) {
 function drawGeraniums(g, x, y) {
   fillRect(g, '#b5684a', x, y + 31, 16, 5);
   fillRect(g, '#6f8f5c', x - 1, y + 27, 18, 4);
-  for (const fx of [0, 5, 10, 14]) fillRect(g, '#d84a5a', x + fx, y + 26, 2, 2);
+  fillRect(g, '#7f9a64', x + 3, y + 26, 9, 1);
+  const seed = Math.abs(x * 7 + y * 3);
+  for (const [k, fx] of [0, 4, 8, 11, 14].entries()) {
+    fillRect(g, BLOOMS[Math.floor(hash01(seed + k) * BLOOMS.length)], x + fx, y + 25 + (k % 2), 2, 2);
+  }
 }
+
+// ---------- Plantas variadas para los balcones de los lados ----------
+function hash01(n) {
+  let h = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+const BLOOMS = ['#e0708e', '#d84a5a', '#f2d16b', '#f4efe6', '#b98ab0', '#ef9a6a', '#ffb3c6', '#c77dd8', '#ff8a5c'];
+const LEAVES = ['#6f8f5c', '#7f9a64', '#5f8a4e', '#86a86a'];
+const POTS = ['#b5684a', '#c9785a', '#a35a42', '#e9e4da', '#c9504a'];
+
+// Ramas que cuelgan por fuera de la barandilla, como las del edificio central.
+function drawVines(g, x, y, w, seed, maxLen = 14) {
+  for (let i = 0, vx = x; vx < x + w; i++, vx += 3 + Math.floor(hash01(seed * 7 + i) * 4)) {
+    const len = 4 + Math.floor(hash01(seed * 13 + i) * (maxLen - 4));
+    for (let k = 0; k < len; k++) {
+      const dx = (k >> 2) % 2;
+      fillRect(g, k % 3 ? '#4f8557' : '#6f9a5c', vx + dx, y + k, 1, 1);
+      if (k % 4 === 2) fillRect(g, '#6f9a5c', vx + dx + (i % 2 ? 1 : -1), y + k, 1, 1);
+    }
+    if (hash01(seed * 3 + i) > 0.6) fillRect(g, BLOOMS[Math.floor(hash01(seed + i * 5) * BLOOMS.length)], vx, y + len, 1, 1);
+  }
+}
+
+// Fila de macetas centrada en cx, con plantas altas, bajas y flores de colores al azar.
+// base = altura donde apoyan (la barandilla).
+function drawPotRow(g, cx, base, n, seed, pw = 6) {
+  const gap = 2;
+  const total = n * pw + (n - 1) * gap;
+  let px = Math.round(cx - total / 2);
+  for (let i = 0; i < n; i++, px += pw + gap) {
+    const r = hash01(seed * 17 + i);
+    fillRect(g, POTS[Math.floor(hash01(seed * 5 + i) * POTS.length)], px, base - 5, pw, 5);
+    fillRect(g, 'rgba(42,22,38,0.25)', px, base - 1, pw, 1);
+    const leaf = LEAVES[Math.floor(hash01(seed * 11 + i) * LEAVES.length)];
+    if (r < 0.35) {
+      // Planta alta: tallos con hojas a los lados y flores arriba
+      const h = 9 + Math.floor(hash01(seed * 23 + i) * 6);
+      fillRect(g, leaf, px + 2, base - 5 - h, 2, h);
+      for (let k = 2; k < h; k += 2) fillRect(g, k % 4 ? '#7fa65f' : leaf, px + (k % 4 ? 0 : 4), base - 5 - k, 2, 1);
+      const c1 = BLOOMS[Math.floor(hash01(seed * 29 + i) * BLOOMS.length)];
+      const c2 = BLOOMS[Math.floor(hash01(seed * 43 + i) * BLOOMS.length)];
+      fillRect(g, c1, px + 1, base - 6 - h, 3, 2);
+      fillRect(g, c2, px + (hash01(seed + i) > 0.5 ? 4 : -1), base - 1 - h, 2, 2);
+    } else if (r < 0.7) {
+      // Mata baja con muchas flores
+      fillRect(g, leaf, px - 1, base - 9, pw + 2, 4);
+      fillRect(g, leaf, px, base - 10, pw, 1);
+      for (let k = 0; k < 4; k++) {
+        const c = BLOOMS[Math.floor(hash01(seed * 31 + i * 4 + k) * BLOOMS.length)];
+        fillRect(g, c, px - 1 + ((k * 3 + Math.floor(hash01(seed * 37 + i) * 3)) % (pw + 1)), base - 11 + (k % 2) * 2, 2, 2);
+      }
+    } else {
+      // Planta colgante: poca altura y ramas que caen por delante
+      fillRect(g, leaf, px - 1, base - 7, pw + 2, 2);
+      fillRect(g, leaf, px + 1, base - 8, pw - 2, 1);
+      drawVines(g, px, base - 5, pw, seed * 41 + i, 10);
+    }
+  }
+}
+
+// Planta grande en el suelo del balcón, detrás de la barandilla (ficus o palmera pequeña).
+function drawTallPlant(g, cx, floor, seed) {
+  fillRect(g, POTS[Math.floor(hash01(seed) * POTS.length)], cx - 4, floor - 7, 9, 7);
+  const h = 18 + Math.floor(hash01(seed * 3) * 8);
+  const palm = hash01(seed * 7) > 0.5;
+  fillRect(g, '#6b5440', cx, floor - 7 - h + 4, 1, h - 4);
+  if (palm) {
+    for (const [dx, dy, len] of [[-1, 0, 7], [1, 0, 7], [-1, 4, 5], [1, 4, 5], [0, -2, 4]]) {
+      for (let k = 0; k < len; k++) fillRect(g, k % 2 ? '#5f8a4e' : '#7fa65f', cx + dx * k, floor - 7 - h + dy + Math.floor(k / 2) - (dx === 0 ? k : 0), 1, 1);
+    }
+  } else {
+    for (let k = 0; k < 6; k++) {
+      const lx = cx - 5 + Math.floor(hash01(seed * 13 + k) * 9);
+      const ly = floor - 7 - h + Math.floor(hash01(seed * 17 + k) * (h - 6));
+      fillRect(g, LEAVES[k % 4], lx, ly, 4, 3);
+    }
+  }
+}
+
+function drawGreenAwning(g, x, y, len) {
+  fillRect(g, '#7c9a74', x - 2, y, 20, len);
+  fillRect(g, '#6a8763', x - 2, y + len - 1, 20, 1);
+  for (let sx = x; sx < x + 18; sx += 4) fillRect(g, '#8eaa86', sx, y, 1, len - 1);
+  // Festón
+  for (let sx = x - 2; sx < x + 18; sx += 4) fillRect(g, '#6a8763', sx + 1, y + len, 2, 1);
+}
+
+function drawLaundry(g, x, y, color, second) {
+  fillRect(g, color, x - 2, y + 27, 9, 12);
+  fillRect(g, 'rgba(42,22,38,0.15)', x + 2, y + 27, 1, 12);
+  fillRect(g, second, x + 9, y + 27, 7, 8);
+}
+
+// Decoración de cada ventana del edificio crema: [columna][planta]
+const RIGHT_DECOR = [
+  [
+    { awning: 22, pots: [3, 1], vines: 0 },
+    { tall: 5, laundry: ['#d98aa6', '#e9e4da'] },
+    { pots: [2, 2], vines: 16 }
+  ],
+  [
+    { laundry: ['#4f6fb0', '#e9e4da'], vines: 8 },
+    { tall: 6, pots: [3, 3] },
+    { pots: [3, 4], vines: 10 }
+  ],
+  [
+    { pots: [3, 7], vines: 12 },
+    { laundry: ['#4f6fb0', '#f2e2b0'], tall: 8 },
+    { awning: 14, pots: [2, 9], vines: 16 }
+  ],
+  [
+    { awning: 9, tall: 10 },
+    { pots: [3, 11], vines: 12 },
+    { laundry: ['#d98aa6', '#e9e4da'], pots: [1, 12] }
+  ]
+];
 
 // Bicicleta guardada en el balcón (como en la calle real).
 function drawBalconyBike(g, x, y) {
@@ -1422,7 +1546,7 @@ function drawLeftBuilding(g, facade, x0, night) {
       // Lo que va detrás de la barandilla
       if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, true); drawTableAndChair(g, lx, y); }
       if (set === 1 && i === 1) drawInteriorShutters(g, lx, y, false);
-      if (set === 1 && i === 2) drawBalconyBike(g, lx + 14, y + 47);
+      if (set === 1 && i === 2) drawTallPlant(g, lx + 30, y + 53, 21 + k);
       if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(g, lx + 22, y); }
       if (set === 3 && i === 0) drawTableAndChair(g, lx, y);
       if (set === 3 && i === 2) drawInteriorShutters(g, lx, y, true);
@@ -1438,12 +1562,13 @@ function drawLeftBuilding(g, facade, x0, night) {
         for (const [sx, sy] of STRING_LIGHTS) fillRect(g, '#f4e6c0', sx + 1, sy + 1, 1, 2);
       }
       if (set === 1 && i === 0) {
-        drawPlants(g, lx - 4, y + 30, 46, night);
-        for (const ix of [lx - 3, lx + 7, lx + 33]) fillRect(g, '#6f8f5c', ix, y + 54, 1, 9);
+        drawPotRow(g, lx + 19, y + 36, 5, 50 + k);
+        drawVines(g, lx - 4, y + 54, 46, 60 + k, 12);
       }
-      if (set === 2 && i === 0) drawGeraniums(g, lx, y);
+      if (set === 2 && i === 0) { drawGeraniums(g, lx, y); drawVines(g, lx - 4, y + 54, 22, 70 + k, 14); }
       if (set === 2 && i === 2) drawBlanket(g, lx + 18, y, '#d98aa6', '#c2708e', '#efb3c8');
-      if (set === 3 && i === 1) drawPlants(g, lx + 4, y + 30, 28, night);
+      if (set === 1 && i === 2) { drawPotRow(g, lx + 8, y + 36, 2, 40 + k); drawVines(g, lx + 20, y + 54, 20, 45 + k, 16); }
+      if (set === 3 && i === 1) { drawPotRow(g, lx + 19, y + 36, 3, 80 + k); drawVines(g, lx + 8, y + 54, 24, 90 + k, 10); }
     });
   }
 
@@ -1586,20 +1711,14 @@ function drawRightBuilding(g, facade, x1, night) {
       fillRect(g, '#59607a', x, y, 16, 44);
       fillRect(g, '#7a82a0', x + 2, y + 2, 2, 10);
       fillRect(g, '#6b4e3c', x + 7, y, 2, 44);
-      const kind = (f * 2 + c) % 3;
-      if (kind === 0) {
-        // Toldo de tela verde a medio bajar
-        fillRect(g, '#7c9a74', x - 2, y, 20, 18);
-        fillRect(g, '#6a8763', x - 2, y + 17, 20, 1);
-        for (let sx = x; sx < x + 18; sx += 4) fillRect(g, '#8eaa86', sx, y, 1, 17);
-      }
+      const d = RIGHT_DECOR[c % 4][f];
+      const seed = 100 + c * 10 + f;
+      if (d.awning) drawGreenAwning(g, x, y, d.awning);
+      if (d.tall) drawTallPlant(g, x + 8, y + 43, d.tall);
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
-      if (kind === 1) {
-        // Ropa tendida en la barandilla
-        fillRect(g, c % 2 ? '#d98aa6' : '#4f6fb0', x - 2, y + 27, 9, 12);
-        fillRect(g, '#e9e4da', x + 9, y + 27, 7, 8);
-      }
-      if (kind === 2) drawPlants(g, x - 2, y + 20, 20, night);
+      if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
+      if (d.vines) drawVines(g, x - 3, y + 44, 22, seed, d.vines);
+      if (d.pots) drawPotRow(g, x + 8, y + 26, d.pots[0], seed + d.pots[1]);
     });
   }
   // Planta baja: solo pared, con el zócalo de granito
