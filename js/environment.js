@@ -1459,6 +1459,91 @@ function drawLeftBuilding(g, facade, x0, night) {
   if (x0 < FLORIST_X + FLORIST_W) drawFlorist(g, FLORIST_X, night);
 }
 
+// Bar de barrio en la planta baja del edificio crema, inspirado en un bar rojo de Malasaña:
+// rótulo rojo con un emblema dorado (sin nombre) y cristalera con marcos rojos.
+const BAR_W = 92;
+// Centrado bajo el segundo tramo del edificio crema (ventanas en 323 y 387).
+const BAR_X = FIELD_W + RIGHT_MODULE + RIGHT_MODULE / 2 - BAR_W / 2;
+const BAR_RED = '#c4161c';
+const BAR_RED_DARK = '#8e0f17';
+const BAR_RED_LIGHT = '#e0393a';
+const BAR_GOLD = '#e2b14a';
+// Huecos de cristal: [x relativo, ancho]
+const BAR_PANES = [[4, 29], [39, 14], [59, 29]];
+
+function drawBar(g, x, night) {
+  const w = BAR_W;
+  // Marco rojo de la cristalera
+  fillRect(g, BAR_RED_DARK, x, 324, w, 58);
+  fillRect(g, BAR_RED, x + 1, 325, w - 2, 56);
+  // Interior visto a través del cristal
+  const back = night > 0.5 ? '#7a4a30' : '#5e3e30';
+  for (const [px, pw] of BAR_PANES) {
+    const gx = x + px;
+    const door = pw < 20;
+    const bottom = door ? 380 : 370;
+    fillRect(g, back, gx, 328, pw, bottom - 328);
+    if (!door) {
+      // Estante con botellas y barra
+      fillRect(g, '#3e2a22', gx, 340, pw, 1);
+      for (let bx = gx + 1, n = 0; bx < gx + pw - 1; bx += 3, n++) {
+        const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][(n + px) % 5];
+        const bh = 4 + (n % 2);
+        fillRect(g, c, bx, 340 - bh, 2, bh);
+        fillRect(g, c, bx, 340 - bh - 1, 1, 1);
+      }
+      fillRect(g, '#2e1c18', gx, 358, pw, 12);
+      fillRect(g, '#8a5a3a', gx, 357, pw, 2);
+      // Taburetes
+      for (let tx = gx + 4; tx < gx + pw - 3; tx += 9) {
+        fillRect(g, BAR_RED_DARK, tx, 362, 4, 2);
+        fillRect(g, '#2a1a16', tx + 1, 364, 2, 6);
+      }
+      // Lámpara colgante
+      const lx = gx + Math.floor(pw / 2) - 2;
+      fillRect(g, '#2a1a16', lx + 2, 328, 1, 4);
+      fillRect(g, BAR_GOLD, lx, 332, 5, 2);
+      fillRect(g, '#fff0c0', lx + 1, 334, 3, 1);
+    } else {
+      // Puerta abierta de cristal: suelo rojo y un poco de luz
+      fillRect(g, '#7a3a2e', gx, 372, pw, 8);
+      fillRect(g, BAR_GOLD, gx + pw - 3, 350, 1, 6);
+    }
+    // Reflejo del cristal
+    g.fillStyle = 'rgba(200,225,240,0.16)';
+    g.fillRect(gx, 328, pw, bottom - 328);
+    g.fillStyle = 'rgba(255,255,255,0.22)';
+    for (let i = 0; i < 10; i++) g.fillRect(gx + 2 + i, 346 - i, 1, 1);
+    for (let i = 0; i < 6; i++) g.fillRect(gx + 6 + i, 346 - i, 1, 1);
+  }
+  // Zócalo rojo bajo los escaparates y umbral
+  for (const [px, pw] of [BAR_PANES[0], BAR_PANES[2]]) {
+    fillRect(g, BAR_RED_DARK, x + px, 370, pw, 1);
+    fillRect(g, '#a5141b', x + px, 371, pw, 9);
+  }
+  fillRect(g, '#9a9488', x + 37, 380, 18, 2);
+  // Rótulo rojo corrido
+  fillRect(g, BAR_RED_DARK, x - 3, 310, w + 6, 15);
+  fillRect(g, BAR_RED, x - 3, 311, w + 6, 12);
+  fillRect(g, BAR_RED_LIGHT, x - 3, 311, w + 6, 1);
+  fillRect(g, BAR_GOLD, x + 2, 316, 34, 1);
+  fillRect(g, BAR_GOLD, x + w - 36, 316, 34, 1);
+  // Emblema: copa dentro de un círculo dorado, sin nombre
+  const ex = x + w / 2 - 4;
+  fillRect(g, BAR_GOLD, ex + 2, 312, 5, 1);
+  fillRect(g, BAR_GOLD, ex + 2, 322, 5, 1);
+  fillRect(g, BAR_GOLD, ex + 1, 313, 1, 1);
+  fillRect(g, BAR_GOLD, ex + 7, 313, 1, 1);
+  fillRect(g, BAR_GOLD, ex + 1, 321, 1, 1);
+  fillRect(g, BAR_GOLD, ex + 7, 321, 1, 1);
+  fillRect(g, BAR_GOLD, ex, 314, 1, 7);
+  fillRect(g, BAR_GOLD, ex + 8, 314, 1, 7);
+  fillRect(g, '#f4efe6', ex + 2, 314, 5, 1);
+  fillRect(g, '#f4efe6', ex + 3, 315, 3, 1);
+  fillRect(g, '#f4efe6', ex + 4, 316, 1, 3);
+  fillRect(g, '#f4efe6', ex + 3, 319, 3, 1);
+}
+
 function drawRightBuilding(g, facade, x1, night) {
   const x0 = FIELD_W;
   const w = x1 - x0;
@@ -1518,6 +1603,7 @@ function drawRightBuilding(g, facade, x1, night) {
   }
   // Planta baja: solo pared, con el zócalo de granito
   drawZocalo(g, facade, x0, x1);
+  if (BAR_X + BAR_W + 4 <= x1) drawBar(g, BAR_X, night);
 }
 
 // Bolardo antiaparcamiento como los de la acera del edificio central.
@@ -1729,6 +1815,10 @@ export function renderSideBuildings(
   if (night > 0.35 && x0 < FLORIST_X + FLORIST_W) {
     ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
     ctx.fillRect(FLORIST_X + 3, 328, FLORIST_W - 6, 44);
+  }
+  if (night > 0.35 && BAR_X + BAR_W + 4 <= x1) {
+    ctx.fillStyle = `rgba(255,190,110,${(night * 0.35).toFixed(3)})`;
+    for (const [px, pw] of BAR_PANES) ctx.fillRect(BAR_X + px, 328, pw, pw < 20 ? 52 : 42);
   }
   if (night > 0.3 && LEFT_X - 8 >= x0) {
     for (const [lx, ly] of STRING_LIGHTS) {
