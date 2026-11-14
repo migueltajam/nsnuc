@@ -34,6 +34,16 @@ facade.onload = () => {
   // Usamos el PNG aportado: al recibir fachada.svg original, se puede sustituir aquí.
   facade.src = './assets/images/fachada.png';
 
+  // El lettering del letrero se pinta aparte con su resolución original (el doble que
+  // la fachada): en el PNG está reducido y algunas letras salen mordidas.
+  const lettering = new Image();
+  let letteringReady = false;
+  lettering.onload = () => {
+    letteringReady = true;
+    buildBackground();
+  };
+  lettering.src = './assets/images/lettering.png';
+
   let LW = 0;
   let LH = 0;
   let scale = 1;
@@ -172,6 +182,13 @@ facade.onload = () => {
     bg.fillStyle = ROAD;
     bg.fillRect(fx, fy + fh - scale, fw, background.height - fy - fh + scale);
     if (facadeReady) bg.drawImage(facade, fx, fy, fw, fh);
+    if (facadeReady && letteringReady) {
+      // Papel limpio del letrero (x 32–147, y 310–324) y el lettering encima.
+      bg.fillStyle = 'rgb(245,235,222)';
+      bg.fillRect(Math.round(fx + 32 * scale), Math.round(fy + 310 * scale),
+        Math.round(116 * scale), Math.round(15 * scale));
+      bg.drawImage(lettering, fx + 36 * scale, fy + 311.5 * scale, 108 * scale, 12.5 * scale);
+    }
 
     // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
     if (fx > 0) {

@@ -1123,9 +1123,10 @@ function getWallTile(facade) {
   if (wallTile) return wallTile;
   if (!facade?.complete || !facade.naturalWidth) return null;
   // Columna limpia de la fachada (x 90–108): tejado, cornisa, sillería e impostas.
+  // Termina en la fila 308: a partir de la 309 empieza el letrero.
   const c = document.createElement('canvas');
   c.width = 18;
-  c.height = 311 - 46;
+  c.height = 309 - 46;
   const g = c.getContext('2d');
   g.imageSmoothingEnabled = false;
   g.drawImage(facade, 90, 46, 18, c.height, 0, 0, 18, c.height);
@@ -1295,11 +1296,11 @@ function drawLeftBuilding(g, facade, x0, night) {
   });
 
   // Planta baja: la misma sillería baja hasta el zócalo de granito
-  // (filas 263–303 de la columna limpia: mismo dibujo que las 311–351)
+  // (filas 261–303 de la columna limpia: mismo dibujo que las 309–351)
   if (tile) {
-    for (let x = -18; x >= x0 - 18; x -= 18) g.drawImage(tile, 0, 263 - 46, 18, 41, x, 311, 18, 41);
+    for (let x = -18; x >= x0 - 18; x -= 18) g.drawImage(tile, 0, 261 - 46, 18, 43, x, 309, 18, 43);
   } else {
-    fillRect(g, '#d3bd8c', x0, 311, -x0, 41);
+    fillRect(g, '#d3bd8c', x0, 309, -x0, 43);
   }
   drawZocalo(g, facade, x0, 0);
   drawPortal(g, -52, night);
