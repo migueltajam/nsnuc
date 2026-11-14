@@ -1433,6 +1433,12 @@ const RIGHT_DECOR = [
     { awning: 9, tall: 10 },                                 // 4
     { pots: [3, 11], vines: 12 },                            // 8
     { floorPot: [1, 12] }                                    // 12
+  ],
+  // Columna extra de las pantallas anchas: como la primera pero sin toldo
+  [
+    { pots: [2, 21], first: 1 },
+    { tall: 25, tallDx: 15 },
+    { pots: [2, 22], vines: 16 }
   ]
 ];
 
@@ -1733,7 +1739,7 @@ function drawRightBuilding(g, facade, x1, night) {
       fillRect(g, '#59607a', x, y, 16, 44);
       fillRect(g, '#7a82a0', x + 2, y + 2, 2, 10);
       fillRect(g, '#6b4e3c', x + 7, y, 2, 44);
-      const d = RIGHT_DECOR[c % 4][f];
+      const d = RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f];
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
       if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
