@@ -49,7 +49,9 @@
   export const MAX_SIDE_EXTEND = 0.5;
   // Como mucho se ve esta anchura de calle a cada lado (lo que cabe en una tablet en
   // horizontal). En pantallas más anchas, lo que sobra queda como margen.
-  export const MAX_SIDE_UNITS = 230;
+  export const MAX_SIDE_UNITS = 234; // termina justo tras los sillares de la esquina del edificio crema
+  // Si sobran menos unidades que esto, la calle llega al borde en vez de dejar margen.
+  export const SIDE_TOLERANCE = 8;
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
   export const BASE_FALL_TIME = 3.4;

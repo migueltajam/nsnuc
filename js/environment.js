@@ -1,4 +1,4 @@
-import { FIELD_W, FIELD_H, MAX_SIDE_UNITS, clamp } from './config.js';
+import { FIELD_W, FIELD_H, MAX_SIDE_UNITS, SIDE_TOLERANCE, clamp } from './config.js';
 
 const DAY_SECONDS = 180;
 const START_HOUR = 17;
@@ -2005,19 +2005,28 @@ export function renderSideBuildings(
   const night = nightAmount(hour);
   const dusk = duskAmount(hour);
 
-  const left = Math.min(Math.ceil(fieldX) + 2, MAX_SIDE_UNITS);
-  const right = Math.min(Math.ceil(canvasWidth / scale - fieldX - FIELD_W) + 2, MAX_SIDE_UNITS);
+  // Si a la pantalla le sobra muy poco más allá de la calle, se rellena hasta el borde
+  // (sin una franja de margen de un par de píxeles).
+  const capSide = (side) => (side > MAX_SIDE_UNITS + SIDE_TOLERANCE ? MAX_SIDE_UNITS : side);
+  const left = capSide(Math.ceil(fieldX) + 2);
+  const right = capSide(Math.ceil(canvasWidth / scale - fieldX - FIELD_W) + 2);
   if (left <= 2 && right <= 2) return;
   const top = -Math.max(0, Math.ceil(fieldY) + 3);
   const bottom = Math.ceil(canvasHeight / scale - fieldY) + 3;
-  const x0 = -left;
-  const x1 = FIELD_W + right;
+  // La calle se dibuja siempre entera (como en la tablet en horizontal) y la pantalla
+  // la recorta: así en vertical también se ven las ventanas del portal y los detalles.
+  const x0 = -Math.max(left, MAX_SIDE_UNITS);
+  const x1 = FIELD_W + Math.max(right, MAX_SIDE_UNITS);
 
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(shakeX, shakeY);
   ctx.scale(scale, scale);
   ctx.translate(fieldX, fieldY);
+  // Nada se sale de la calle: ni muros ni sillares por fuera del margen
+  ctx.beginPath();
+  ctx.rect(-left, top, FIELD_W + left + right, bottom - top);
+  ctx.clip();
 
   // Cielo con el mismo degradado que el del juego
   const base = colorForHour(hour);
