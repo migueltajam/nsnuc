@@ -612,3 +612,6 @@ html, body { touch-action: manipulation; }
 .legend li .sprite {
   flex: 0 0 auto; width: 26px; height: 22px; object-fit: contain; object-position: center;
 }
+/* Cartel del inicio con la tipografía del juego */
+.logo-sign .logo-text { margin: 0; font-size: 20px; line-height: 1.6; white-space: nowrap; color: var(--denim-ink); text-align: center; }
+.screen .hint { color: var(--gold); font-size: 10px; }
