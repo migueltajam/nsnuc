@@ -1,7 +1,7 @@
 import {
   OUTLINE, SKY_TOP, ROAD, MARGIN, clamp, rand, vibrate,
   ITEM_TYPES, START_LIVES, MAX_LIVES, BEST_KEY, ITEM_R, LEVEL_TIME,
-  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y,
+  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND,
   BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
@@ -14,6 +14,7 @@ import {
   prepareEnvironment,
   renderEnvironment,
   renderSceneExtensions,
+  renderSideBuildings,
   getWorldTimeLabel
 } from './environment.js';
 
@@ -32,6 +33,16 @@ facade.onload = () => {
 };
   // Usamos el PNG aportado: al recibir fachada.svg original, se puede sustituir aquí.
   facade.src = './assets/images/fachada.png';
+
+  // El lettering del letrero se pinta aparte con su resolución original (el doble que
+  // la fachada): en el PNG está reducido y algunas letras salen mordidas.
+  const lettering = new Image();
+  let letteringReady = false;
+  lettering.onload = () => {
+    letteringReady = true;
+    buildBackground();
+  };
+  lettering.src = './assets/images/lettering.png';
 
   let LW = 0;
   let LH = 0;
@@ -88,29 +99,55 @@ facade.onload = () => {
 
   // ---------- Tamaño y escena ----------
 
+  // Altura de la zona segura inferior (barra de gestos del iPhone en modo app), en px CSS.
+  const safeBottomProbe = document.createElement('div');
+  safeBottomProbe.style.cssText =
+    'position:fixed;left:0;bottom:0;width:1px;height:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none';
+  document.body.appendChild(safeBottomProbe);
+
+  // true: la pantalla es un poco más ancha que la escena y se prolonga la fachada a los lados.
+  let extendSides = false;
+
   function resize() {
     const relX = LW ? (paddle.x - fieldX) / FIELD_W : 0.5;
-    // DPR limitado a 2: ahorra memoria y batería en móviles de 3x/4x.
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Resolución real del móvil (hasta 3x): con escala fraccional los píxeles quedan uniformes.
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const bounds = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.round(bounds.width * dpr));
     canvas.height = Math.max(1, Math.round(bounds.height * dpr));
-    // En pantallas muy bajas se permite escala fraccional: nunca se corta el personaje.
-    const ratio = Math.min(canvas.width / FIELD_W, canvas.height / FIELD_H);
-    scale = ratio < 2 ? ratio : Math.floor(ratio);
-    LW = Math.ceil(canvas.width / scale);
-    LH = Math.ceil(canvas.height / scale);
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const bottomPadPx = (safeBottomProbe.offsetHeight + 4) * dpr;
+    const usableH = Math.max(1, H - bottomPadPx);
+
+    // 1. Ocupar todo el ancho si cabe la escena recortando como mucho MAX_TOP_CROP de cielo.
+    // 2. Si no, encajar esa altura y continuar la calle con edificios vecinos a los lados.
+    // 3. En pantallas anchas (escritorio, horizontal) se muestra la escena entera con márgenes.
+    const fillWidth = W / FIELD_W;
+    const fitCropped = usableH / (FIELD_H - MAX_TOP_CROP);
+    if (fillWidth <= fitCropped) {
+      scale = fillWidth;
+      extendSides = false;
+    } else if ((W - fitCropped * FIELD_W) / 2 <= W * MAX_SIDE_EXTEND) {
+      scale = fitCropped;
+      extendSides = true;
+    } else {
+      const contain = Math.min(fillWidth, usableH / FIELD_H);
+      scale = contain < 2 ? contain : Math.floor(contain);
+      extendSides = false;
+    }
+
+    LW = Math.ceil(W / scale);
+    LH = Math.ceil(H / scale);
     buffer.width = LW;
     buffer.height = LH;
     ctx.imageSmoothingEnabled = false;
     g.imageSmoothingEnabled = false;
 
-    // El espacio sobrante va sobre todo arriba (cielo bajo el HUD); abajo solo lo justo
-    // para no chocar con la barra de gestos del móvil.
-    const cssToLogical = dpr / scale;
-    const extraH = LH - FIELD_H;
-    const bottomPad = Math.max(0, Math.min(extraH, Math.round(24 * cssToLogical)));
-    fieldY = LH - FIELD_H - bottomPad;
+    // La calle queda pegada abajo; lo que sobre (móviles altos) va al cielo, bajo el HUD,
+    // y lo que falte (móviles bajos) se recorta del cielo.
+    fieldY = Math.floor(LH - FIELD_H - bottomPadPx / scale);
     fieldX = Math.floor((LW - FIELD_W) / 2);
     groundY = fieldY + GROUND_Y;
 
@@ -145,6 +182,13 @@ facade.onload = () => {
     bg.fillStyle = ROAD;
     bg.fillRect(fx, fy + fh - scale, fw, background.height - fy - fh + scale);
     if (facadeReady) bg.drawImage(facade, fx, fy, fw, fh);
+    if (facadeReady && letteringReady) {
+      // Papel limpio del letrero (x 32–147, y 310–324) y el lettering encima.
+      bg.fillStyle = 'rgb(245,235,222)';
+      bg.fillRect(Math.round(fx + 32 * scale), Math.round(fy + 310 * scale),
+        Math.round(116 * scale), Math.round(15 * scale));
+      bg.drawImage(lettering, fx + 36 * scale, fy + 311.5 * scale, 108 * scale, 12.5 * scale);
+    }
 
     // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
     if (fx > 0) {
@@ -370,9 +414,18 @@ facade.onload = () => {
     return ITEM_TYPES[0];
   }
 
+  // Borde inferior del HUD en unidades del juego: si el cielo está recortado,
+  // los objetos aparecen justo debajo del marcador y no escondidos tras él.
+  function hudBottom() {
+    const hud = ui.hud.getBoundingClientRect();
+    if (!hud.height) return 0;
+    const rect = canvas.getBoundingClientRect();
+    return ((hud.bottom - rect.top) / rect.height) * canvas.height / scale;
+  }
+
   function spawn() {
     const type = pickType();
-    const y = fieldY + SPAWN_Y;
+    const y = Math.max(fieldY + SPAWN_Y, hudBottom() + 2);
     const half = sprites[type.sprite].width / 2;
     items.push({
       type,
@@ -633,7 +686,23 @@ facade.onload = () => {
       ctx.drawImage(background, ox, oy);
     }
 
-    // 2. Continuamos el cielo y la calle
+    // 2. Si sobra un poco de ancho, la calle continúa con dos edificios vecinos.
+    if (extendSides) {
+      renderSideBuildings(
+        ctx,
+        facadeReady ? facade : null,
+        fieldX,
+        fieldY,
+        scale,
+        clock,
+        canvas.width,
+        canvas.height,
+        ox,
+        oy
+      );
+    }
+
+    // 2b. Continuamos el cielo y la calle
     // en los dispositivos con espacio sobrante.
     renderSceneExtensions(
       ctx,

@@ -461,3 +461,20 @@ html, body { touch-action: manipulation; }
     width: 106px;
   }
 }
+
+/* HUD sobre el cielo: degradado translúcido para que el cielo se vea detrás. */
+#hud {
+  background: linear-gradient(to bottom,
+    rgba(42, 22, 38, 0.72) 0%,
+    rgba(42, 22, 38, 0.34) 48%,
+    rgba(42, 22, 38, 0) 100%);
+  border-bottom: 0;
+  padding-bottom: 22px;
+}
+#hud .hud-label,
+#hud .hud-score,
+#hud .hud-level,
+#hud .hud-world-clock,
+#hud .hud-combo {
+  text-shadow: 1px 1px 0 #290f1f, -1px 1px 0 #290f1f, 1px -1px 0 #290f1f, -1px -1px 0 #290f1f;
+}
