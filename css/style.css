@@ -620,3 +620,14 @@ html, body { touch-action: manipulation; }
 /* Fin de partida: estrellas pegadas a la puntuación */
 #screen-over .record-celebration { margin-top: -10px; line-height: 1; }
 #screen-over .final strong { margin-top: 8px; }
+
+/* El marco vaquero (con su pespunte) queda fijo y solo se desliza el contenido de dentro:
+   así nada pasa por encima del bordado. */
+.screen .panel { padding: 14px; overflow: hidden; }
+.screen .panel > .panel-body {
+  display: flex; flex-direction: column; align-items: center; gap: inherit;
+  width: 100%; min-height: 0; flex: 0 1 auto; overflow: auto;
+  padding: 10px 6px;
+  touch-action: pan-y; overscroll-behavior: contain;
+  scrollbar-color: var(--denim-light) var(--denim-dark); scrollbar-width: thin;
+}
