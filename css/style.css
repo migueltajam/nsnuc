@@ -661,4 +661,4 @@ html, body { touch-action: manipulation; }
 /* ===== Cuenta atrás en vaquero ===== */
 .countdown { background: radial-gradient(circle, rgba(26, 36, 64, .2), rgba(26, 36, 64, .6)); gap: 20px; }
 .countdown span { font-size: 120px; line-height: 1; color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
-.countdown small { font-size: 20px; letter-spacing: 2px; color: var(--gold); text-shadow: 0 2px 0 var(--denim-ink); }
+.countdown small { font-size: 20px; letter-spacing: 2px; color: var(--shirt); text-shadow: 0 2px 0 var(--denim-ink); }
