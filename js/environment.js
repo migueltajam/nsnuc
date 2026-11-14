@@ -1414,6 +1414,13 @@ export function renderSideBuildings(
     }
   }
 
+  // Franja crema sobre el tejado (filas 43–45 de la fachada), continua a ambos lados
+  if (facade?.complete && facade.naturalWidth) {
+    for (const [a, b] of [[x0, 0], [FIELD_W, x1]]) {
+      for (let x = a; x < b; x += 18) ctx.drawImage(facade, 0, 43, 18, 3, x, 43, Math.min(18, b - x), 3);
+    }
+  }
+
   if (left > 2) drawLeftBuilding(ctx, facade, x0, night);
   if (right > 2) drawRightBuilding(ctx, facade, x1, night);
 
@@ -1441,7 +1448,7 @@ export function renderSideBuildings(
 
   // Misma luz que la escena: noche, tinte azul, resplandor de la calle y ventanas encendidas
   const darkness = Math.min(0.9, night * 0.56 + dusk * 0.07);
-  for (const [a, b, roof, lit] of [[x0, 0, 46, LEFT_LIT], [FIELD_W, x1, 46, RIGHT_LIT]]) {
+  for (const [a, b, roof, lit] of [[x0, 0, 43, LEFT_LIT], [FIELD_W, x1, 43, RIGHT_LIT]]) {
     if (b - a <= 0) continue;
     const h = bottom - roof;
     ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
