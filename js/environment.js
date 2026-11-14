@@ -1183,20 +1183,40 @@ function getSidewalkSlice(facade) {
   return c;
 }
 
-// Ventanas que se encienden de noche: [x, y, ancho, alto].
-const LEFT_X = -50;
+// Columnas de ventanas de los laterales. Se repiten hacia fuera todo lo que haga
+// falta, así la calle llena también tablets y pantallas anchas.
+const LEFT_X = -50;          // primera columna del edificio amarillo
+const LEFT_STEP = 74;        // distancia entre columnas hacia la izquierda
 const LEFT_FLOORS = [80, 158, 236];
-const LEFT_LIT = [];
-LEFT_FLOORS.forEach((y, i) => {
-  // Solo los cristales de arriba: los de abajo quedan detrás del balcón.
-  if (i !== 1) for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) LEFT_LIT.push([LEFT_X + gx, y + gy, gw, gh]);
-});
+const leftColumnX = (k) => LEFT_X - LEFT_STEP * k;
 
-const RIGHT_COLS = [FIELD_W + 16, FIELD_W + 50];
+const RIGHT_X = FIELD_W + 16; // primera columna del edificio crema
+const RIGHT_STEP = 34;
 const RIGHT_FLOORS = [86, 164, 242];
-const RIGHT_LIT = [[RIGHT_COLS[0], 166, 16, 22], [RIGHT_COLS[1], 88, 16, 22], [RIGHT_COLS[1], 244, 16, 22]];
+const rightColumnX = (c) => RIGHT_X + RIGHT_STEP * c;
 
-// Guirnalda de bombillas del balcón de abajo del edificio amarillo.
+// Ventanas que se encienden de noche (solo los cristales altos: los bajos quedan tras el balcón).
+function leftLit(x0) {
+  const out = [];
+  for (let k = 0; leftColumnX(k) + 46 >= x0; k++) {
+    LEFT_FLOORS.forEach((y, i) => {
+      if ((k * 3 + i + 1) % 4 === 0 || (k === 0 && i === 1)) return;
+      for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) out.push([leftColumnX(k) + gx, y + gy, gw, gh]);
+    });
+  }
+  return out;
+}
+function rightLit(x1) {
+  const out = [];
+  for (let c = 0; rightColumnX(c) - 8 <= x1; c++) {
+    RIGHT_FLOORS.forEach((y, f) => {
+      if ((f * 5 + c * 3 + 1) % 4 === 0) out.push([rightColumnX(c), y + 2, 16, 22]);
+    });
+  }
+  return out;
+}
+
+// Guirnalda de bombillas del balcón de abajo de la primera columna amarilla.
 const STRING_LIGHTS = [];
 for (let i = 0; i < 12; i++) {
   const x = LEFT_X - 4 + i * 4;
@@ -1239,6 +1259,83 @@ function drawPortal(g, x, night) {
   fillRect(g, '#cfc6bb', x + 2, 380, 36, 2);
 }
 
+function drawInteriorShutters(g, x, y, ajarPane) {
+  for (const [gx, gy, gw, gh] of VANO_GLASS) {
+    const ajar = ajarPane && gx > 10 && gy > 10;
+    fillRect(g, '#9a7656', x + gx, y + gy, ajar ? 7 : gw, gh);
+    for (let sy = 2; sy < gh; sy += 3) fillRect(g, '#7f5f44', x + gx, y + gy + sy, ajar ? 7 : gw, 1);
+    if (ajar) fillRect(g, '#3a302c', x + gx + 7, y + gy, gw - 7, gh);
+  }
+}
+
+function drawTableAndChair(g, x, y) {
+  fillRect(g, '#9a6a3e', x + 20, y + 41, 13, 2);
+  fillRect(g, '#7a5230', x + 21, y + 43, 1, 10);
+  fillRect(g, '#7a5230', x + 31, y + 43, 1, 10);
+  fillRect(g, '#b5684a', x + 25, y + 37, 4, 4);
+  fillRect(g, '#7f9a64', x + 24, y + 34, 6, 3);
+  fillRect(g, '#9a6a3e', x + 9, y + 38, 2, 15);
+  fillRect(g, '#9a6a3e', x + 9, y + 46, 8, 2);
+  fillRect(g, '#7a5230', x + 16, y + 48, 1, 5);
+  fillRect(g, '#b48450', x + 9, y + 40, 2, 1);
+}
+
+function drawBlanket(g, x, y, color, fold, edge) {
+  fillRect(g, color, x - 3, y + 36, 22, 13);
+  fillRect(g, fold, x + 2, y + 37, 2, 12);
+  fillRect(g, fold, x + 10, y + 37, 2, 11);
+  fillRect(g, edge, x - 3, y + 36, 22, 1);
+  fillRect(g, '#e9e1d2', x - 1, y + 46, 18, 1);
+}
+
+function drawGeraniums(g, x, y) {
+  fillRect(g, '#b5684a', x, y + 31, 16, 5);
+  fillRect(g, '#6f8f5c', x - 1, y + 27, 18, 4);
+  for (const fx of [0, 5, 10, 14]) fillRect(g, '#d84a5a', x + fx, y + 26, 2, 2);
+}
+
+// Bicicleta guardada en el balcón (como en la calle real).
+function drawBalconyBike(g, x, y) {
+  const c = '#2a2628';
+  for (const wx of [x, x + 12]) {
+    fillRect(g, c, wx + 1, y, 3, 1);
+    fillRect(g, c, wx + 1, y + 4, 3, 1);
+    fillRect(g, c, wx, y + 1, 1, 3);
+    fillRect(g, c, wx + 4, y + 1, 1, 3);
+  }
+  fillRect(g, '#5b7bb5', x + 3, y - 1, 10, 1);
+  fillRect(g, '#5b7bb5', x + 7, y - 4, 1, 4);
+  fillRect(g, '#5b7bb5', x + 12, y - 4, 1, 4);
+  fillRect(g, c, x + 5, y - 5, 3, 1);
+  fillRect(g, c, x + 11, y - 5, 3, 1);
+}
+
+// Puerta de madera de planta baja.
+function drawWoodenDoor(g, x) {
+  fillRect(g, '#e6dccb', x, 334, 26, 48);
+  fillRect(g, '#7a5e4c', x + 4, 340, 18, 42);
+  fillRect(g, '#7a5e4c', x + 6, 338, 14, 2);
+  fillRect(g, '#5e4738', x + 12, 340, 2, 42);
+  fillRect(g, '#6c5242', x + 6, 345, 5, 12);
+  fillRect(g, '#6c5242', x + 15, 345, 5, 12);
+  fillRect(g, '#6c5242', x + 6, 362, 5, 16);
+  fillRect(g, '#6c5242', x + 15, 362, 5, 16);
+  fillRect(g, '#c9b37e', x + 10, 360, 1, 2);
+  fillRect(g, '#c9b37e', x + 15, 360, 1, 2);
+  fillRect(g, '#cfc6bb', x + 2, 380, 22, 2);
+}
+
+// Ventana de planta baja con reja.
+function drawGroundWindow(g, x, night) {
+  fillRect(g, '#e6dccb', x, 322, 26, 26);
+  fillRect(g, night > 0.5 ? '#c99a5c' : '#5f6576', x + 3, 325, 20, 20);
+  fillRect(g, night > 0.5 ? '#e0b46e' : '#8a91a5', x + 5, 327, 2, 8);
+  for (let bx = x + 4; bx < x + 23; bx += 3) fillRect(g, '#2a2628', bx, 324, 1, 23);
+  fillRect(g, '#2a2628', x + 2, 324, 22, 1);
+  fillRect(g, '#2a2628', x + 2, 346, 22, 1);
+  fillRect(g, '#cfc1ab', x - 1, 348, 28, 2);
+}
+
 function drawLeftBuilding(g, facade, x0, night) {
   const tile = getWallTile(facade);
   // Muro, cornisa y tejado: la misma sillería ocre del edificio
@@ -1248,52 +1345,38 @@ function drawLeftBuilding(g, facade, x0, night) {
     fillRect(g, '#d3bd8c', x0, 46, -x0, 265);
   }
 
-  LEFT_FLOORS.forEach((y, i) => {
-    rects(g, VANO, LEFT_X, y);
-    if (i === 0) {
-      // Contraventanas interiores de madera, una entornada
-      for (const [gx, gy, gw, gh] of VANO_GLASS) {
-        const ajar = gx > 10 && gy > 10;
-        fillRect(g, '#9a7656', LEFT_X + gx, y + gy, ajar ? 7 : gw, gh);
-        for (let sy = 2; sy < gh; sy += 3) fillRect(g, '#7f5f44', LEFT_X + gx, y + gy + sy, ajar ? 7 : gw, 1);
-        if (ajar) fillRect(g, '#3a302c', LEFT_X + gx + 7, y + gy, gw - 7, gh);
+  for (let k = 0; leftColumnX(k) + 46 >= x0; k++) {
+    const lx = leftColumnX(k);
+    const set = k === 0 ? 0 : 1 + ((k - 1) % 3);
+    LEFT_FLOORS.forEach((y, i) => {
+      rects(g, VANO, lx, y);
+      // Lo que va detrás de la barandilla
+      if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, true); drawTableAndChair(g, lx, y); }
+      if (set === 1 && i === 1) drawInteriorShutters(g, lx, y, false);
+      if (set === 1 && i === 2) drawBalconyBike(g, lx + 14, y + 47);
+      if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(g, lx + 22, y); }
+      if (set === 3 && i === 0) drawTableAndChair(g, lx, y);
+      if (set === 3 && i === 2) drawInteriorShutters(g, lx, y, true);
+      drawBalcony(g, lx - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
+      // Lo que cuelga de la barandilla o va en la repisa
+      if (set === 0 && i === 1) { drawBlanket(g, lx, y, '#5b7bb5', '#46629a', '#8aa6d6'); drawGeraniums(g, lx + 24, y); }
+      if (set === 0 && i === 2) {
+        fillRect(g, '#a8775f', lx + 30, y + 30, 6, 6);
+        fillRect(g, '#6f8f5c', lx + 32, y + 22, 2, 8);
+        fillRect(g, '#6f8f5c', lx + 30, y + 25, 2, 3);
+        fillRect(g, '#6f8f5c', lx + 34, y + 24, 2, 3);
+        for (let n = 0; n < STRING_LIGHTS.length - 1; n++) fillRect(g, '#4a4450', STRING_LIGHTS[n][0], STRING_LIGHTS[n][1], 4, 1);
+        for (const [sx, sy] of STRING_LIGHTS) fillRect(g, '#f4e6c0', sx + 1, sy + 1, 1, 2);
       }
-      // Mesita y silla de madera en el balcón
-      fillRect(g, '#9a6a3e', LEFT_X + 20, y + 41, 13, 2);
-      fillRect(g, '#7a5230', LEFT_X + 21, y + 43, 1, 10);
-      fillRect(g, '#7a5230', LEFT_X + 31, y + 43, 1, 10);
-      fillRect(g, '#b5684a', LEFT_X + 25, y + 37, 4, 4);
-      fillRect(g, '#7f9a64', LEFT_X + 24, y + 34, 6, 3);
-      fillRect(g, '#9a6a3e', LEFT_X + 9, y + 38, 2, 15);
-      fillRect(g, '#9a6a3e', LEFT_X + 9, y + 46, 8, 2);
-      fillRect(g, '#7a5230', LEFT_X + 16, y + 48, 1, 5);
-      fillRect(g, '#b48450', LEFT_X + 9, y + 40, 2, 1);
-    }
-    drawBalcony(g, LEFT_X - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
-    if (i === 1) {
-      // Manta azul tendida en la barandilla y jardinera de geranios
-      fillRect(g, '#5b7bb5', LEFT_X - 3, y + 36, 22, 13);
-      fillRect(g, '#46629a', LEFT_X + 2, y + 37, 2, 12);
-      fillRect(g, '#46629a', LEFT_X + 10, y + 37, 2, 11);
-      fillRect(g, '#8aa6d6', LEFT_X - 3, y + 36, 22, 1);
-      fillRect(g, '#e9e1d2', LEFT_X - 1, y + 46, 18, 1);
-      fillRect(g, '#b5684a', LEFT_X + 24, y + 31, 16, 5);
-      fillRect(g, '#6f8f5c', LEFT_X + 23, y + 27, 18, 4);
-      for (const fx of [24, 29, 34, 38]) fillRect(g, '#d84a5a', LEFT_X + fx, y + 26, 2, 2);
-    }
-    if (i === 2) {
-      // Guirnalda de bombillas y un cactus
-      fillRect(g, '#a8775f', LEFT_X + 30, y + 30, 6, 6);
-      fillRect(g, '#6f8f5c', LEFT_X + 32, y + 22, 2, 8);
-      fillRect(g, '#6f8f5c', LEFT_X + 30, y + 25, 2, 3);
-      fillRect(g, '#6f8f5c', LEFT_X + 34, y + 24, 2, 3);
-      for (let k = 0; k < STRING_LIGHTS.length - 1; k++) {
-        const [lx, ly] = STRING_LIGHTS[k];
-        fillRect(g, '#4a4450', lx, ly, 4, 1);
+      if (set === 1 && i === 0) {
+        drawPlants(g, lx - 4, y + 30, 46, night);
+        for (const ix of [lx - 3, lx + 7, lx + 33]) fillRect(g, '#6f8f5c', ix, y + 54, 1, 9);
       }
-      for (const [lx, ly] of STRING_LIGHTS) fillRect(g, '#f4e6c0', lx + 1, ly + 1, 1, 2);
-    }
-  });
+      if (set === 2 && i === 0) drawGeraniums(g, lx, y);
+      if (set === 2 && i === 2) drawBlanket(g, lx + 18, y, '#d98aa6', '#c2708e', '#efb3c8');
+      if (set === 3 && i === 1) drawPlants(g, lx + 4, y + 30, 28, night);
+    });
+  }
 
   // Planta baja: la misma sillería baja hasta el zócalo de granito
   // (filas 261–303 de la columna limpia: mismo dibujo que las 309–351)
@@ -1304,13 +1387,17 @@ function drawLeftBuilding(g, facade, x0, night) {
   }
   drawZocalo(g, facade, x0, 0);
   drawPortal(g, -52, night);
+  for (let k = 1; leftColumnX(k) + 46 >= x0; k++) {
+    const lx = leftColumnX(k);
+    if (k % 2) drawWoodenDoor(g, lx + 6, night);
+    else drawGroundWindow(g, lx + 6, night);
+  }
 }
 
 function drawRightBuilding(g, facade, x1, night) {
   const x0 = FIELD_W;
   const w = x1 - x0;
   const wall = '#e8dcc0';
-  const wallShade = '#d6c8a9';
   const trim = '#f5efe2';
   const trimShade = '#c9bc9f';
   // Tejado y cornisa continuos: los mismos del edificio central (filas 46–69),
@@ -1336,9 +1423,9 @@ function drawRightBuilding(g, facade, x1, night) {
     fillRect(g, trim, x0 + 10, y, w, 4);
     fillRect(g, trimShade, x0 + 10, y + 4, w, 1);
   }
-  RIGHT_FLOORS.forEach((y, f) => {
-    RIGHT_COLS.forEach((x, c) => {
-      if (x - 8 > x1) return;
+  for (let c = 0; rightColumnX(c) - 8 <= x1; c++) {
+    const x = rightColumnX(c);
+    RIGHT_FLOORS.forEach((y, f) => {
       // Recercado blanco y ventana
       fillRect(g, trim, x - 4, y - 5, 24, 50);
       fillRect(g, trimShade, x - 4, y + 45, 24, 1);
@@ -1356,12 +1443,12 @@ function drawRightBuilding(g, facade, x1, night) {
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
       if (kind === 1) {
         // Ropa tendida en la barandilla
-        fillRect(g, '#4f6fb0', x - 2, y + 27, 9, 12);
+        fillRect(g, c % 2 ? '#d98aa6' : '#4f6fb0', x - 2, y + 27, 9, 12);
         fillRect(g, '#e9e4da', x + 9, y + 27, 7, 8);
       }
       if (kind === 2) drawPlants(g, x - 2, y + 20, 20, night);
     });
-  });
+  }
   // Planta baja: solo pared, con el zócalo de granito
   drawZocalo(g, facade, x0, x1);
 }
@@ -1448,7 +1535,7 @@ export function renderSideBuildings(
 
   // Misma luz que la escena: noche, tinte azul, resplandor de la calle y ventanas encendidas
   const darkness = Math.min(0.9, night * 0.56 + dusk * 0.07);
-  for (const [a, b, roof, lit] of [[x0, 0, 43, LEFT_LIT], [FIELD_W, x1, 43, RIGHT_LIT]]) {
+  for (const [a, b, roof, lit] of [[x0, 0, 43, leftLit(x0)], [FIELD_W, x1, 43, rightLit(x1)]]) {
     if (b - a <= 0) continue;
     const h = bottom - roof;
     ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
