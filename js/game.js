@@ -305,6 +305,10 @@ facade.onload = () => {
     audio.sfx('tick');
   }
 
+  export function isRunning() {
+    return state === 'playing' || state === 'countdown';
+  }
+
   export function pause() {
     if (state !== 'playing' && state !== 'countdown') return;
     pausedFrom = state;
