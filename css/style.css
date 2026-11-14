@@ -607,3 +607,8 @@ html, body { touch-action: manipulation; }
 .rotate-phone span { background: var(--embroidery); }
 .countdown span { color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
 .countdown small { color: var(--shirt); }
+/* Leyenda del inicio: iconos del mismo tamaño, pegados a la izquierda, y textos alineados */
+.legend li { justify-content: flex-start; gap: 10px; padding: 4px 12px; }
+.legend li .sprite {
+  flex: 0 0 auto; width: 26px; height: 22px; object-fit: contain; object-position: center;
+}
