@@ -661,7 +661,7 @@ Se está trabajando en la continuidad visual del escenario para pantallas con di
 **Cómo se adapta la escena a la pantalla** (`resize()` en `js/game.js`, ajustes en `js/config.js`):
 
 1. La calle queda pegada abajo y la escena ocupa todo el ancho si cabe recortando como mucho `MAX_TOP_CROP` (8 unidades) de la parte alta del cielo.
-2. Si el móvil es más bajo (lo normal con las barras del navegador), la escena se encaja en altura y la calle continúa a los lados con dos edificios vecinos (`renderSideBuildings()` en `js/environment.js`): uno rosado con una tienda a la izquierda y uno gris con portal a la derecha, con el mismo ciclo de día y noche. Hasta `MAX_SIDE_EXTEND` (16 % por lado).
+2. Si el móvil es más bajo (lo normal con las barras del navegador), la escena se encaja en altura y la calle continúa a los lados como la calle real del rodaje (`renderSideBuildings()` en `js/environment.js`): a la izquierda sigue el mismo edificio amarillo, con una sombrilla rosa en un balcón y una persiana roja con grafitis; a la derecha, el edificio rosa de contraventanas oscuras, con rótulo verde y persiana gris con grafitis. Siguen el mismo ciclo de día y noche. Hasta `MAX_SIDE_EXTEND` (16 % por lado).
 3. En pantallas anchas (escritorio, horizontal) se muestra la escena entera con márgenes.
 4. El HUD es un degradado translúcido para que el cielo se vea detrás; los objetos aparecen justo debajo del marcador.
 

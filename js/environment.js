@@ -1061,27 +1061,87 @@ export function renderSceneExtensions(
 
 /* ==========================================
    EDIFICIOS VECINOS A LOS LADOS
-   Cuando la pantalla es algo más ancha que la escena,
-   la calle continúa con dos fachadas vecinas.
+   Cuando la pantalla es algo más ancha que la escena, la calle continúa:
+   a la izquierda sigue el mismo edificio amarillo (con su persiana de
+   grafitis), a la derecha el edificio rosa de contraventanas oscuras,
+   como en la calle real del rodaje.
    ========================================== */
 
-// Ventanas de los vecinos: [x, y, ancho, alto] en unidades del juego.
-const NEIGHBOR_LEFT = {
-  wall: '#c9a091', wallDark: '#b48a7d', trim: '#e6d6c6', trimShadow: '#9c7d70',
-  top: 30,
-  windows: [
-    [-41, 86, 17, 40], [-41, 164, 17, 40], [-41, 242, 17, 40],
-    [-74, 86, 17, 40], [-74, 164, 17, 40], [-74, 242, 17, 40]
-  ]
-};
-const NEIGHBOR_RIGHT = {
-  wall: '#aab0b9', wallDark: '#959ba5', trim: '#e2e0da', trimShadow: '#80868f',
-  top: 50,
-  windows: [
-    [FIELD_W + 19, 92, 16, 36], [FIELD_W + 19, 170, 16, 36], [FIELD_W + 19, 248, 16, 36],
-    [FIELD_W + 52, 92, 16, 36], [FIELD_W + 52, 170, 16, 36], [FIELD_W + 52, 248, 16, 36]
-  ]
-};
+// Piezas del diseño original: [x, y, ancho, alto, color] relativas al hueco.
+const VANO = [
+  [-4, -5, 46, 59, '#ece6da'], [-4, -5, 46, 2, '#f6f2ea'], [-1, -1, 40, 1, '#bdb3a2'],
+  [0, 0, 38, 54, '#4a3e3a'], [1, 1, 36, 53, '#6e4c3a'], [18, 1, 2, 53, '#5a3e30'],
+  [3, 3, 13, 22, '#786e86'], [3, 28, 13, 24, '#786e86'], [22, 3, 13, 22, '#786e86'],
+  [22, 28, 13, 24, '#786e86'], [4, 4, 2, 10, '#e9c79a'], [7, 4, 1, 6, '#d9b48c'],
+  [23, 29, 2, 9, '#e9c79a'], [26, 29, 1, 5, '#d9b48c']
+];
+const VANO_GLASS = [[3, 3, 13, 22], [3, 28, 13, 24], [22, 3, 13, 22], [22, 28, 13, 24]];
+
+function rects(g, list, ox, oy) {
+  for (const [x, y, w, h, c] of list) {
+    g.fillStyle = c;
+    g.fillRect(ox + x, oy + y, w, h);
+  }
+}
+
+function fillRect(g, color, x, y, w, h) {
+  g.fillStyle = color;
+  g.fillRect(x, y, w, h);
+}
+
+// Balcón de forja como los del edificio: barrotes, celosía abajo y repisa.
+function drawBalcony(g, x, y, w, ironColor, ledge, ledgeShadow) {
+  fillRect(g, ironColor, x, y, w, 2);
+  for (let bx = x + 1; bx < x + w - 1; bx += 4) fillRect(g, ironColor, bx, y + 2, 1, 10);
+  fillRect(g, ironColor, x, y + 11, w, 1);
+  for (let bx = x + 1; bx < x + w - 2; bx += 4) {
+    fillRect(g, ironColor, bx + 1, y + 12, 1, 1);
+    fillRect(g, ironColor, bx, y + 13, 1, 1);
+    fillRect(g, ironColor, bx + 2, y + 13, 1, 1);
+    fillRect(g, ironColor, bx + 1, y + 14, 1, 1);
+  }
+  fillRect(g, ironColor, x, y + 17, w, 1);
+  fillRect(g, ironColor, x, y, 1, 18);
+  fillRect(g, ironColor, x + w - 1, y, 1, 18);
+  fillRect(g, ledge, x - 1, y + 18, w + 2, 3);
+  fillRect(g, ledgeShadow, x + 1, y + 21, w - 2, 2);
+}
+
+// Sombrilla rosa en un balcón (como en la calle real).
+function drawParasol(g, cx, cy) {
+  const rows = [[-1, 2], [-3, 6], [-5, 10], [-6, 12], [-7, 14]];
+  rows.forEach(([dx, w], i) => fillRect(g, i % 2 ? '#f28aaa' : '#ff9fbe', cx + dx, cy + i, w, 1));
+  fillRect(g, '#d8577f', cx - 7, cy + 4, 14, 1);
+  for (const dx of [-5, -2, 1, 4]) fillRect(g, '#d8577f', cx + dx, cy + 1, 1, 3);
+  fillRect(g, '#ffd2dc', cx - 2, cy + 1, 2, 1);
+  fillRect(g, '#6b4a3a', cx, cy + 5, 1, 12);
+}
+
+function drawPlants(g, x, y, w, night) {
+  const leaf = night > 0.5 ? '#4f6a46' : '#6f8f5c';
+  const leaf2 = night > 0.5 ? '#5d7a52' : '#7f9a64';
+  for (let px = x; px < x + w; px += 9) {
+    fillRect(g, '#b5684a', px, y + 6, 7, 5);
+    fillRect(g, leaf, px - 1, y, 9, 6);
+    fillRect(g, leaf2, px + 1, y - 2, 5, 3);
+    fillRect(g, px % 2 ? '#e0708e' : '#e8c95a', px + 2, y - 3, 2, 2);
+  }
+}
+
+let wallTile = null;
+function getWallTile(facade) {
+  if (wallTile) return wallTile;
+  if (!facade?.complete || !facade.naturalWidth) return null;
+  // Columna limpia de la fachada (x 90–108): tejado, cornisa, sillería e impostas.
+  const c = document.createElement('canvas');
+  c.width = 18;
+  c.height = 311 - 46;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(facade, 90, 46, 18, c.height, 0, 0, 18, c.height);
+  wallTile = c;
+  return c;
+}
 
 let sidewalkSlice = null;
 function getSidewalkSlice(facade) {
@@ -1098,72 +1158,122 @@ function getSidewalkSlice(facade) {
   return c;
 }
 
-function fillRect(g, color, x, y, w, h) {
-  g.fillStyle = color;
-  g.fillRect(x, y, w, h);
+// Ventanas que se encienden de noche: [x, y, ancho, alto].
+const LEFT_X = -50;
+const LEFT_FLOORS = [80, 158, 236];
+const LEFT_LIT = [];
+LEFT_FLOORS.forEach((y, i) => {
+  // Solo los cristales de arriba: los de abajo quedan detrás del balcón.
+  if (i !== 1) for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) LEFT_LIT.push([LEFT_X + gx, y + gy, gw, gh]);
+});
+
+const RIGHT_COLS = [FIELD_W + 11, FIELD_W + 45];
+const RIGHT_FLOORS = [88, 166, 244];
+const RIGHT_LIT = [[RIGHT_COLS[0] + 1, 167, 16, 24], [RIGHT_COLS[1] + 1, 89, 16, 24], [RIGHT_COLS[1] + 1, 245, 16, 24]];
+
+function drawLeftBuilding(g, facade, x0, night) {
+  const tile = getWallTile(facade);
+  // Muro, cornisa y tejado: la misma sillería ocre del edificio
+  if (tile) {
+    for (let x = -18; x >= x0 - 18; x -= 18) g.drawImage(tile, x, 46);
+  } else {
+    fillRect(g, '#d3bd8c', x0, 46, -x0, 265);
+  }
+  // Bajante y cables
+  fillRect(g, '#9e968a', -31, 70, 3, 241);
+  fillRect(g, '#b8b0a4', -30, 70, 1, 241);
+  fillRect(g, '#4e4642', x0, 311, -x0, 1);
+
+  LEFT_FLOORS.forEach((y, i) => {
+    rects(g, VANO, LEFT_X, y);
+    if (i === 1) {
+      // Persiana medio bajada
+      for (let yy = 1; yy < 30; yy += 2) {
+        fillRect(g, '#dcd0b8', LEFT_X + 1, y + yy, 36, 1);
+        fillRect(g, '#c4b79c', LEFT_X + 1, y + yy + 1, 36, 1);
+      }
+      fillRect(g, '#a8997e', LEFT_X + 1, y + 31, 36, 2);
+    }
+    drawBalcony(g, LEFT_X - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
+    if (i === 0) drawParasol(g, LEFT_X + 30, y + 24);
+    if (i === 2) drawPlants(g, LEFT_X - 4, y + 30, 46, night);
+  });
+
+  // Planta baja: persiana metálica roja con grafitis y rótulo oscuro
+  fillRect(g, '#a4a09a', x0, 352, -x0, 30);
+  fillRect(g, '#8d8983', x0, 352, -x0, 1);
+  fillRect(g, '#2a2228', -50, 315, 40, 9);
+  fillRect(g, '#e6dccb', -48, 317, 36, 1);
+  fillRect(g, '#e6dccb', -48, 321, 36, 1);
+  for (const [sx, sw] of [[-46, 4], [-40, 6], [-32, 3], [-27, 6], [-19, 5]]) fillRect(g, '#efe3c8', sx, 319, sw, 1);
+  fillRect(g, '#3e3a42', -51, 326, 42, 2);
+  fillRect(g, '#b4443e', -50, 328, 40, 54);
+  for (let y = 329; y < 382; y += 2) fillRect(g, '#9a3934', -50, y, 40, 1);
+  // Grafitis
+  const tag = [[-47, 344, 7, 1], [-47, 345, 1, 6], [-41, 345, 1, 6], [-47, 350, 7, 1], [-37, 342, 1, 9],
+    [-36, 342, 6, 1], [-31, 343, 1, 3], [-36, 346, 6, 1], [-26, 347, 9, 1], [-22, 343, 1, 9], [-18, 344, 5, 1]];
+  for (const [x, y, w, h] of tag) fillRect(g, '#1f1b1e', x, y, w, h);
+  fillRect(g, '#f2efe6', -46, 362, 10, 1);
+  fillRect(g, '#f2efe6', -44, 360, 1, 5);
+  fillRect(g, 'rgba(224,85,138,0.8)', -30, 365, 12, 2);
+  fillRect(g, 'rgba(224,85,138,0.8)', -26, 361, 2, 8);
 }
 
-function drawNeighbor(g, n, x0, x1, top, side, hour, night) {
+function drawRightBuilding(g, x1, night) {
+  const x0 = FIELD_W;
   const w = x1 - x0;
-  // Muro
-  fillRect(g, n.wall, x0, n.top, w, 382 - n.top);
-  // Sombra contra nuestro edificio y pilastra
-  const edge = side === 'left' ? x1 - 3 : x0;
-  fillRect(g, n.wallDark, edge, n.top, 3, 382 - n.top);
-  fillRect(g, 'rgba(0,0,0,0.14)', side === 'left' ? x1 - 1 : x0, n.top, 1, 382 - n.top);
-  // Remate superior
-  fillRect(g, n.trim, x0, n.top - 3, w, 3);
-  fillRect(g, n.trimShadow, x0, n.top, w, 1);
-  // Impostas a la altura de las nuestras
-  for (const y of [148, 226, 304]) {
-    fillRect(g, n.trim, x0, y, w, 3);
-    fillRect(g, n.trimShadow, x0, y + 3, w, 1);
+  const wall = '#d9a99f';
+  const wallShade = '#c99a91';
+  const trim = '#efe3d6';
+  const trimShade = '#b98f86';
+  // Alero de madera
+  fillRect(g, '#5e4334', x0, 50, w, 4);
+  for (let x = x0 + 1; x < x1; x += 4) fillRect(g, '#7a5a46', x, 54, 2, 2);
+  fillRect(g, wall, x0, 56, w, 255);
+  fillRect(g, wallShade, x0, 56, 2, 255);
+  // Impostas
+  for (const y of [146, 224, 302]) {
+    fillRect(g, trim, x0, y, w, 3);
+    fillRect(g, trimShade, x0, y + 3, w, 1);
   }
-  // Ventanas con balconcillo
-  n.windows.forEach(([wx, wy, ww, wh], i) => {
-    if (wx + ww < x0 || wx > x1) return;
-    fillRect(g, n.trim, wx - 2, wy - 2, ww + 4, wh + 4);
-    const lit = night > 0.35 && (i * 7 + 3) % 5 < 3;
-    fillRect(g, lit ? '#e9b56c' : '#6d677c', wx, wy, ww, wh);
-    if (!lit) fillRect(g, '#8a84a0', wx + 1, wy + 1, 2, 9);
-    fillRect(g, '#5d4a3e', wx + Math.floor(ww / 2), wy, 1, wh);
-    if (side === 'right') {
-      // Contraventanas verdes
-      fillRect(g, '#6d8a72', wx - 6, wy, 4, wh);
-      fillRect(g, '#6d8a72', wx + ww + 2, wy, 4, wh);
-    }
-    // Barandilla
-    fillRect(g, '#45404b', wx - 4, wy + wh - 11, ww + 8, 1);
-    for (let bx = wx - 4; bx < wx + ww + 4; bx += 3) fillRect(g, '#45404b', bx, wy + wh - 10, 1, 9);
-    fillRect(g, n.trim, wx - 5, wy + wh - 1, ww + 10, 2);
-    // Alguna maceta
-    if (i % 2 === 0) {
-      fillRect(g, '#7f9a64', wx - 2, wy + wh - 15, 6, 4);
-      fillRect(g, i % 4 === 0 ? '#e0708e' : '#e8c95a', wx - 1, wy + wh - 16, 2, 2);
-    }
+  // Bajante pegado al edificio amarillo
+  fillRect(g, '#a49a96', x0 + 3, 56, 2, 255);
+
+  RIGHT_FLOORS.forEach((y, f) => {
+    RIGHT_COLS.forEach((x, c) => {
+      if (x - 8 > x1) return;
+      fillRect(g, trim, x - 2, y - 3, 22, 47);
+      fillRect(g, '#4f566a', x, y, 18, 42);
+      fillRect(g, '#6d748c', x + 2, y + 2, 2, 10);
+      fillRect(g, '#3a3f4f', x + 9, y, 1, 42);
+      // Contraventanas oscuras, a veces entornadas
+      const half = (f + c) % 2 === 0;
+      fillRect(g, '#2f463d', x - 7, y, 5, 42);
+      fillRect(g, '#2f463d', half ? x + 12 : x + 20, y, half ? 6 : 5, 42);
+      for (let yy = y + 2; yy < y + 42; yy += 3) {
+        fillRect(g, '#3d5a4e', x - 7, yy, 5, 1);
+        fillRect(g, '#3d5a4e', half ? x + 12 : x + 20, yy, half ? 6 : 5, 1);
+      }
+      drawBalcony(g, x - 4, y + 26, 26, '#3a363e', trim, trimShade);
+      if ((f + c) % 3 === 1) drawPlants(g, x - 2, y + 20, 20, night);
+    });
   });
-  // Planta baja
-  fillRect(g, '#a4a09a', x0, 352, w, 30);
-  fillRect(g, '#8d8983', x0, 352, w, 1);
-  if (side === 'left') {
-    // Tienda con persiana metálica y algún grafiti
-    fillRect(g, '#3e3a42', x0, 314, w - 6, 7);
-    fillRect(g, '#e6d6c6', x0 + 3, 316, Math.max(0, w - 12), 3);
-    fillRect(g, '#8e9098', x0, 322, w - 8, 60);
-    for (let y = 323; y < 382; y += 2) fillRect(g, '#7b7d85', x0, y, w - 8, 1);
-    fillRect(g, 'rgba(224,85,138,0.55)', x1 - 26, 350, 9, 2);
-    fillRect(g, 'rgba(224,85,138,0.55)', x1 - 22, 346, 2, 9);
-    fillRect(g, 'rgba(90,150,160,0.55)', x1 - 16, 360, 6, 2);
-  } else {
-    // Portal de madera y una maceta en la puerta
-    fillRect(g, n.trim, x0 + 8, 318, 26, 64);
-    fillRect(g, '#7a5e4c', x0 + 11, 324, 20, 58);
-    fillRect(g, '#5e4738', x0 + 20, 324, 2, 58);
-    fillRect(g, '#c9b37e', x0 + 18, 352, 1, 2);
-    fillRect(g, '#c9b37e', x0 + 23, 352, 1, 2);
-    fillRect(g, '#a8775f', x0 + 38, 374, 7, 8);
-    fillRect(g, '#7f9a64', x0 + 37, 366, 9, 8);
-  }
+
+  // Planta baja: piedra gris, persiana con grafitis y rótulo verde
+  fillRect(g, '#aaa49d', x0, 311, w, 71);
+  for (let y = 318; y < 382; y += 8) fillRect(g, '#958f88', x0, y, w, 1);
+  fillRect(g, '#4e4642', x0, 311, w, 1);
+  fillRect(g, '#e6dccb', x0 + 8, 315, 38, 9);
+  fillRect(g, '#2f5a4a', x0 + 9, 316, 36, 7);
+  for (const [sx, sw] of [[12, 3], [17, 5], [24, 4], [30, 6], [38, 4]]) fillRect(g, '#e8d9a8', x0 + sx, 319, sw, 1);
+  fillRect(g, '#6f6c69', x0 + 8, 326, 38, 2);
+  fillRect(g, '#bcb8b2', x0 + 8, 328, 38, 54);
+  for (let y = 329; y < 382; y += 2) fillRect(g, '#a7a39d', x0 + 8, y, 38, 1);
+  const tag = [[11, 340, 9, 1], [11, 341, 1, 7], [19, 341, 1, 4], [12, 344, 7, 1], [23, 339, 1, 10], [24, 339, 7, 1],
+    [30, 340, 1, 4], [25, 343, 6, 1], [34, 345, 8, 1], [36, 341, 1, 8], [12, 352, 14, 1], [14, 353, 1, 4]];
+  for (const [x, y, ww, h] of tag) fillRect(g, '#1f1b1e', x0 + x, y, ww, h);
+  fillRect(g, 'rgba(224,85,138,0.8)', x0 + 28, 356, 12, 2);
+  fillRect(g, 'rgba(224,85,138,0.8)', x0 + 31, 352, 2, 8);
 }
 
 export function renderSideBuildings(
@@ -1187,6 +1297,8 @@ export function renderSideBuildings(
   if (left <= 2 && right <= 2) return;
   const top = -Math.max(0, Math.ceil(fieldY) + 3);
   const bottom = Math.ceil(canvasHeight / scale - fieldY) + 3;
+  const x0 = -left;
+  const x1 = FIELD_W + right;
 
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -1194,76 +1306,70 @@ export function renderSideBuildings(
   ctx.scale(scale, scale);
   ctx.translate(fieldX, fieldY);
 
-  const regions = [
-    ['left', -left, 0, NEIGHBOR_LEFT],
-    ['right', FIELD_W, FIELD_W + right, NEIGHBOR_RIGHT]
-  ];
-
   // Cielo con el mismo degradado que el del juego
   const base = colorForHour(hour);
   const horizon = mix(base, dusk > 0.15 ? rgb('#f2b178') : rgb('#d9b7d8'), 0.18 + dusk * 0.16);
   const gradient = ctx.createLinearGradient(0, 0, 0, SKY_HEIGHT);
   gradient.addColorStop(0, cssRGB(base));
   gradient.addColorStop(1, cssRGB(horizon));
-
-  for (const [side, x0, x1, n] of regions) {
-    if (x1 - x0 <= 0) continue;
+  for (const [a, b, roof] of [[x0, 0, 46], [FIELD_W, x1, 50]]) {
+    if (b - a <= 0) continue;
     ctx.fillStyle = cssRGB(base);
-    ctx.fillRect(x0, top, x1 - x0, -top);
+    ctx.fillRect(a, top, b - a, -top);
     ctx.fillStyle = gradient;
-    ctx.fillRect(x0, 0, x1 - x0, n.top);
+    ctx.fillRect(a, 0, b - a, roof);
     if (night > 0.15) {
       ctx.fillStyle = `rgba(7, 10, 24, ${0.08 + night * 0.24})`;
-      ctx.fillRect(x0, top, x1 - x0, SKY_HEIGHT * 0.58 - top);
+      ctx.fillRect(a, top, b - a, SKY_HEIGHT * 0.58 - top);
     }
-    drawNeighbor(ctx, n, x0, x1, top, side, hour, night);
   }
+
+  if (left > 2) drawLeftBuilding(ctx, facade, x0, night);
+  if (right > 2) drawRightBuilding(ctx, x1, night);
 
   // Acera, bordillo y calzada continuos
   const slice = getSidewalkSlice(facade);
   const pavement = getPavementTile(facade);
-  for (const [, x0, x1] of regions) {
-    if (x1 - x0 <= 0) continue;
+  for (const [a, b] of [[x0, 0], [FIELD_W, x1]]) {
+    if (b - a <= 0) continue;
     if (slice) {
-      const start = Math.floor(x0 / 28) * 28;
-      for (let x = start; x < x1; x += 28) ctx.drawImage(slice, x, 382);
+      for (let x = Math.floor(a / 28) * 28; x < b; x += 28) ctx.drawImage(slice, x, 382);
     } else {
-      fillRect(ctx, '#72686d', x0, 382, x1 - x0, FIELD_H - 382);
+      fillRect(ctx, '#72686d', a, 382, b - a, FIELD_H - 382);
     }
     if (bottom > FIELD_H) {
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x0, FIELD_H, x1 - x0, bottom - FIELD_H);
+      ctx.rect(a, FIELD_H, b - a, bottom - FIELD_H);
       ctx.clip();
       ctx.translate(0, FIELD_H);
       ctx.fillStyle = pavement ? ctx.createPattern(pavement, 'repeat') : '#72686d';
-      ctx.fillRect(x0, 0, x1 - x0, bottom - FIELD_H);
+      ctx.fillRect(a, 0, b - a, bottom - FIELD_H);
       ctx.restore();
     }
   }
 
-  // Misma luz que la escena: noche, tinte azul y resplandor de la calle
+  // Misma luz que la escena: noche, tinte azul, resplandor de la calle y ventanas encendidas
   const darkness = Math.min(0.9, night * 0.56 + dusk * 0.07);
-  for (const [, x0, x1, n] of regions) {
-    if (x1 - x0 <= 0) continue;
-    const h = bottom - n.top + 3;
+  for (const [a, b, roof, lit] of [[x0, 0, 46, LEFT_LIT], [FIELD_W, x1, 50, RIGHT_LIT]]) {
+    if (b - a <= 0) continue;
+    const h = bottom - roof;
     ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
-    ctx.fillRect(x0, n.top - 3, x1 - x0, h);
+    ctx.fillRect(a, roof, b - a, h);
     if (night > 0.08) {
       ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
-      ctx.fillRect(x0, n.top - 3, x1 - x0, h);
+      ctx.fillRect(a, roof, b - a, h);
     }
     if (night > 0.2) {
       ctx.fillStyle = `rgba(255,205,135,${(night * 0.12).toFixed(3)})`;
-      ctx.fillRect(x0, FIELD_H - 72, x1 - x0, bottom - FIELD_H + 72);
+      ctx.fillRect(a, FIELD_H - 72, b - a, bottom - FIELD_H + 72);
     }
-    // Las ventanas encendidas brillan por encima de la oscuridad
     if (night > 0.35) {
-      n.windows.forEach(([wx, wy, ww, wh], i) => {
-        if ((i * 7 + 3) % 5 >= 3 || wx + ww < x0 || wx > x1) return;
-        ctx.fillStyle = `rgba(255,200,120,${(night * 0.55).toFixed(3)})`;
-        ctx.fillRect(wx, wy, ww, wh - 11);
-      });
+      ctx.fillStyle = `rgba(255,196,110,${(night * 0.75).toFixed(3)})`;
+      for (const [wx, wy, ww, wh] of lit) {
+        if (wx + ww < a || wx > b) continue;
+        ctx.fillRect(wx, wy, ww, wh);
+      }
     }
   }
 
