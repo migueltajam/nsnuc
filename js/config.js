@@ -43,9 +43,10 @@
   // En móviles más bajos que el diseño se puede recortar como mucho esta franja
   // de la parte alta del cielo (casi todo el cielo se conserva, visible tras el HUD).
   export const MAX_TOP_CROP = 8;
-  // Si sobra ancho, la calle continúa con edificios vecinos a los lados, hasta esta
-  // fracción del ancho por cada lado; más allá (escritorio, horizontal) hay márgenes.
-  export const MAX_SIDE_EXTEND = 0.16;
+  // Si sobra ancho, la calle continúa a los lados (edificio amarillo a la izquierda,
+  // crema a la derecha) hasta esta fracción del ancho por cada lado. Con 0.5 la calle
+  // llena siempre la pantalla: móviles, tablets y escritorio.
+  export const MAX_SIDE_EXTEND = 0.5;
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
   export const BASE_FALL_TIME = 3.4;
