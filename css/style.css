@@ -617,3 +617,6 @@ html, body { touch-action: manipulation; }
 .screen .hint { color: var(--gold); font-size: 10px; }
 /* Instrucciones del inicio con aire a los lados, como antes */
 #screen-start .only-touch, #screen-start .only-mouse { padding: 0 18px; }
+/* Fin de partida: estrellas pegadas a la puntuación */
+#screen-over .record-celebration { margin-top: -10px; line-height: 1; }
+#screen-over .final strong { margin-top: 8px; }
