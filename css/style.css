@@ -1,3 +1,9 @@
+/* Tipografía propia del juego: mayúsculas gruesas de píxel (tools/build_font.py). */
+@font-face {
+  font-family: "NSNUC Pixel";
+  src: url("../assets/fonts/nsnuc-pixel.woff") format("woff"), url("../assets/fonts/nsnuc-pixel.ttf") format("truetype");
+  font-display: block;
+}
 :root {
   --outline: #290f1f;
   --panel: #3a1f36;
@@ -18,7 +24,7 @@ html, body {
   overflow: hidden;
   background: #2a1626;
   color: var(--text);
-  font-family: "Press Start 2P", ui-monospace, "Courier New", monospace;
+  font-family: "NSNUC Pixel", ui-monospace, "Courier New", monospace;
   -webkit-font-smoothing: none;
   -webkit-user-select: none;
   user-select: none;
@@ -227,7 +233,7 @@ html, body { touch-action: manipulation; }
 .sound-menu {
   min-height: 34px; padding: 8px 10px; background: transparent;
   border: 1px dashed #86506a; color: #e9b2cb;
-  font: 8px "Press Start 2P", monospace; line-height: 1.4;
+  font: 8px "NSNUC Pixel", monospace; line-height: 1.4;
   cursor: pointer;
 }
 .sound-menu:focus-visible, .btn:focus-visible, .hud-sound:focus-visible,
@@ -528,3 +534,89 @@ html, body { touch-action: manipulation; }
   .only-mouse { display: block; }
   .only-touch { display: none; }
 }
+
+/* ===== Menús en vaquero: colores de la ropa del personaje =====
+   Denim con pespunte naranja, camisa azul clarito y rosa del bordado. */
+:root {
+  --denim: #3f6194;
+  --denim-light: #5a7fb4;
+  --denim-dark: #2e4a78;
+  --denim-ink: #1a2440;
+  --stitch: #d8a060;
+  --shirt: #e4eefa;
+  --shirt-mid: #c8d8ea;
+  --shirt-deep: #a8c6ea;
+  --embroidery: #cf7d90;
+  --embroidery-light: #e6a6b4;
+  --embroidery-dark: #a95d70;
+  --cream: #f4f1ea;
+  --gold: #f2c58a;
+}
+.screen { background: rgba(26, 36, 64, .55); }
+.screen .panel, .rotate-lock .panel {
+  background: var(--denim);
+  outline: 2px dashed var(--stitch);
+  outline-offset: -9px;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--denim-light), inset 0 -4px 0 0 var(--denim-dark),
+    0 12px 0 0 rgba(0, 0, 0, .35);
+  scrollbar-color: var(--denim-light) var(--denim-dark);
+}
+.screen h1, .screen h2, .final strong, .rotate-lock h2 {
+  color: var(--cream);
+  text-shadow: 0 3px 0 var(--denim-ink);
+}
+.screen p, .rotate-lock p { color: var(--cream); }
+.screen .hint, .screen .final, .screen .best, .screen .leaderboard-note { color: var(--shirt-mid); }
+.screen .over-eyebrow { color: var(--stitch); }
+.screen .new-record, .screen .nickname-error { color: var(--gold); }
+.record-celebration { color: var(--gold); }
+.logo-sign { box-shadow: 0 0 0 3px var(--denim-ink), inset 0 -3px 0 #ddd6c8; }
+.legend li { background: var(--denim-dark); color: var(--cream); box-shadow: inset 0 -3px 0 var(--embroidery); }
+.legend li.danger { color: var(--gold); }
+.nickname-label { color: var(--shirt-mid); }
+.nickname-input { background: var(--denim-dark); border-color: var(--denim-ink); color: var(--cream); }
+.nickname-input:focus { border-color: var(--embroidery); }
+.nickname-input::placeholder { color: #8ea6cc; }
+.btn {
+  background: var(--embroidery); color: #fff; text-shadow: 2px 2px 0 #9a4f62;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--embroidery-light), inset 0 -6px 0 0 var(--embroidery-dark);
+}
+.btn-secondary {
+  background: var(--shirt); color: #2b3f63; text-shadow: none;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 #ffffff, inset 0 -6px 0 0 var(--shirt-deep);
+}
+.screen .sound-menu { color: var(--shirt-mid); border-color: var(--denim-light); }
+.stat { background: var(--denim-dark); border-bottom-color: var(--embroidery); }
+.stat span { color: var(--shirt-deep); }
+.stat strong { color: #fff; }
+.leaderboard-section, .achievements-section { border-top-color: var(--denim-light); }
+.leaderboard-section h3, .achievements-section h3 { color: var(--cream); }
+.achievements-section h3 span { color: var(--gold); }
+.leaderboard li { background: var(--denim-dark); color: var(--cream); }
+.leaderboard li strong { color: var(--gold); }
+.achievement { background: var(--denim-dark); border-color: var(--denim-light); }
+.achievement strong { color: var(--cream); }
+.achievement small { color: var(--shirt-mid); }
+.rotate-lock { background: var(--denim-ink); }
+.rotate-phone span { background: var(--embroidery); }
+.countdown span { color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
+.countdown small { color: var(--shirt); }
+/* Leyenda del inicio: iconos del mismo tamaño, pegados a la izquierda, y textos alineados */
+.legend li { justify-content: flex-start; gap: 10px; padding: 4px 12px; }
+.legend li .sprite {
+  flex: 0 0 auto; width: 26px; height: 22px; object-fit: contain; object-position: center;
+}
+/* Cartel del inicio con la tipografía del juego */
+.logo-sign .logo-text { margin: 0; font-size: 24px; line-height: 32px; white-space: nowrap; color: var(--denim-ink); text-align: center; }
+.screen .hint { color: var(--gold); font-size: 10px; }
+/* Instrucciones del inicio con aire a los lados, como antes */
+#screen-start .only-touch, #screen-start .only-mouse { padding: 0 18px; }
+/* Fin de partida: estrellas pegadas a la puntuación */
+#screen-over .record-celebration { margin-top: -10px; line-height: 1; }
+#screen-over .final strong { margin-top: 8px; }

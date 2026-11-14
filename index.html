@@ -8,9 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>No soy ni un casi · ¡Atrapa!</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="preload" href="./assets/fonts/nsnuc-pixel.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="./css/style.css">
   <meta name="description" content="No soy ni un casi: un arcade de besos, calabazas y récords. Juega en el móvil, descubre el 17 y supera tu puntuación.">
 </head>
@@ -53,18 +51,18 @@
     <section id="screen-start" class="screen">
       <div class="panel">
         <div class="logo-sign">
-          <img class="logo" src="./assets/images/lettering.png" alt="No soy ni un casi">
+          <p class="logo-text">NO SOY NI UN CASI</p>
         </div>
-        <h1>¡ATRAPA!</h1>
-        <p class="only-touch">Desliza el dedo para mover a Miguel y recoger besos.</p>
-        <p class="only-mouse">Mueve el ratón o usa las flechas ← → para mover a Miguel y recoger besos. Pausa con Esc.</p>
+        <h1>¡LLUEVEN BESOS!</h1>
+        <p class="only-touch">Desliza el dedo para mover a Miguel.</p>
+        <p class="only-mouse">Mueve el ratón o usa las flechas ← → para mover a Miguel. Pausa con Esc.</p>
         <ul class="legend">
           <li><img class="sprite" data-sprite="corazon" alt=""><span>+10</span></li>
           <li><img class="sprite" data-sprite="beso" alt=""><span>+20</span></li>
           <li><img class="sprite" data-sprite="vida" alt=""><span>+1 VIDA</span></li>
           <li class="danger"><img class="sprite" data-sprite="calabaza" alt=""><span>¡EVÍTALA!</span></li>
         </ul>
-        <p class="hint">Solo las calabazas restan vidas. ¡Encadena besos para conseguir combos!</p>
+        <p class="hint">¡Que no te den calabazas, románticx!</p>
         <label class="nickname-label" for="nickname">TU APODO</label>
         <input id="nickname" name="nickname" class="nickname-input" type="text" minlength="2" maxlength="16" placeholder="MIGUEL17" autocomplete="nickname" spellcheck="false">
         <p id="nickname-error" class="nickname-error hidden" role="alert"></p>
@@ -77,16 +75,16 @@
     <section id="screen-pause" class="screen hidden">
       <div class="panel">
         <h2>PAUSA</h2>
-        <button id="btn-resume" class="btn">CONTINUAR</button>
         <button class="sound-toggle sound-menu" aria-label="Silenciar música y efectos" aria-pressed="false">♪ SONIDO: ON</button>
+        <button id="btn-resume" class="btn">CONTINUAR</button>
         <button id="btn-quit" class="btn btn-secondary">SALIR</button>
       </div>
     </section>
 
     <section id="screen-over" class="screen hidden">
       <div class="panel">
-        <p class="over-eyebrow">FIN DE LA PARTIDA</p>
-        <h2>GAME OVER</h2>
+        <p class="over-eyebrow">TE HAN DADO CALABAZAS</p>
+        <h2>SE ACABÓ</h2>
         <p class="final">TU PUNTUACIÓN<strong id="final-score">0</strong></p>
         <div id="record-celebration" class="record-celebration hidden" aria-hidden="true">★ ★ ★</div>
         <div class="stats-grid" aria-label="Estadísticas de la partida">
