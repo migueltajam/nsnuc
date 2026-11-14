@@ -1869,12 +1869,12 @@ function drawStreetTree(g, x) {
 
 function drawStreetProps(g, x0, x1) {
   // Izquierda: bolardos a los lados del portal y de la floristería, sin tapar puertas
-  for (const bx of [-74, FLORIST_X - 10]) if (bx - 9 >= x0) drawBollard(g, bx);
+  for (const bx of [-74, FLORIST_X - 10, -268]) if (bx - 9 >= x0) drawBollard(g, bx);
   // Pizarra a un lado de la floristería, dentro de su ancho
   if (FLORIST_X + FLORIST_W - 30 >= x0) drawFlowerChalkboard(g, FLORIST_X + FLORIST_W - 30);
   // Derecha: la señal de la canción y un par de bolardos
   if (FIELD_W + 46 <= x1) drawSongSign(g, FIELD_W + 34);
-  for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176]) if (bx + 4 <= x1) drawBollard(g, bx);
+  for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176, FIELD_W + 250]) if (bx + 4 <= x1) drawBollard(g, bx);
   if (TREE_X + 16 <= x1) drawStreetTree(g, TREE_X);
 }
 
@@ -1987,6 +1987,9 @@ function drawRoofs(g, x0, x1, night) {
   if (rightColumnX(2) + 16 <= x1) drawDormer(g, rightColumnX(2));
   if (m + 62 <= x1) { drawWhiteChimney(g, m + 34); drawWhiteChimney(g, m + 49); }
   if (rightColumnX(3) + 16 <= x1) drawDormer(g, rightColumnX(3));
+  // Tercer tramo (pantallas de ordenador): buhardilla y chimenea de ladrillo
+  if (rightColumnX(4) + 16 <= x1) drawDormer(g, rightColumnX(4));
+  if (FIELD_W + 2 * RIGHT_MODULE + 46 <= x1) drawBrickChimney(g, FIELD_W + 2 * RIGHT_MODULE + 34, 13);
 }
 
 // Los edificios de los lados se pintan a 1 píxel por unidad en un lienzo aparte y se

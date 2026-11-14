@@ -49,7 +49,7 @@
   export const MAX_SIDE_EXTEND = 0.5;
   // Como mucho se ve esta anchura de calle a cada lado (lo que cabe en una tablet en
   // horizontal). En pantallas más anchas, lo que sobra queda como margen.
-  export const MAX_SIDE_UNITS = 234; // termina justo tras los sillares de la esquina del edificio crema
+  export const MAX_SIDE_UNITS = 290; // llena del todo una pantalla 16:9 de ordenador
   // Si sobran menos unidades que esto, la calle llega al borde en vez de dejar margen.
   export const SIDE_TOLERANCE = 8;
 
