@@ -1,3 +1,9 @@
+/* Tipografía propia del juego: mayúsculas gruesas de píxel (tools/build_font.py). */
+@font-face {
+  font-family: "NSNUC Pixel";
+  src: url("../assets/fonts/nsnuc-pixel.woff") format("woff"), url("../assets/fonts/nsnuc-pixel.ttf") format("truetype");
+  font-display: block;
+}
 :root {
   --outline: #290f1f;
   --panel: #3a1f36;
@@ -18,7 +24,7 @@ html, body {
   overflow: hidden;
   background: #2a1626;
   color: var(--text);
-  font-family: "Press Start 2P", ui-monospace, "Courier New", monospace;
+  font-family: "NSNUC Pixel", ui-monospace, "Courier New", monospace;
   -webkit-font-smoothing: none;
   -webkit-user-select: none;
   user-select: none;
@@ -227,7 +233,7 @@ html, body { touch-action: manipulation; }
 .sound-menu {
   min-height: 34px; padding: 8px 10px; background: transparent;
   border: 1px dashed #86506a; color: #e9b2cb;
-  font: 8px "Press Start 2P", monospace; line-height: 1.4;
+  font: 8px "NSNUC Pixel", monospace; line-height: 1.4;
   cursor: pointer;
 }
 .sound-menu:focus-visible, .btn:focus-visible, .hud-sound:focus-visible,
@@ -559,7 +565,7 @@ html, body { touch-action: manipulation; }
 }
 .screen h1, .screen h2, .final strong, .rotate-lock h2 {
   color: var(--cream);
-  text-shadow: 3px 3px 0 var(--embroidery), 6px 6px 0 var(--denim-ink);
+  text-shadow: 0 3px 0 var(--denim-ink);
 }
 .screen p, .rotate-lock p { color: var(--cream); }
 .screen .hint, .screen .final, .screen .best, .screen .leaderboard-note { color: var(--shirt-mid); }
@@ -599,3 +605,5 @@ html, body { touch-action: manipulation; }
 .achievement small { color: var(--shirt-mid); }
 .rotate-lock { background: var(--denim-ink); }
 .rotate-phone span { background: var(--embroidery); }
+.countdown span { color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
+.countdown small { color: var(--shirt); }
