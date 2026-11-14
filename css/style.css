@@ -613,5 +613,7 @@ html, body { touch-action: manipulation; }
   flex: 0 0 auto; width: 26px; height: 22px; object-fit: contain; object-position: center;
 }
 /* Cartel del inicio con la tipografía del juego */
-.logo-sign .logo-text { margin: 0; font-size: 20px; line-height: 1.6; white-space: nowrap; color: var(--denim-ink); text-align: center; }
+.logo-sign .logo-text { margin: 0; font-size: 24px; line-height: 32px; white-space: nowrap; color: var(--denim-ink); text-align: center; }
 .screen .hint { color: var(--gold); font-size: 10px; }
+/* Instrucciones del inicio con aire a los lados, como antes */
+#screen-start .only-touch, #screen-start .only-mouse { padding: 0 18px; }
