@@ -1,7 +1,7 @@
 import {
   OUTLINE, SKY_TOP, ROAD, MARGIN, clamp, rand, vibrate,
   ITEM_TYPES, START_LIVES, MAX_LIVES, BEST_KEY, ITEM_R, LEVEL_TIME,
-  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND,
+  FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND, MAX_SIDE_UNITS,
   BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
@@ -190,8 +190,25 @@ facade.onload = () => {
       bg.drawImage(lettering, fx + 36 * scale, fy + 311.5 * scale, 108 * scale, 12.5 * scale);
     }
 
+    // Con la calle extendida, el borde de la fachada se prolonga un poco bajo los
+    // edificios laterales: así no asoma una línea del fondo en la unión.
+    const cap = MAX_SIDE_UNITS * scale;
+    if (extendSides && facadeReady && fx > 0) {
+      const l = Math.max(0, Math.floor(fx - cap));
+      bg.drawImage(facade, 0, 0, 1, FIELD_H, l, fy, Math.ceil(fx) + 1 - l, fh);
+      const r0 = Math.floor(fx + fw) - 1;
+      const r1 = Math.min(background.width, Math.ceil(fx + fw + cap));
+      bg.drawImage(facade, FIELD_W - 1, 0, 1, FIELD_H, r0, fy, r1 - r0, fh);
+    }
+    // Si la pantalla es más ancha que la calle, filo oscuro donde termina
+    if (extendSides && fx > cap) {
+      bg.fillStyle = OUTLINE;
+      bg.fillRect(Math.floor(fx - cap) - scale, 0, scale, background.height);
+      bg.fillRect(Math.ceil(fx + fw + cap), 0, scale, background.height);
+    }
+
     // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
-    if (fx > 0) {
+    if (fx > 0 && !extendSides) {
       bg.fillStyle = OUTLINE;
       bg.fillRect(fx - scale, 0, scale, background.height);
       bg.fillRect(fx + fw, 0, scale, background.height);
