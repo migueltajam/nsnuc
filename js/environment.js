@@ -1327,11 +1327,20 @@ function drawVines(g, x, y, w, seed, maxLen = 14) {
 
 // Fila de macetas centrada en cx, con plantas altas, bajas y flores de colores al azar.
 // base = altura donde apoyan (la barandilla).
-function drawPotRow(g, cx, base, n, seed, pw = 6) {
+// hang: la maceta cuelga por fuera del pasamanos de la barandilla (base = pasamanos),
+// con sus ganchos, como las jardineras del edificio central.
+function drawPotRow(g, cx, base, n, seed, pw = 6, { first = 0, hang = false } = {}) {
   const gap = 2;
   const total = n * pw + (n - 1) * gap;
   let px = Math.round(cx - total / 2);
-  for (let i = 0; i < n; i++, px += pw + gap) {
+  const rail = base;
+  if (hang) base += 6;
+  for (let j = 0; j < n; j++, px += pw + gap) {
+    const i = j + first;
+    if (hang) {
+      fillRect(g, '#2a2628', px, rail - 1, 1, 3);
+      fillRect(g, '#2a2628', px + pw - 1, rail - 1, 1, 3);
+    }
     const r = hash01(seed * 17 + i);
     fillRect(g, POTS[Math.floor(hash01(seed * 5 + i) * POTS.length)], px, base - 5, pw, 5);
     fillRect(g, 'rgba(42,22,38,0.25)', px, base - 1, pw, 1);
@@ -1363,8 +1372,9 @@ function drawPotRow(g, cx, base, n, seed, pw = 6) {
 }
 
 // Planta grande en el suelo del balcón, detrás de la barandilla (ficus o palmera pequeña).
-function drawTallPlant(g, cx, floor, seed) {
-  fillRect(g, POTS[Math.floor(hash01(seed) * POTS.length)], cx - 4, floor - 7, 9, 7);
+function drawTallPlant(g, cx, floor, seed, pot = null) {
+  fillRect(g, pot || POTS[Math.floor(hash01(seed) * POTS.length)], cx - 4, floor - 7, 9, 7);
+  if (pot) fillRect(g, 'rgba(42,22,38,0.12)', cx + 2, floor - 7, 3, 7);
   const h = 18 + Math.floor(hash01(seed * 3) * 8);
   const palm = hash01(seed * 7) > 0.5;
   fillRect(g, '#6b5440', cx, floor - 7 - h + 4, 1, h - 4);
@@ -1396,26 +1406,27 @@ function drawLaundry(g, x, y, color, second) {
 }
 
 // Decoración de cada ventana del edificio crema: [columna][planta]
+// Ventanas numeradas de izquierda a derecha y de arriba abajo (1–4, 5–8, 9–12).
 const RIGHT_DECOR = [
   [
-    { awning: 22, pots: [3, 1], vines: 0 },
-    { tall: 5, laundry: ['#d98aa6', '#e9e4da'] },
-    { pots: [2, 2], vines: 16 }
+    { awning: 11, pots: [2, 1], first: 1 },                // 1
+    { tall: 5, tallDx: 15 },                                 // 5
+    { pots: [2, 2], vines: 16 }                              // 9
   ],
   [
-    { laundry: ['#4f6fb0', '#e9e4da'], vines: 8 },
-    { tall: 6, pots: [3, 3] },
-    { pots: [3, 4], vines: 10 }
+    { vines: 8 },                                            // 2
+    { pots: [3, 3] },                                        // 6
+    { pots: [3, 4], vines: 10 }                              // 10
   ],
   [
-    { pots: [3, 7], vines: 12 },
-    { laundry: ['#4f6fb0', '#f2e2b0'], tall: 8 },
-    { awning: 14, pots: [2, 9], vines: 16 }
+    { pots: [3, 7], vines: 12 },                             // 3
+    { tall: 8, tallDx: 4, tallPot: '#e6dcc6' },              // 7
+    { awning: 14, pots: [2, 9], vines: 16 }                  // 11
   ],
   [
-    { awning: 9, tall: 10 },
-    { pots: [3, 11], vines: 12 },
-    { laundry: ['#d98aa6', '#e9e4da'], pots: [1, 12] }
+    { awning: 9, tall: 10 },                                 // 4
+    { pots: [3, 11], vines: 12 },                            // 8
+    { floorPot: [1, 12] }                                    // 12
   ]
 ];
 
@@ -1714,11 +1725,12 @@ function drawRightBuilding(g, facade, x1, night) {
       const d = RIGHT_DECOR[c % 4][f];
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
-      if (d.tall) drawTallPlant(g, x + 8, y + 43, d.tall);
+      if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
+      if (d.floorPot) drawPotRow(g, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
       if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
       if (d.vines) drawVines(g, x - 3, y + 44, 22, seed, d.vines);
-      if (d.pots) drawPotRow(g, x + 8, y + 26, d.pots[0], seed + d.pots[1]);
+      if (d.pots) drawPotRow(g, x + 8, y + 26, d.pots[0], seed + d.pots[1], 6, { first: d.first || 0, hang: true });
     });
   }
   // Planta baja: solo pared, con el zócalo de granito
