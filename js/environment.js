@@ -1133,6 +1133,40 @@ function getWallTile(facade) {
   return c;
 }
 
+let zocaloSlice = null;
+function getZocaloSlice(facade) {
+  if (zocaloSlice) return zocaloSlice;
+  if (!facade?.complete || !facade.naturalWidth) return null;
+  // Zócalo de granito del edificio (x 176–190: dos repeticiones del dibujo).
+  const c = document.createElement('canvas');
+  // Solo filas 352–377 (cinco repeticiones): debajo asoma el caballete de la acera.
+  c.width = 14;
+  c.height = 25;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(facade, 176, 352, 14, 25, 0, 0, 14, 25);
+  zocaloSlice = c;
+  return c;
+}
+
+// Zócalo continuo, con el mismo dibujo que el del edificio (periodo de 7).
+function drawZocalo(g, facade, a, b) {
+  const slice = getZocaloSlice(facade);
+  if (!slice) {
+    fillRect(g, '#a4a09a', a, 352, b - a, 30);
+    return;
+  }
+  g.save();
+  g.beginPath();
+  g.rect(a, 352, b - a, 30);
+  g.clip();
+  for (let x = Math.floor((a - 1) / 14) * 14 + 1; x < b; x += 14) {
+    g.drawImage(slice, x, 352);
+    g.drawImage(slice, x, 377);
+  }
+  g.restore();
+}
+
 let sidewalkSlice = null;
 function getSidewalkSlice(facade) {
   if (sidewalkSlice) return sidewalkSlice;
@@ -1212,22 +1246,29 @@ function drawLeftBuilding(g, facade, x0, night) {
   } else {
     fillRect(g, '#d3bd8c', x0, 46, -x0, 265);
   }
-  // Bajante y cables
-  fillRect(g, '#9e968a', -31, 70, 3, 241);
-  fillRect(g, '#b8b0a4', -30, 70, 1, 241);
-  fillRect(g, '#4e4642', x0, 311, -x0, 1);
 
   LEFT_FLOORS.forEach((y, i) => {
     rects(g, VANO, LEFT_X, y);
     if (i === 0) {
-      // Visillos blancos y sombrilla rosa
+      // Contraventanas interiores de madera, una entornada
       for (const [gx, gy, gw, gh] of VANO_GLASS) {
-        fillRect(g, '#efe7da', LEFT_X + gx, y + gy, gw, gh);
-        for (let fx = 2; fx < gw; fx += 4) fillRect(g, '#d9cfc0', LEFT_X + gx + fx, y + gy, 1, gh);
+        const ajar = gx > 10 && gy > 10;
+        fillRect(g, '#9a7656', LEFT_X + gx, y + gy, ajar ? 7 : gw, gh);
+        for (let sy = 2; sy < gh; sy += 3) fillRect(g, '#7f5f44', LEFT_X + gx, y + gy + sy, ajar ? 7 : gw, 1);
+        if (ajar) fillRect(g, '#3a302c', LEFT_X + gx + 7, y + gy, gw - 7, gh);
       }
+      // Mesita y silla de madera en el balcón
+      fillRect(g, '#9a6a3e', LEFT_X + 20, y + 41, 13, 2);
+      fillRect(g, '#7a5230', LEFT_X + 21, y + 43, 1, 10);
+      fillRect(g, '#7a5230', LEFT_X + 31, y + 43, 1, 10);
+      fillRect(g, '#b5684a', LEFT_X + 25, y + 37, 4, 4);
+      fillRect(g, '#7f9a64', LEFT_X + 24, y + 34, 6, 3);
+      fillRect(g, '#9a6a3e', LEFT_X + 9, y + 38, 2, 15);
+      fillRect(g, '#9a6a3e', LEFT_X + 9, y + 46, 8, 2);
+      fillRect(g, '#7a5230', LEFT_X + 16, y + 48, 1, 5);
+      fillRect(g, '#b48450', LEFT_X + 9, y + 40, 2, 1);
     }
     drawBalcony(g, LEFT_X - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
-    if (i === 0) drawParasol(g, LEFT_X + 30, y + 24);
     if (i === 1) {
       // Manta azul tendida en la barandilla y jardinera de geranios
       fillRect(g, '#5b7bb5', LEFT_X - 3, y + 36, 22, 13);
@@ -1253,14 +1294,14 @@ function drawLeftBuilding(g, facade, x0, night) {
     }
   });
 
-  // Planta baja: sillería hasta el zócalo de granito y el portal número 17
-  fillRect(g, '#d3bd8c', x0, 312, -x0, 40);
-  for (let y = 319; y < 352; y += 8) fillRect(g, '#eadfc4', x0, y, -x0, 1);
-  for (let y = 312, k = 0; y < 352; y += 8, k++) {
-    for (let x = (k % 2 ? -9 : -18); x >= x0 - 18; x -= 18) fillRect(g, '#eadfc4', x, y, 1, 7);
+  // Planta baja: la misma sillería baja hasta el zócalo de granito
+  // (filas 263–303 de la columna limpia: mismo dibujo que las 311–351)
+  if (tile) {
+    for (let x = -18; x >= x0 - 18; x -= 18) g.drawImage(tile, 0, 263 - 46, 18, 41, x, 311, 18, 41);
+  } else {
+    fillRect(g, '#d3bd8c', x0, 311, -x0, 41);
   }
-  fillRect(g, '#a4a09a', x0, 352, -x0, 30);
-  fillRect(g, '#8d8983', x0, 352, -x0, 1);
+  drawZocalo(g, facade, x0, 0);
   drawPortal(g, -52, night);
 }
 
@@ -1321,9 +1362,7 @@ function drawRightBuilding(g, facade, x1, night) {
     });
   });
   // Planta baja: solo pared, con el zócalo de granito
-  fillRect(g, '#4e4642', x0, 311, w, 1);
-  fillRect(g, '#a4a09a', x0, 352, w, 30);
-  fillRect(g, '#8d8983', x0, 352, w, 1);
+  drawZocalo(g, facade, x0, x1);
 }
 
 export function renderSideBuildings(
