@@ -14,6 +14,7 @@ import {
   prepareEnvironment,
   renderEnvironment,
   renderSceneExtensions,
+  renderSideBuildings,
   getWorldTimeLabel
 } from './environment.js';
 
@@ -111,7 +112,7 @@ facade.onload = () => {
     const usableH = Math.max(1, H - bottomPadPx);
 
     // 1. Ocupar todo el ancho si cabe la escena recortando como mucho MAX_TOP_CROP de cielo.
-    // 2. Si no, encajar esa altura y prolongar la fachada a los lados (franjas pequeñas).
+    // 2. Si no, encajar esa altura y continuar la calle con edificios vecinos a los lados.
     // 3. En pantallas anchas (escritorio, horizontal) se muestra la escena entera con márgenes.
     const fillWidth = W / FIELD_W;
     const fitCropped = usableH / (FIELD_H - MAX_TOP_CROP);
@@ -668,7 +669,23 @@ facade.onload = () => {
       ctx.drawImage(background, ox, oy);
     }
 
-    // 2. Continuamos el cielo y la calle
+    // 2. Si sobra un poco de ancho, la calle continúa con dos edificios vecinos.
+    if (extendSides) {
+      renderSideBuildings(
+        ctx,
+        facadeReady ? facade : null,
+        fieldX,
+        fieldY,
+        scale,
+        clock,
+        canvas.width,
+        canvas.height,
+        ox,
+        oy
+      );
+    }
+
+    // 2b. Continuamos el cielo y la calle
     // en los dispositivos con espacio sobrante.
     renderSceneExtensions(
       ctx,
@@ -693,19 +710,6 @@ facade.onload = () => {
       ox,
       oy
     );
-
-    // 3b. Si sobra un poco de ancho, la fachada se prolonga hacia los lados estirando
-    // una columna de cada borde (ya con el cielo, la noche y la calle aplicados).
-    if (extendSides) {
-      const left = Math.round(fieldX * scale + ox);
-      const right = Math.round((fieldX + FIELD_W) * scale + ox);
-      const srcL = Math.round((fieldX + 2.5) * scale + ox);
-      const srcR = Math.round((fieldX + FIELD_W - 0.5) * scale + ox);
-      if (left > 0) ctx.drawImage(canvas, srcL, 0, 1, canvas.height, 0, 0, left, canvas.height);
-      if (right < canvas.width) {
-        ctx.drawImage(canvas, srcR, 0, 1, canvas.height, right, 0, canvas.width - right, canvas.height);
-      }
-    }
 
     // 4. Personaje, objetos y efectos del juego.
     // Siempre quedan por delante del escenario.

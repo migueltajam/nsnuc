@@ -1058,3 +1058,214 @@ export function renderSceneExtensions(
 
   ctx.restore();
 }
+
+/* ==========================================
+   EDIFICIOS VECINOS A LOS LADOS
+   Cuando la pantalla es algo más ancha que la escena,
+   la calle continúa con dos fachadas vecinas.
+   ========================================== */
+
+// Ventanas de los vecinos: [x, y, ancho, alto] en unidades del juego.
+const NEIGHBOR_LEFT = {
+  wall: '#c9a091', wallDark: '#b48a7d', trim: '#e6d6c6', trimShadow: '#9c7d70',
+  top: 30,
+  windows: [
+    [-41, 86, 17, 40], [-41, 164, 17, 40], [-41, 242, 17, 40],
+    [-74, 86, 17, 40], [-74, 164, 17, 40], [-74, 242, 17, 40]
+  ]
+};
+const NEIGHBOR_RIGHT = {
+  wall: '#aab0b9', wallDark: '#959ba5', trim: '#e2e0da', trimShadow: '#80868f',
+  top: 50,
+  windows: [
+    [FIELD_W + 19, 92, 16, 36], [FIELD_W + 19, 170, 16, 36], [FIELD_W + 19, 248, 16, 36],
+    [FIELD_W + 52, 92, 16, 36], [FIELD_W + 52, 170, 16, 36], [FIELD_W + 52, 248, 16, 36]
+  ]
+};
+
+let sidewalkSlice = null;
+function getSidewalkSlice(facade) {
+  if (sidewalkSlice) return sidewalkSlice;
+  if (!facade?.complete || !facade.naturalWidth) return null;
+  // Tramo de acera, bordillo y calzada sin bolardos ni bici (x 24–52 de la fachada).
+  const c = document.createElement('canvas');
+  c.width = 28;
+  c.height = FIELD_H - 382;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(facade, 24, 382, 28, c.height, 0, 0, 28, c.height);
+  sidewalkSlice = c;
+  return c;
+}
+
+function fillRect(g, color, x, y, w, h) {
+  g.fillStyle = color;
+  g.fillRect(x, y, w, h);
+}
+
+function drawNeighbor(g, n, x0, x1, top, side, hour, night) {
+  const w = x1 - x0;
+  // Muro
+  fillRect(g, n.wall, x0, n.top, w, 382 - n.top);
+  // Sombra contra nuestro edificio y pilastra
+  const edge = side === 'left' ? x1 - 3 : x0;
+  fillRect(g, n.wallDark, edge, n.top, 3, 382 - n.top);
+  fillRect(g, 'rgba(0,0,0,0.14)', side === 'left' ? x1 - 1 : x0, n.top, 1, 382 - n.top);
+  // Remate superior
+  fillRect(g, n.trim, x0, n.top - 3, w, 3);
+  fillRect(g, n.trimShadow, x0, n.top, w, 1);
+  // Impostas a la altura de las nuestras
+  for (const y of [148, 226, 304]) {
+    fillRect(g, n.trim, x0, y, w, 3);
+    fillRect(g, n.trimShadow, x0, y + 3, w, 1);
+  }
+  // Ventanas con balconcillo
+  n.windows.forEach(([wx, wy, ww, wh], i) => {
+    if (wx + ww < x0 || wx > x1) return;
+    fillRect(g, n.trim, wx - 2, wy - 2, ww + 4, wh + 4);
+    const lit = night > 0.35 && (i * 7 + 3) % 5 < 3;
+    fillRect(g, lit ? '#e9b56c' : '#6d677c', wx, wy, ww, wh);
+    if (!lit) fillRect(g, '#8a84a0', wx + 1, wy + 1, 2, 9);
+    fillRect(g, '#5d4a3e', wx + Math.floor(ww / 2), wy, 1, wh);
+    if (side === 'right') {
+      // Contraventanas verdes
+      fillRect(g, '#6d8a72', wx - 6, wy, 4, wh);
+      fillRect(g, '#6d8a72', wx + ww + 2, wy, 4, wh);
+    }
+    // Barandilla
+    fillRect(g, '#45404b', wx - 4, wy + wh - 11, ww + 8, 1);
+    for (let bx = wx - 4; bx < wx + ww + 4; bx += 3) fillRect(g, '#45404b', bx, wy + wh - 10, 1, 9);
+    fillRect(g, n.trim, wx - 5, wy + wh - 1, ww + 10, 2);
+    // Alguna maceta
+    if (i % 2 === 0) {
+      fillRect(g, '#7f9a64', wx - 2, wy + wh - 15, 6, 4);
+      fillRect(g, i % 4 === 0 ? '#e0708e' : '#e8c95a', wx - 1, wy + wh - 16, 2, 2);
+    }
+  });
+  // Planta baja
+  fillRect(g, '#a4a09a', x0, 352, w, 30);
+  fillRect(g, '#8d8983', x0, 352, w, 1);
+  if (side === 'left') {
+    // Tienda con persiana metálica y algún grafiti
+    fillRect(g, '#3e3a42', x0, 314, w - 6, 7);
+    fillRect(g, '#e6d6c6', x0 + 3, 316, Math.max(0, w - 12), 3);
+    fillRect(g, '#8e9098', x0, 322, w - 8, 60);
+    for (let y = 323; y < 382; y += 2) fillRect(g, '#7b7d85', x0, y, w - 8, 1);
+    fillRect(g, 'rgba(224,85,138,0.55)', x1 - 26, 350, 9, 2);
+    fillRect(g, 'rgba(224,85,138,0.55)', x1 - 22, 346, 2, 9);
+    fillRect(g, 'rgba(90,150,160,0.55)', x1 - 16, 360, 6, 2);
+  } else {
+    // Portal de madera y una maceta en la puerta
+    fillRect(g, n.trim, x0 + 8, 318, 26, 64);
+    fillRect(g, '#7a5e4c', x0 + 11, 324, 20, 58);
+    fillRect(g, '#5e4738', x0 + 20, 324, 2, 58);
+    fillRect(g, '#c9b37e', x0 + 18, 352, 1, 2);
+    fillRect(g, '#c9b37e', x0 + 23, 352, 1, 2);
+    fillRect(g, '#a8775f', x0 + 38, 374, 7, 8);
+    fillRect(g, '#7f9a64', x0 + 37, 366, 9, 8);
+  }
+}
+
+export function renderSideBuildings(
+  ctx,
+  facade,
+  fieldX,
+  fieldY,
+  scale,
+  seconds,
+  canvasWidth,
+  canvasHeight,
+  shakeX = 0,
+  shakeY = 0
+) {
+  const hour = getWorldHour(seconds);
+  const night = nightAmount(hour);
+  const dusk = duskAmount(hour);
+
+  const left = Math.ceil(fieldX) + 2;
+  const right = Math.ceil(canvasWidth / scale - fieldX - FIELD_W) + 2;
+  if (left <= 2 && right <= 2) return;
+  const top = -Math.max(0, Math.ceil(fieldY) + 3);
+  const bottom = Math.ceil(canvasHeight / scale - fieldY) + 3;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(shakeX, shakeY);
+  ctx.scale(scale, scale);
+  ctx.translate(fieldX, fieldY);
+
+  const regions = [
+    ['left', -left, 0, NEIGHBOR_LEFT],
+    ['right', FIELD_W, FIELD_W + right, NEIGHBOR_RIGHT]
+  ];
+
+  // Cielo con el mismo degradado que el del juego
+  const base = colorForHour(hour);
+  const horizon = mix(base, dusk > 0.15 ? rgb('#f2b178') : rgb('#d9b7d8'), 0.18 + dusk * 0.16);
+  const gradient = ctx.createLinearGradient(0, 0, 0, SKY_HEIGHT);
+  gradient.addColorStop(0, cssRGB(base));
+  gradient.addColorStop(1, cssRGB(horizon));
+
+  for (const [side, x0, x1, n] of regions) {
+    if (x1 - x0 <= 0) continue;
+    ctx.fillStyle = cssRGB(base);
+    ctx.fillRect(x0, top, x1 - x0, -top);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x0, 0, x1 - x0, n.top);
+    if (night > 0.15) {
+      ctx.fillStyle = `rgba(7, 10, 24, ${0.08 + night * 0.24})`;
+      ctx.fillRect(x0, top, x1 - x0, SKY_HEIGHT * 0.58 - top);
+    }
+    drawNeighbor(ctx, n, x0, x1, top, side, hour, night);
+  }
+
+  // Acera, bordillo y calzada continuos
+  const slice = getSidewalkSlice(facade);
+  const pavement = getPavementTile(facade);
+  for (const [, x0, x1] of regions) {
+    if (x1 - x0 <= 0) continue;
+    if (slice) {
+      const start = Math.floor(x0 / 28) * 28;
+      for (let x = start; x < x1; x += 28) ctx.drawImage(slice, x, 382);
+    } else {
+      fillRect(ctx, '#72686d', x0, 382, x1 - x0, FIELD_H - 382);
+    }
+    if (bottom > FIELD_H) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x0, FIELD_H, x1 - x0, bottom - FIELD_H);
+      ctx.clip();
+      ctx.translate(0, FIELD_H);
+      ctx.fillStyle = pavement ? ctx.createPattern(pavement, 'repeat') : '#72686d';
+      ctx.fillRect(x0, 0, x1 - x0, bottom - FIELD_H);
+      ctx.restore();
+    }
+  }
+
+  // Misma luz que la escena: noche, tinte azul y resplandor de la calle
+  const darkness = Math.min(0.9, night * 0.56 + dusk * 0.07);
+  for (const [, x0, x1, n] of regions) {
+    if (x1 - x0 <= 0) continue;
+    const h = bottom - n.top + 3;
+    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+    ctx.fillRect(x0, n.top - 3, x1 - x0, h);
+    if (night > 0.08) {
+      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+      ctx.fillRect(x0, n.top - 3, x1 - x0, h);
+    }
+    if (night > 0.2) {
+      ctx.fillStyle = `rgba(255,205,135,${(night * 0.12).toFixed(3)})`;
+      ctx.fillRect(x0, FIELD_H - 72, x1 - x0, bottom - FIELD_H + 72);
+    }
+    // Las ventanas encendidas brillan por encima de la oscuridad
+    if (night > 0.35) {
+      n.windows.forEach(([wx, wy, ww, wh], i) => {
+        if ((i * 7 + 3) % 5 >= 3 || wx + ww < x0 || wx > x1) return;
+        ctx.fillStyle = `rgba(255,200,120,${(night * 0.55).toFixed(3)})`;
+        ctx.fillRect(wx, wy, ww, wh - 11);
+      });
+    }
+  }
+
+  ctx.restore();
+}
