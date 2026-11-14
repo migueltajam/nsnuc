@@ -1313,17 +1313,17 @@ function drawRightBuilding(g, facade, x1, night) {
   const wallShade = '#d6c8a9';
   const trim = '#f5efe2';
   const trimShade = '#c9bc9f';
-  // Tejado continuo con el del edificio central y alero de madera con canecillos
+  // Tejado y cornisa continuos: los mismos del edificio central (filas 46–69),
+  // con su moldura crema, la fila de dentículos y la línea de sombra.
   const tile = getWallTile(facade);
   if (tile) {
-    for (let x = x0; x < x1; x += 18) g.drawImage(tile, 0, 0, 18, 16, x, 46, 18, 16);
+    for (let x = x0; x < x1; x += 18) g.drawImage(tile, 0, 0, 18, 24, x, 46, 18, 24);
   } else {
     fillRect(g, '#8a8296', x0, 46, w, 16);
+    fillRect(g, '#e2d8c4', x0, 62, w, 6);
+    fillRect(g, '#8f7f6c', x0, 68, w, 2);
   }
-  fillRect(g, '#5e4334', x0, 62, w, 3);
-  for (let x = x0 + 1; x < x1; x += 5) fillRect(g, '#7a5a46', x, 65, 3, 3);
-  fillRect(g, '#3e2c22', x0, 65, w, 1);
-  fillRect(g, wall, x0, 68, w, 284);
+  fillRect(g, wall, x0, 70, w, 282);
   // Sillares almohadillados en la esquina, junto al edificio central
   for (let y = 70, k = 0; y < 352; y += 9, k++) {
     const qw = k % 2 ? 7 : 10;
