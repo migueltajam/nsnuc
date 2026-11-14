@@ -190,16 +190,8 @@ facade.onload = () => {
       bg.drawImage(lettering, fx + 36 * scale, fy + 311.5 * scale, 108 * scale, 12.5 * scale);
     }
 
-    // Con la calle extendida, el borde de la fachada se prolonga un poco bajo los
-    // edificios laterales: así no asoma una línea del fondo en la unión.
-    if (extendSides && facadeReady && fx > 0) {
-      bg.drawImage(facade, 0, 0, 1, FIELD_H, 0, fy, Math.ceil(fx) + 1, fh);
-      bg.drawImage(facade, FIELD_W - 1, 0, 1, FIELD_H, Math.floor(fx + fw) - 1, fy,
-        background.width - Math.floor(fx + fw) + 1, fh);
-    }
-
     // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
-    if (fx > 0 && !extendSides) {
+    if (fx > 0) {
       bg.fillStyle = OUTLINE;
       bg.fillRect(fx - scale, 0, scale, background.height);
       bg.fillRect(fx + fw, 0, scale, background.height);
