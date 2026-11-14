@@ -1314,8 +1314,8 @@ function drawBalconyBike(g, x, y) {
 // Floristería junto al portal 17, inspirada en una floristería de barrio de Madrid:
 // toldo granate con festón crema, estanterías llenas de macetas y cubos de flores en la acera.
 const FLORIST_W = 102;
-// Centrada entre el final del tramo (-195) y el portal 17, bajo la ventana de ese tramo.
-const FLORIST_X = -186;
+// Centrada con el balcón de encima (columna -171, centro -152).
+const FLORIST_X = -152 - FLORIST_W / 2;
 const FLOWER_COLORS = ['#e0708e', '#d84a5a', '#f2d16b', '#f4efe6', '#b98ab0', '#ef9a6a', '#ffb3c6'];
 const POT_COLORS = ['#b5684a', '#e9e4da', '#c9504a', '#d9a648', '#9a9ca0'];
 
@@ -1534,7 +1534,7 @@ const DIGIT_FONT = {
 };
 
 // Señal de calle con guiño a la canción: zona residencial con una pareja y un corazón,
-// y debajo una señal de velocidad con el número 17.
+// y debajo un «ceda el paso» con un corazón dentro.
 function drawSongSign(g, x) {
   // Poste
   fillRect(g, 'rgba(42,22,38,0.22)', x - 10, 399, 11, 2);
@@ -1560,17 +1560,21 @@ function drawSongSign(g, x) {
   fillRect(g, '#ff6f94', sx + 10, sy + 4, 5, 1);
   fillRect(g, '#ff6f94', sx + 11, sy + 5, 3, 1);
   fillRect(g, '#ff6f94', sx + 12, sy + 6, 1, 1);
-  // Señal redonda con el 17
-  const cx = x + 1, cy = 340;
-  const rows = [[-3, 6], [-5, 10], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-6, 12], [-5, 10], [-3, 6]];
-  rows.forEach(([dx, rw], i) => fillRect(g, '#d43a3a', cx + dx, cy - 5 + i, rw, 1));
-  const inner = [[-2, 4], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-4, 8], [-2, 4]];
-  inner.forEach(([dx, rw], i) => fillRect(g, '#f6f4ee', cx + dx, cy - 4 + i, rw, 1));
-  [['1', cx - 4], ['7', cx]].forEach(([d, dx]) => {
-    DIGIT_FONT[d].forEach((row, ry) => {
-      for (let rx = 0; rx < 3; rx++) if (row[rx] === '1') fillRect(g, '#1f1b1e', dx + rx, cy - 3 + ry, 1, 1);
-    });
-  });
+  // Debajo, un «ceda el paso» con un corazón: cede el paso al amor
+  const cx = x + 1, ty = 333;
+  for (let i = 0; i < 12; i++) {
+    const half = Math.round((11 - i) * 0.62);
+    fillRect(g, '#d43a3a', cx - half - 1, ty + i, half * 2 + 2, 1);
+    if (i >= 2 && i <= 8) {
+      const ih = Math.max(0, half - 2);
+      fillRect(g, '#f6f4ee', cx - ih, ty + i, ih * 2, 1);
+    }
+  }
+  fillRect(g, '#ff3d6e', cx - 3, ty + 3, 2, 1);
+  fillRect(g, '#ff3d6e', cx + 1, ty + 3, 2, 1);
+  fillRect(g, '#ff3d6e', cx - 3, ty + 4, 6, 1);
+  fillRect(g, '#ff3d6e', cx - 2, ty + 5, 4, 1);
+  fillRect(g, '#ff3d6e', cx - 1, ty + 6, 2, 1);
 }
 
 // Pizarra de caballete frente a la floristería, con un cardo seco dibujado
@@ -1604,11 +1608,12 @@ function drawFlowerChalkboard(g, x) {
 
 function drawStreetProps(g, x0, x1) {
   // Izquierda: bolardos a los lados del portal y de la floristería, sin tapar puertas
-  if (-74 - 9 >= x0) drawBollard(g, -74);
-  if (FLORIST_X + 30 >= x0) drawFlowerChalkboard(g, FLORIST_X + 40);
+  for (const bx of [-74, FLORIST_X - 10]) if (bx - 9 >= x0) drawBollard(g, bx);
+  // Pizarra a un lado de la floristería, dentro de su ancho
+  if (FLORIST_X + FLORIST_W - 30 >= x0) drawFlowerChalkboard(g, FLORIST_X + FLORIST_W - 30);
   // Derecha: la señal de la canción y un par de bolardos
   if (FIELD_W + 46 <= x1) drawSongSign(g, FIELD_W + 34);
-  if (FIELD_W + 74 <= x1) drawBollard(g, FIELD_W + 70);
+  for (const bx of [FIELD_W + 70, FIELD_W + 122, FIELD_W + 176]) if (bx + 4 <= x1) drawBollard(g, bx);
 }
 
 export function renderSideBuildings(
