@@ -1702,11 +1702,12 @@ function drawStreetTree(g, x) {
   fillRect(g, '#3e3530', x - 6, 390, 14, 3);
   fillRect(g, 'rgba(42,22,38,0.22)', x - 12, 399, 14, 2);
   // Tronco fino y ramas
-  fillRect(g, '#5e4a3c', x, 296, 2, 96);
-  fillRect(g, '#7a6250', x, 296, 1, 96);
+  const top = 314; // altura de la copa: algo más bajo que las ventanas del primer piso
+  fillRect(g, '#5e4a3c', x, top, 2, 392 - top);
+  fillRect(g, '#7a6250', x, top, 1, 392 - top);
   const branches = [[-1, 316, -9, 12], [2, 310, 10, 13], [-1, 300, -6, 12], [2, 298, 6, 12], [0, 290, 1, 14]];
   for (const [bx, by, dx, len] of branches) {
-    for (let i = 0; i < len; i++) fillRect(g, '#5e4a3c', x + bx + Math.round(dx * i / len), by - i, 1, 1);
+    for (let i = 0; i < len; i++) fillRect(g, '#5e4a3c', x + bx + Math.round(dx * i / len), by + top - 296 - i, 1, 1);
   }
   // Copa: racimos de hojas claras, algo sueltos para que se vean las ramas
   const clusters = [[-17, 296, 12, 12], [7, 290, 13, 13], [-10, 280, 13, 11], [-1, 268, 12, 11],
@@ -1718,7 +1719,7 @@ function drawStreetTree(g, x) {
         const r = dx * dx + dy * dy;
         if (r > 1) continue;
         const h = (xx * 7 + yy * 13 + k * 5) % 11;
-        if (h < (r > 0.55 ? 5 : 9)) fillRect(g, TREE_LEAVES[(xx * 2 + yy * 3 + k) % 5], x + cx + xx, cy + yy, 1, 1);
+        if (h < (r > 0.55 ? 5 : 9)) fillRect(g, TREE_LEAVES[(xx * 2 + yy * 3 + k) % 5], x + cx + xx, cy + top - 296 + yy, 1, 1);
       }
     }
   });
