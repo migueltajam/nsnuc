@@ -84,7 +84,7 @@ g('♥', ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'], 7)
 g('Ⅱ', ['##.##', '##.##', '##.##', '##.##', '##.##', '##.##', '##.##'], 8)
 g('❔', G['?'][0])
 
-ACCENTS = {'´': ['..##', '.##.'], '¨': ['##.##'], '~': ['.#.##', '##.#.']}
+ACCENTS = {'´': ['..##', '.##.'], '¨': ['##.##'], '~': ['.#.##', '##.#.'], 'ˇ': ['##..##', '.####.']}
 def accented(base, acc, name):
     rows, top = G[base]
     w = len(rows[0])
@@ -95,6 +95,7 @@ def accented(base, acc, name):
     G[name] = (arows + ['.' * w] * (1 if acc != '~' else 1) + rows, top + len(arows) + 1)
 for b, ch in zip('AEIOU', 'ÁÉÍÓÚ'): accented(b, '´', ch)
 accented('U', '¨', 'Ü'); accented('N', '~', 'Ñ')
+accented('S', 'ˇ', 'Š'); accented('C', 'ˇ', 'Č'); accented('Z', 'ˇ', 'Ž')
 
 def build(path_base):
     order = ['.notdef', 'space'] + [f'u{ord(c):04X}' for c in G]
