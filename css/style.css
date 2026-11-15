@@ -657,3 +657,76 @@ html, body { touch-action: manipulation; }
   touch-action: pan-y; overscroll-behavior: contain;
   scrollbar-color: var(--denim-light) var(--denim-dark); scrollbar-width: thin;
 }
+
+/* ===== Cuenta atrás en vaquero ===== */
+.countdown { background: radial-gradient(circle, rgba(26, 36, 64, .2), rgba(26, 36, 64, .6)); gap: 20px; }
+.countdown span { font-size: 120px; line-height: 1; color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
+.countdown small { font-size: 20px; letter-spacing: 2px; color: var(--shirt); text-shadow: 0 2px 0 var(--denim-ink); }
+
+/* ===== Aviso de logro en vaquero ===== */
+.achievement-toast {
+  background: var(--denim); border: none;
+  outline: 2px dashed var(--stitch); outline-offset: -8px;
+  padding: 16px 18px;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--denim-light), inset 0 -4px 0 0 var(--denim-dark), 0 10px 0 0 rgba(0, 0, 0, .3);
+}
+.achievement-toast small { color: var(--stitch); font-size: 10px; letter-spacing: 1px; }
+.achievement-toast strong { color: var(--cream); font-size: 20px; line-height: 1.2; text-shadow: 0 2px 0 var(--denim-ink); }
+
+/* ===== Guiño del 17 en vaquero: parche pequeño arriba a la derecha ===== */
+.easter-egg {
+  width: 150px; padding: 12px 10px 14px; gap: 6px; opacity: 1;
+  background: var(--denim); border: none;
+  outline: 2px dashed var(--stitch); outline-offset: -7px;
+  box-shadow: 0 -3px 0 0 var(--denim-ink), 0 3px 0 0 var(--denim-ink),
+    -3px 0 0 0 var(--denim-ink), 3px 0 0 0 var(--denim-ink),
+    inset 0 3px 0 0 var(--denim-light), inset 0 -4px 0 0 var(--denim-dark), 0 8px 0 0 rgba(0, 0, 0, .3);
+}
+.easter-egg .egg-top { font-size: 10px; line-height: 1.2; color: var(--stitch); }
+.easter-egg .egg-title { font-size: 10px; line-height: 1.2; color: var(--cream); text-shadow: 0 2px 0 var(--denim-ink); }
+.easter-egg small { font-size: 10px; line-height: 1.3; color: var(--shirt-mid); }
+.easter-egg .jersey {
+  width: 64px; height: 66px; gap: 3px;
+  background: repeating-linear-gradient(90deg, var(--shirt-deep) 0 8px, var(--shirt) 8px 16px);
+  filter: drop-shadow(0 3px 0 var(--denim-ink));
+}
+.easter-egg .jersey small { font-size: 10px; color: var(--denim-ink); }
+.easter-egg .jersey strong { font-size: 30px; line-height: 1; color: var(--denim-ink); text-shadow: none; }
+@keyframes egg-small-in {
+  from { opacity: 0; transform: translateY(-7px) scale(.93); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 360px) { .easter-egg { width: 136px; } }
+.easter-egg .egg-top { text-shadow: none; }
+/* El secreto sale como las etiquetas de logro: en horizontal, centrado arriba */
+.easter-egg {
+  top: calc(env(safe-area-inset-top) + 80px); left: 0; right: 0; margin: 0 auto;
+  width: min(88vw, 310px); padding: 14px 18px;
+  display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px;
+  align-items: center; text-align: left;
+}
+.easter-egg .jersey { grid-column: 1; grid-row: 1 / span 3; width: 52px; height: 54px; gap: 1px; }
+.easter-egg .jersey small { display: none; }
+.easter-egg .jersey strong { font-size: 20px; padding-top: 8px; }
+.easter-egg .egg-top, .easter-egg .egg-title, .easter-egg > small { grid-column: 2; }
+.easter-egg .egg-title { font-size: 20px; }
+@media (max-width: 360px) { .easter-egg { width: min(88vw, 310px); } }
+/* Camiseta del 17: celeste lisa, cuello blanco a rayas, nombre y dorsal en blanco */
+.easter-egg .jersey {
+  position: relative; width: 62px; height: 60px; gap: 1px; justify-content: flex-start; padding-top: 11px;
+  background:
+    linear-gradient(90deg, #2f97cf 0 20%, transparent 20% 80%, #2f97cf 80% 100%) 0 0 / 100% 31% no-repeat,
+    linear-gradient(90deg, transparent 0 22%, #3aa6dc 22% 27%, transparent 27% 73%, #3aa6dc 73% 78%, transparent 78%),
+    #4db7ea;
+}
+.easter-egg .jersey::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: 18px; height: 5px; margin-left: -9px;
+  background: repeating-linear-gradient(180deg, #ffffff 0 1px, #9fd7f3 1px 2px);
+  clip-path: polygon(0 0, 100% 0, 75% 100%, 25% 100%);
+}
+.easter-egg .jersey small { display: block; font-size: 10px; line-height: 1; color: #f4fbff; letter-spacing: 0; }
+.easter-egg .jersey strong { font-size: 20px; line-height: 1; padding-top: 2px; color: #f4fbff; text-shadow: 0 1px 0 #2f97cf; }
+.easter-egg .jersey { width: 76px; height: 64px; }
+.easter-egg .jersey small { text-shadow: none; font-weight: normal; }
