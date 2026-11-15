@@ -700,3 +700,16 @@ html, body { touch-action: manipulation; }
 }
 @media (max-width: 360px) { .easter-egg { width: 136px; } }
 .easter-egg .egg-top { text-shadow: none; }
+/* El secreto sale como las etiquetas de logro: en horizontal, centrado arriba */
+.easter-egg {
+  top: calc(env(safe-area-inset-top) + 80px); left: 0; right: 0; margin: 0 auto;
+  width: min(88vw, 310px); padding: 14px 18px;
+  display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px;
+  align-items: center; text-align: left;
+}
+.easter-egg .jersey { grid-column: 1; grid-row: 1 / span 3; width: 52px; height: 54px; gap: 1px; }
+.easter-egg .jersey small { display: none; }
+.easter-egg .jersey strong { font-size: 20px; padding-top: 8px; }
+.easter-egg .egg-top, .easter-egg .egg-title, .easter-egg > small { grid-column: 2; }
+.easter-egg .egg-title { font-size: 20px; }
+@media (max-width: 360px) { .easter-egg { width: min(88vw, 310px); } }
