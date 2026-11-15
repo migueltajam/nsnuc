@@ -180,7 +180,7 @@ export function showEasterEgg() {
   clearTimeout(eggTimeout);
 
   // Solo aparece durante 1,6 segundos.
-  eggTimeout = setTimeout(hideEasterEgg, 1600);
+  eggTimeout = setTimeout(hideEasterEgg, 3500); // 3,5 s: da tiempo a leerlo
 }
 export function hideEasterEgg() {
   clearTimeout(eggTimeout);
