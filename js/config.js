@@ -8,7 +8,7 @@
   };
   export const SKY_TOP = '#5b9bd5'; // color de cielo para el espacio sobrante en pantallas altas
   export const ROAD = '#4e4a56';
-  export const MARGIN = '#2a1626';
+  export const MARGIN = '#1a2440'; // azul marino del menú
 
   export const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   export const rand = (min, max) => Math.random() * (max - min) + min;

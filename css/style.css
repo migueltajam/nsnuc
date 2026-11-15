@@ -22,7 +22,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #2a1626;
+  background: #1a2440;
   color: var(--text);
   font-family: "NSNUC Pixel", ui-monospace, "Courier New", monospace;
   -webkit-font-smoothing: none;
