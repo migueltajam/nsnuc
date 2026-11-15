@@ -662,3 +662,15 @@ html, body { touch-action: manipulation; }
 .countdown { background: radial-gradient(circle, rgba(26, 36, 64, .2), rgba(26, 36, 64, .6)); gap: 20px; }
 .countdown span { font-size: 120px; line-height: 1; color: var(--cream); text-shadow: 0 6px 0 var(--denim-ink); }
 .countdown small { font-size: 20px; letter-spacing: 2px; color: var(--shirt); text-shadow: 0 2px 0 var(--denim-ink); }
+
+/* ===== Aviso de logro en vaquero ===== */
+.achievement-toast {
+  background: var(--denim); border: none;
+  outline: 2px dashed var(--stitch); outline-offset: -8px;
+  padding: 16px 18px;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--denim-light), inset 0 -4px 0 0 var(--denim-dark), 0 10px 0 0 rgba(0, 0, 0, .3);
+}
+.achievement-toast small { color: var(--stitch); font-size: 10px; letter-spacing: 1px; }
+.achievement-toast strong { color: var(--cream); font-size: 20px; line-height: 1.2; text-shadow: 0 2px 0 var(--denim-ink); }
