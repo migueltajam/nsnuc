@@ -224,14 +224,14 @@ facade.onload = () => {
     }
     // Si la pantalla es más ancha que la calle, filo oscuro donde termina
     if (extendSides && fx > cap + SIDE_TOLERANCE * scale) {
-      bg.fillStyle = OUTLINE;
+      bg.fillStyle = "#0f1628";
       bg.fillRect(Math.floor(fx - cap) - scale, 0, scale, background.height);
       bg.fillRect(Math.ceil(fx + fw + cap), 0, scale, background.height);
     }
 
     // Filo oscuro a los lados cuando la pantalla es más ancha que el campo.
     if (fx > 0 && !extendSides) {
-      bg.fillStyle = OUTLINE;
+      bg.fillStyle = "#0f1628";
       bg.fillRect(fx - scale, 0, scale, background.height);
       bg.fillRect(fx + fw, 0, scale, background.height);
     }
