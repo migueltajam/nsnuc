@@ -531,14 +531,14 @@ facade.onload = () => {
         if (score >= 1000) award('points1000');
         if (multiplier > oldMultiplier) {
           audio.sfx('combo');
-          addText(x, y - 17, `x${multiplier}`, '#fee761');
+          addText(x, y - 18, `x${multiplier}`, '#f2c58a');
           burst(x, y, ['#fee761','#ffd2dc','#ffffff'], 18, 95);
         }
         updateHud(score, level, lives);
         updateCombo(combo, multiplier);
         bumpScore();
         burst(x, y, it.type.colors, 10, 70);
-        addText(x, y - 8, `+${points}`, '#ffd2dc');
+        addText(x, y - 8, `+${points}`, '#f4f1ea');
         vibrate(multiplier > 1 ? 25 : 12);
         break;
       }
@@ -547,7 +547,7 @@ facade.onload = () => {
         lives = Math.min(MAX_LIVES, lives + 1);
         updateHud(score, level, lives);
         burst(x, y, it.type.colors, 12, 70);
-        addText(x, y - 8, '+1', '#fee761');
+        addText(x, y - 8, '+1', '#f2c58a');
         vibrate(25);
         break;
       case 'bomb':
@@ -555,7 +555,7 @@ facade.onload = () => {
         stats.pumpkins++;
         audio.sfx('damage');
         burst(x, y, it.type.colors, 28, 120, 2);
-        addText(x, y - 8, '-1', '#ff3d6e');
+        addText(x, y - 8, '-1', '#cf7d90');
         shake = 0.35;
         flash = 0.3;
         vibrate([60, 40, 60]);

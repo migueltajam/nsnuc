@@ -154,36 +154,25 @@ import { OUTLINE, rgb } from './config.js';
   export const spriteURLs = {};
   for (const [name, c] of Object.entries(sprites)) spriteURLs[name] = c.toDataURL();
 
-  const FONT = {
-    0: ['111', '101', '101', '101', '111'],
-    1: ['010', '110', '010', '010', '111'],
-    2: ['111', '001', '111', '100', '111'],
-    3: ['111', '001', '111', '001', '111'],
-    4: ['101', '101', '111', '001', '001'],
-    5: ['111', '100', '111', '001', '111'],
-    6: ['111', '100', '111', '101', '111'],
-    7: ['111', '001', '010', '010', '010'],
-    8: ['111', '101', '111', '101', '111'],
-    9: ['111', '101', '111', '001', '111'],
-    '+': ['000', '010', '111', '010', '000'],
-    '-': ['000', '000', '111', '000', '000'],
-  };
+  // Números flotantes con la tipografía del juego (NSNUC Pixel, rejilla de 9 de alto).
+  // Generado desde tools/build_font.py.
+  const FONT = {"0": ["011110", "111111", "110011", "110011", "110011", "110011", "110011", "111111", "011110"], "1": ["011100", "111100", "001100", "001100", "001100", "001100", "001100", "111111", "111111"], "2": ["111110", "111111", "000011", "011111", "111110", "110000", "110000", "111111", "111111"], "3": ["111110", "111111", "000011", "011110", "011111", "000011", "000011", "111111", "111110"], "4": ["110011", "110011", "110011", "110011", "111111", "111111", "000011", "000011", "000011"], "5": ["111111", "111111", "110000", "111110", "111111", "000011", "000011", "111111", "111110"], "6": ["011111", "111111", "110000", "111110", "111111", "110011", "110011", "111111", "011110"], "7": ["111111", "111111", "000011", "000110", "001100", "001100", "001100", "001100", "001100"], "8": ["011110", "111111", "110011", "011110", "111111", "110011", "110011", "111111", "011110"], "9": ["011110", "111111", "110011", "110011", "111111", "011111", "000011", "111111", "111110"], "+": ["000000", "000000", "001100", "001100", "111111", "111111", "001100", "001100", "000000"], "-": ["0000", "0000", "0000", "0000", "1111", "1111", "0000", "0000", "0000"], "x": ["000000", "000000", "000000", "110011", "011110", "001100", "011110", "110011", "000000"]};
 
-  export function drawText(g, str, cx, cy, color, size = 2) {
-    const w = (str.length * 4 - 1) * size;
+  export function drawText(g, str, cx, cy, color, size = 1) {
+    const glyphs = [...str].map((ch) => FONT[ch]).filter(Boolean);
+    const w = glyphs.reduce((sum, gl) => sum + (gl[0].length + 1) * size, -size);
     const x0 = Math.round(cx - w / 2);
-    const y0 = Math.round(cy - (5 * size) / 2);
+    const y0 = Math.round(cy - (9 * size) / 2);
     const pixels = [];
-    [...str].forEach((ch, n) => {
-      const glyph = FONT[ch];
-      if (!glyph) return;
+    let x = x0;
+    for (const glyph of glyphs) {
       glyph.forEach((row, ry) => {
-        for (let rx = 0; rx < 3; rx++) {
-          if (row[rx] === '1') pixels.push([x0 + (n * 4 + rx) * size, y0 + ry * size]);
-        }
+        for (let rx = 0; rx < row.length; rx++) if (row[rx] === '1') pixels.push([x + rx * size, y0 + ry * size]);
       });
-    });
-    g.fillStyle = OUTLINE;
+      x += (glyph[0].length + 1) * size;
+    }
+    // Contorno azul marino, como las sombras del menú
+    g.fillStyle = '#1a2440';
     for (const [px, py] of pixels) g.fillRect(px - 1, py - 1, size + 2, size + 2);
     g.fillStyle = color;
     for (const [px, py] of pixels) g.fillRect(px, py, size, size);
