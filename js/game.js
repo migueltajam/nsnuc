@@ -698,16 +698,32 @@ facade.onload = () => {
     }
   }
 
+  // Golpe de calabaza: los bordes de la pantalla se oscurecen en el azul marino del menú
+  // (el centro queda limpio para seguir jugando).
+  function drawHitVignette(alpha) {
+    const ink = (a) => `rgba(26, 36, 64, ${a})`;
+    const ex = LW * 0.24;
+    const ey = LH * 0.2;
+    const edge = (x0, y0, x1, y1, rx, ry, rw, rh) => {
+      const grad = g.createLinearGradient(x0, y0, x1, y1);
+      grad.addColorStop(0, ink(alpha));
+      grad.addColorStop(1, ink(0));
+      g.fillStyle = grad;
+      g.fillRect(rx, ry, rw, rh);
+    };
+    edge(0, 0, ex, 0, 0, 0, ex, LH);
+    edge(LW, 0, LW - ex, 0, LW - ex, 0, ex, LH);
+    edge(0, 0, 0, ey, 0, 0, LW, ey);
+    edge(0, LH, 0, LH - ey, 0, LH - ey, LW, ey);
+  }
+
   function render() {
     g.clearRect(0, 0, LW, LH);
     drawPlayer();
     drawItems();
     drawEffects();
 
-    if (flash > 0) {
-      g.fillStyle = `rgba(255, 61, 110, ${Math.min(0.45, flash * 1.5)})`;
-      g.fillRect(0, 0, LW, LH);
-    }
+    if (flash > 0) drawHitVignette(Math.min(0.8, flash * 2.7));
 
     let ox = 0;
     let oy = 0;
