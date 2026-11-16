@@ -1518,10 +1518,13 @@ function drawFlorist(g, x, night) {
     fillRect(g, FLOWER_COLORS[(n + 2) % FLOWER_COLORS.length], bx + 3, by - 4, 2, 2);
     fillRect(g, FLOWER_COLORS[(n + 4) % FLOWER_COLORS.length], bx + 1, by - 6, 2, 1);
   }
-  // Postes oscuros
-  fillRect(g, '#1f1c1b', x, 314, 3, 68);
-  fillRect(g, '#1f1c1b', x + w - 3, 314, 3, 68);
-  // Toldo granate con festón crema
+  // Postes: contorno de 1 px como el de la librería central y madera oscura
+  fillRect(g, '#3e3432', x, 314, 1, 68);
+  fillRect(g, '#4a3a2c', x + 1, 314, 2, 68);
+  fillRect(g, '#3e3432', x + w - 1, 314, 1, 68);
+  fillRect(g, '#4a3a2c', x + w - 3, 314, 2, 68);
+  // Toldo granate con festón crema, con el mismo contorno de 1 px
+  fillRect(g, '#3e3432', x - 3, 311, w + 6, 16);
   fillRect(g, '#5e1e28', x - 2, 312, w + 4, 3);
   fillRect(g, '#7a2833', x - 2, 315, w + 4, 10);
   fillRect(g, '#8c3440', x - 2, 315, w + 4, 1);
@@ -1676,10 +1679,13 @@ function drawBar(g, x, night) {
     fillRect(g, '#45604f', x + px, 371, pw, 9);
   }
   fillRect(g, '#9a9488', x + 37, 380, 18, 2);
-  // Postes oscuros de 3 px, iguales que los de la floristería
-  fillRect(g, '#1f1c1b', x, 324, 3, 58);
-  fillRect(g, '#1f1c1b', x + w - 3, 324, 3, 58);
-  // Rótulo corrido, con la misma banda oscura de 3 px arriba que el toldo de la floristería
+  // Postes: contorno de 1 px como el de la librería central y el color oscuro del bar
+  fillRect(g, '#3e3432', x, 324, 1, 58);
+  fillRect(g, BAR_RED_DARK, x + 1, 324, 2, 58);
+  fillRect(g, '#3e3432', x + w - 1, 324, 1, 58);
+  fillRect(g, BAR_RED_DARK, x + w - 3, 324, 2, 58);
+  // Rótulo corrido con el mismo contorno de 1 px y banda oscura arriba, como el toldo de la floristería
+  fillRect(g, '#3e3432', x - 4, 306, w + 8, 20);
   fillRect(g, BAR_RED_DARK, x - 3, 307, w + 6, 18);
   fillRect(g, BAR_RED, x - 3, 311, w + 6, 12);
   fillRect(g, BAR_RED_LIGHT, x - 3, 311, w + 6, 1);
