@@ -1642,12 +1642,15 @@ function drawBar(g, x, night) {
     fillRect(g, back, gx, 328, pw, bottom - 328);
     if (!door) {
       // Estante con botellas y barra
-      fillRect(g, '#3e2a22', gx, 340, pw, 1);
-      for (let bx = gx + 1, n = 0; bx < gx + pw - 1; bx += 3, n++) {
-        const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][(n + px) % 5];
-        const bh = 4 + (n % 2);
-        fillRect(g, c, bx, 340 - bh, 2, bh);
-        fillRect(g, c, bx, 340 - bh - 1, 1, 1);
+      // Estante algo más bajo para que las botellas no toquen la lámpara; botellas al azar
+      fillRect(g, '#3e2a22', gx, 344, pw, 1);
+      for (let bx = gx + 1, n = 0, ci = px % 5; bx < gx + pw - 1; bx += 3, n++) {
+        const seed = px * 31 + n * 7;
+        ci = (ci + 1 + Math.floor(hash01(seed) * 4)) % 5; // nunca dos seguidas del mismo color
+        const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][ci];
+        const bh = 3 + Math.floor(hash01(seed + 11) * 3);
+        fillRect(g, c, bx, 344 - bh, 2, bh);
+        fillRect(g, c, bx + (hash01(seed + 5) > 0.5 ? 1 : 0), 344 - bh - 1, 1, 1);
       }
       fillRect(g, '#2e1c18', gx, 358, pw, 12);
       fillRect(g, '#8a5a3a', gx, 357, pw, 2);
@@ -1655,11 +1658,6 @@ function drawBar(g, x, night) {
         // Una caña en la barra del escaparate izquierdo
         fillRect(g, '#f2c24a', gx + pw - 9, 353, 2, 4);
         fillRect(g, '#fff6d8', gx + pw - 9, 353, 2, 1);
-      } else {
-        // Una copa de vino en la del derecho
-        fillRect(g, '#7a2236', gx + 7, 352, 3, 2);
-        fillRect(g, '#d8e4ea', gx + 8, 354, 1, 2);
-        fillRect(g, '#d8e4ea', gx + 7, 356, 3, 1);
       }
       // Taburetes
       for (let tx = gx + 4; tx < gx + pw - 3; tx += 9) {
@@ -1711,11 +1709,12 @@ function drawBar(g, x, night) {
   fillRect(g, BAR_GOLD, ex + 7, 321, 1, 1);
   fillRect(g, BAR_GOLD, ex, 314, 1, 7);
   fillRect(g, BAR_GOLD, ex + 8, 314, 1, 7);
-  // Copa centrada dentro del círculo: interior de las filas 313–321 (centro 317), copa 314–320
-  fillRect(g, '#f4efe6', ex + 2, 314, 5, 1);
-  fillRect(g, '#f4efe6', ex + 3, 315, 3, 1);
-  fillRect(g, '#f4efe6', ex + 4, 316, 1, 4);
-  fillRect(g, '#f4efe6', ex + 3, 320, 3, 1);
+  // Copa centrada en el círculo: el interior va de la fila 313 a la 321 (centro 317);
+  // la copa ocupa 315–319, con el mismo hueco arriba y abajo
+  fillRect(g, '#f4efe6', ex + 2, 315, 5, 1);
+  fillRect(g, '#f4efe6', ex + 3, 316, 3, 1);
+  fillRect(g, '#f4efe6', ex + 4, 317, 1, 2);
+  fillRect(g, '#f4efe6', ex + 3, 319, 3, 1);
 }
 
 function drawRightBuilding(g, facade, x1, night) {
