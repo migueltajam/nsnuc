@@ -1641,69 +1641,40 @@ function drawBar(g, x, night) {
     const bottom = door ? 380 : 370;
     fillRect(g, back, gx, 328, pw, bottom - 328);
     if (!door) {
-      const left = px < 30;
-      // Viga de madera con jamones colgados, como en las tabernas de Madrid
-      fillRect(g, '#3e2a22', gx, 328, pw, 2);
-      for (const hx of left ? [gx + 4, gx + 20] : [gx + 5, gx + 21]) {
-        fillRect(g, '#2a1a16', hx + 1, 330, 1, 2);
-        fillRect(g, '#e8d9c0', hx + 1, 332, 1, 1);
-        fillRect(g, '#8a3a2a', hx, 333, 3, 3);
-        fillRect(g, '#a8503a', hx, 333, 1, 2);
-        fillRect(g, '#6e2a20', hx + 1, 336, 2, 1);
-      }
-      // Lámpara colgante en el centro
-      const lx = gx + Math.floor(pw / 2) - 2;
-      fillRect(g, '#2a1a16', lx + 2, 330, 1, 3);
-      fillRect(g, BAR_GOLD, lx, 333, 5, 2);
-      fillRect(g, '#fff0c0', lx + 1, 335, 3, 1);
-      // Dos estantes: botellas arriba y copas abajo
-      fillRect(g, '#3e2a22', gx, 343, pw, 1);
+      // Estante con botellas y barra
+      fillRect(g, '#3e2a22', gx, 340, pw, 1);
       for (let bx = gx + 1, n = 0; bx < gx + pw - 1; bx += 3, n++) {
         const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][(n + px) % 5];
         const bh = 4 + (n % 2);
-        fillRect(g, c, bx, 343 - bh, 2, bh);
-        fillRect(g, c, bx, 343 - bh - 1, 1, 1);
-        if (n % 2) fillRect(g, 'rgba(255,255,255,0.35)', bx, 343 - bh + 1, 1, 2);
+        fillRect(g, c, bx, 340 - bh, 2, bh);
+        fillRect(g, c, bx, 340 - bh - 1, 1, 1);
       }
-      fillRect(g, '#3e2a22', gx, 350, pw, 1);
-      for (let cx = gx + 2; cx < gx + pw - 2; cx += 3) {
-        fillRect(g, '#d8e4ea', cx, 347, 2, 1);
-        fillRect(g, '#b8c8d2', cx, 348, 1, 2);
+      fillRect(g, '#2e1c18', gx, 358, pw, 12);
+      fillRect(g, '#8a5a3a', gx, 357, pw, 2);
+      if (px < 30) {
+        // Una caña en la barra del escaparate izquierdo
+        fillRect(g, '#f2c24a', gx + pw - 9, 353, 2, 4);
+        fillRect(g, '#fff6d8', gx + pw - 9, 353, 2, 1);
+      } else {
+        // Una copa de vino en la del derecho
+        fillRect(g, '#7a2236', gx + 7, 352, 3, 2);
+        fillRect(g, '#d8e4ea', gx + 8, 354, 1, 2);
+        fillRect(g, '#d8e4ea', gx + 7, 356, 3, 1);
       }
-      // Barra: tablero de madera, tirador de cerveza y frente de azulejos blancos y azules
-      fillRect(g, '#8a5a3a', gx, 355, pw, 2);
-      fillRect(g, '#a8744a', gx, 355, pw, 1);
-      const tx = left ? gx + pw - 8 : gx + 5;
-      fillRect(g, BAR_GOLD, tx, 351, 1, 4);
-      fillRect(g, BAR_GOLD, tx - 1, 351, 3, 1);
-      fillRect(g, '#2a1a16', tx, 349, 1, 2);
-      fillRect(g, '#f2c24a', tx + 3, 352, 2, 3);
-      fillRect(g, '#fff6d8', tx + 3, 352, 2, 1);
-      for (let ty = 357; ty < 370; ty += 2) {
-        for (let tz = gx; tz < gx + pw; tz += 2) {
-          fillRect(g, ((tz - gx) / 2 + (ty - 357) / 2) % 2 ? '#e9e4da' : '#4f74a8', tz, ty, Math.min(2, gx + pw - tz), Math.min(2, 370 - ty));
-        }
+      // Taburetes
+      for (let tx = gx + 4; tx < gx + pw - 3; tx += 9) {
+        fillRect(g, BAR_RED_DARK, tx, 362, 4, 2);
+        fillRect(g, '#2a1a16', tx + 1, 364, 2, 6);
       }
-      // Taburetes delante de la barra
-      for (let sx = gx + 4; sx < gx + pw - 3; sx += 9) {
-        fillRect(g, BAR_RED_DARK, sx, 362, 4, 2);
-        fillRect(g, '#2a1a16', sx + 1, 364, 2, 6);
-      }
+      // Lámpara colgante
+      const lx = gx + Math.floor(pw / 2) - 2;
+      fillRect(g, '#2a1a16', lx + 2, 328, 1, 4);
+      fillRect(g, BAR_GOLD, lx, 332, 5, 2);
+      fillRect(g, '#fff0c0', lx + 1, 334, 3, 1);
     } else {
-      // Puerta abierta: suelo de baldosas blancas y negras y un poco de luz
-      for (let fy = 372; fy < 380; fy += 2) {
-        for (let fx = gx; fx < gx + pw; fx += 2) {
-          fillRect(g, ((fx - gx) / 2 + (fy - 372) / 2) % 2 ? '#e9e4da' : '#2a2224', fx, fy, 2, 2);
-        }
-      }
-      // Perchero con abrigo y un cuadro en la pared del fondo
-      fillRect(g, '#2a1a16', gx + 2, 340, 1, 32);
-      fillRect(g, '#2a1a16', gx + 1, 340, 3, 1);
-      fillRect(g, '#cf7d90', gx + 3, 341, 3, 9);
-      fillRect(g, '#a95d70', gx + 3, 349, 3, 1);
-      fillRect(g, BAR_GOLD, gx + 7, 333, 6, 5);
-      fillRect(g, '#3f6a4a', gx + 8, 334, 4, 3);
-      fillRect(g, BAR_GOLD, gx + pw - 3, 352, 1, 6);
+      // Puerta abierta de cristal: suelo rojo y un poco de luz
+      fillRect(g, '#7a3a2e', gx, 372, pw, 8);
+      fillRect(g, BAR_GOLD, gx + pw - 3, 350, 1, 6);
     }
     // Reflejo del cristal
     g.fillStyle = 'rgba(200,225,240,0.16)';
