@@ -1676,8 +1676,11 @@ function drawBar(g, x, night) {
     fillRect(g, '#45604f', x + px, 371, pw, 9);
   }
   fillRect(g, '#9a9488', x + 37, 380, 18, 2);
-  // Rótulo rojo corrido
-  fillRect(g, BAR_RED_DARK, x - 3, 310, w + 6, 15);
+  // Postes oscuros de 3 px, iguales que los de la floristería
+  fillRect(g, '#1f1c1b', x, 324, 3, 58);
+  fillRect(g, '#1f1c1b', x + w - 3, 324, 3, 58);
+  // Rótulo corrido, con la misma banda oscura de 3 px arriba que el toldo de la floristería
+  fillRect(g, BAR_RED_DARK, x - 3, 307, w + 6, 18);
   fillRect(g, BAR_RED, x - 3, 311, w + 6, 12);
   fillRect(g, BAR_RED_LIGHT, x - 3, 311, w + 6, 1);
   fillRect(g, BAR_GOLD, x + 2, 316, 34, 1);
