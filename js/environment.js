@@ -1578,10 +1578,70 @@ function drawLaundry(g, x, y, color, second) {
 
 // Decoración de cada ventana del edificio crema: [columna][planta]
 // Ventanas numeradas de izquierda a derecha y de arriba abajo (1–4, 5–8, 9–12).
+// Monstera grande en el suelo del balcón: hojas en forma de corazón con los cortes abiertos
+// hasta el borde, detrás de la barandilla.
+// Hoja dibujada mirando a la derecha (el tallo entra por la izquierda); M = nervio central.
+const MONSTERA_LEAF = [
+  '..##.##......',
+  '.###.###.....',
+  '####.###.##..',
+  'MMM##.###.##.',
+  '###MMM###.###',
+  '.####.MMM##.#',
+  '..###.###MMM.',
+  '...##.##.###M',
+  '.....#.#..#..',
+];
+function drawMonsteraLeaf(g, x0, y0, flip, k) {
+  const w = MONSTERA_LEAF[0].length;
+  MONSTERA_LEAF.forEach((row, yy) => {
+    for (let xx = 0; xx < w; xx++) {
+      const ch = row[xx];
+      if (ch === '.') continue;
+      const color = ch === 'M' ? '#7fb86a' : yy < 3 ? '#4f9a5a' : (xx + yy + k) % 5 === 0 ? '#2f6b3e' : '#3e8a4c';
+      fillRect(g, color, flip ? x0 + w - 1 - xx : x0 + xx, y0 + yy, 1, 1);
+    }
+  });
+}
+// Monstera grande: tallos que suben y se arquean, con las hojas caídas hacia los lados
+function drawMonstera(g, cx, floor) {
+  fillRect(g, '#e9e4da', cx - 5, floor - 7, 11, 7);
+  fillRect(g, '#d3c9b8', cx + 3, floor - 7, 3, 7);
+  const top = floor - 7;
+  // [desplazamiento de la base de la hoja, altura de la base, mira a la izquierda]
+  const leaves = [[-3, -33, true], [3, -30, false], [-2, -24, true], [2, -19, false], [-3, -14, true], [1, -36, false]];
+  leaves.forEach(([bx, ly, left], k) => {
+    const baseX = cx + bx;
+    const by = top + ly;
+    // Tallo: sube desde la maceta y se curva hacia la hoja
+    for (let yy = by + 3; yy < top; yy++) {
+      const t = (yy - by - 3) / Math.max(1, top - by - 3);
+      fillRect(g, '#2f5a34', Math.round(baseX + (cx - baseX) * t * t), yy, 1, 1);
+    }
+    drawMonsteraLeaf(g, left ? baseX - 13 : baseX + 1, by, left, k);
+  });
+}
+
+// Lavanda en maceta de barro: matas de tallos finos con espigas moradas (sin frutos).
+function drawLavender(g, cx, floor) {
+  fillRect(g, '#c9785a', cx - 5, floor - 6, 11, 6);
+  fillRect(g, '#b5684a', cx + 3, floor - 5, 3, 5);
+  const top = floor - 6;
+  for (let i = 0; i < 9; i++) {
+    const sx = cx - 5 + Math.round(i * 1.4);
+    const h = 13 + ((i * 7) % 5) * 2;
+    const lean = i < 3 ? -1 : i > 5 ? 1 : 0;
+    for (let k = 0; k < h; k++) fillRect(g, k < 5 ? '#6f8f6a' : '#7f9a74', sx + Math.round(lean * k / 6), top - k, 1, 1);
+    const tx = sx + Math.round(lean * h / 6);
+    for (let k = 0; k < 5; k++) fillRect(g, k % 2 ? '#9a7ac8' : '#7a5aa8', tx + (k % 2 ? lean || 1 : 0) - (k % 2 ? 0 : 0), top - h - k, 1, 1);
+    fillRect(g, '#b89ad8', tx, top - h - 4, 1, 1);
+  }
+}
+
 const RIGHT_DECOR = [
   [
     { awning: 11, pots: [2, 1], first: 1 },                // 1
-    { tall: 5, tallDx: 15 },                                 // 5
+    { lavender: true },                                      // 5
     { pots: [2, 2], vines: 16 }                              // 9
   ],
   [
@@ -1602,7 +1662,7 @@ const RIGHT_DECOR = [
   // Columna extra de las pantallas anchas: como la primera pero sin toldo
   [
     { pots: [2, 21], first: 1 },
-    { tall: 25, tallDx: 15 },
+    { monstera: true },
     { pots: [2, 22], vines: 16 }
   ]
 ];
@@ -1927,6 +1987,8 @@ function drawRightBuilding(g, facade, x1, night) {
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
       if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
+      if (d.monstera) drawMonstera(g, x + 13, y + 43);
+      if (d.lavender) drawLavender(g, x + 12, y + 43);
       if (d.floorPot) drawPotRow(g, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
       if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
