@@ -2320,7 +2320,8 @@ function drawAttic(g, x, w, night) {
     fillRect(g, '#59607a', px + 1, 37, 10, 21);
     fillRect(g, '#6b4e3c', px + 6, 37, 1, 21);
     fillRect(g, '#7a82a0', px + 2, 38, 1, 6);
-    roofLit.push([px + 1, 37, 10, 21]);
+    // Con la persiana a medias, la luz empieza debajo de la persiana
+    roofLit.push(i % 2 === 0 ? [px + 1, 45, 10, 13] : [px + 1, 37, 10, 21]);
     if (i % 2 === 0) {
       fillRect(g, '#7c9a74', px, 36, 12, 9);
       for (let sx = px + 1; sx < px + 12; sx += 3) fillRect(g, '#8eaa86', sx, 36, 1, 9);
@@ -2509,6 +2510,20 @@ export function renderSideBuildings(
       drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
     });
   }
+  if (roofExtras.length) {
+    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    if (night > 0.08) {
+      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    }
+  }
+  // Buhardillas y ático: también con su propio horario (antes de la capa delantera,
+  // para que la barandilla del ático quede por delante de la luz)
+  roofLit.forEach(([rx, ry, rw, rh], i) => {
+    const sch = windowSchedule(3000 + i);
+    if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
+  });
   // Capa delantera (balcones, plantas, toldos) con la misma luz de noche que el muro,
   // pintada por encima de las ventanas encendidas
   fgCtx.save();
@@ -2529,19 +2544,6 @@ export function renderSideBuildings(
   // la floristería cierra pronto, el bar trasnocha y la luz del portal se apaga de madrugada
   if (x0 < FLORIST_X + FLORIST_W) drawShopLight(ctx, FLORIST_X + 3, 328, FLORIST_W - 6, 44, 18.3, 21.4, hour, seconds, 0.32, 701);
   if (LEFT_X - 8 >= x0) drawShopLight(ctx, LEFT_X + 4, 332, 28, 48, 19.1, 1.6, hour, seconds, 0.3, 702);
-  if (roofExtras.length) {
-    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
-    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    if (night > 0.08) {
-      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
-      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    }
-  }
-  // Buhardillas y ático: también con su propio horario
-  roofLit.forEach(([rx, ry, rw, rh], i) => {
-    const sch = windowSchedule(3000 + i);
-    if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
-  });
   if (BAR_X + BAR_W + 4 <= x1) {
     for (const [px, pw] of BAR_PANES) drawShopLight(ctx, BAR_X + px, 328, pw, pw < 20 ? 52 : 42, 18.6, 2.4, hour, seconds, 0.28, 703 + px);
   }
