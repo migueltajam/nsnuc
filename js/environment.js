@@ -2258,7 +2258,6 @@ function drawStreetProps(g, x0, x1) {
 // ---------------- Tejados variados de los edificios de los lados ----------------
 // Solo la parte alta: buhardillas como las del edificio central, chimeneas, una antena
 // y, en el edificio crema, un ático retranqueado con terraza.
-let roofExtras = []; // zonas por encima del tejado que también se oscurecen de noche
 let roofLit = []; // ventanas del tejado que se encienden de noche
 
 function drawDormer(g, x, wide = false) {
@@ -2276,7 +2275,6 @@ function drawDormer(g, x, wide = false) {
     fillRect(g, '#ebc494', px + 1, 48, 1, 5);
     roofLit.push([px, 47, 8, 12]);
   }
-  roofExtras.push([x - 2, 36, w + 4, 8]);
 }
 
 function drawBrickChimney(g, x, h = 14) {
@@ -2286,7 +2284,6 @@ function drawBrickChimney(g, x, h = 14) {
   fillRect(g, '#a36a5a', x + 2, y + 3, 8, h - 3);
   fillRect(g, '#c98a72', x + 10, y + 3, 1, h - 3);
   for (let yy = y + 7; yy < 46; yy += 4) fillRect(g, '#7f5246', x + 2, yy, 8, 1);
-  roofExtras.push([x, y, 13, h]);
 }
 
 function drawWhiteChimney(g, x) {
@@ -2295,7 +2292,6 @@ function drawWhiteChimney(g, x) {
   fillRect(g, '#efe6d4', x, 35, 12, 11);
   fillRect(g, '#d3c6ac', x + 9, 35, 3, 11);
   fillRect(g, '#4a4450', x + 3, 38, 6, 3);
-  roofExtras.push([x - 1, 33, 14, 13]);
 }
 
 function drawAntenna(g, x) {
@@ -2303,7 +2299,6 @@ function drawAntenna(g, x) {
   fillRect(g, '#4a4450', x - 5, 25, 11, 1);
   fillRect(g, '#4a4450', x - 3, 29, 7, 1);
   fillRect(g, '#4a4450', x - 4, 33, 9, 1);
-  roofExtras.push([x - 5, 22, 11, 24]);
 }
 
 function drawAttic(g, x, w, night) {
@@ -2342,11 +2337,9 @@ function drawAttic(g, x, w, night) {
   fillRect(fore(g), '#e0708e', x - 2 + swayAt(x - 2.5), 50, 2, 1);
   fillRect(fore(g), '#3a363e', x - 6, 52, w + 12, 1);
   for (let bx = x - 6; bx <= x + w + 6; bx += 3) fillRect(fore(g), '#3a363e', bx, 52, 1, 10);
-  roofExtras.push([x - 2, 24, w + 4, 22]);
 }
 
 function drawRoofs(g, x0, x1, night) {
-  roofExtras = [];
   roofLit = [];
   // Edificio amarillo (continuación del central): buhardillas sobre cada columna,
   // chimenea de ladrillo y una antena
@@ -2375,6 +2368,7 @@ function drawRoofs(g, x0, x1, night) {
 // escalan de una vez: así no aparecen líneas entre las piezas de muro en ninguna tarjeta gráfica.
 let sideCanvas = null;
 let fgCanvas = null;
+let roofCanvas = null; // buhardillas, chimeneas y ático: se oscurecen solo donde hay dibujo
 export function renderSideBuildings(
   out,
   facade,
@@ -2418,6 +2412,16 @@ export function renderSideBuildings(
     fgCanvas.width = sw;
     fgCanvas.height = sh;
   }
+  roofCanvas ||= document.createElement('canvas');
+  if (roofCanvas.width !== sw || roofCanvas.height !== sh) {
+    roofCanvas.width = sw;
+    roofCanvas.height = sh;
+  }
+  const roofCtx = roofCanvas.getContext('2d');
+  roofCtx.setTransform(1, 0, 0, 1, 0, 0);
+  roofCtx.clearRect(0, 0, sw, sh);
+  roofCtx.imageSmoothingEnabled = false;
+  roofCtx.translate(-x0, -top);
   const fgCtx = fgCanvas.getContext('2d');
   fgCtx.setTransform(1, 0, 0, 1, 0, 0);
   fgCtx.clearRect(0, 0, sw, sh);
@@ -2458,7 +2462,7 @@ export function renderSideBuildings(
   FG = fgCtx;
   if (left > 2) drawLeftBuilding(ctx, facade, x0, night);
   if (right > 2) drawRightBuilding(ctx, facade, x1, night);
-  drawRoofs(ctx, x0, x1, night);
+  drawRoofs(roofCtx, x0, x1, night);
   FG = null;
 
   // Acera, bordillo y calzada continuos
@@ -2510,14 +2514,17 @@ export function renderSideBuildings(
       drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
     });
   }
-  if (roofExtras.length) {
-    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
-    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    if (night > 0.08) {
-      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
-      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    }
+  // Tejados con la forma de cada pieza: se oscurecen solo sus píxeles, no un rectángulo
+  roofCtx.save();
+  roofCtx.globalCompositeOperation = 'source-atop';
+  roofCtx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+  roofCtx.fillRect(x0, top, x1 - x0, bottom - top);
+  if (night > 0.08) {
+    roofCtx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+    roofCtx.fillRect(x0, top, x1 - x0, bottom - top);
   }
+  roofCtx.restore();
+  ctx.drawImage(roofCanvas, x0, top);
   // Buhardillas y ático: también con su propio horario (antes de la capa delantera,
   // para que la barandilla del ático quede por delante de la luz)
   roofLit.forEach(([rx, ry, rw, rh], i) => {
