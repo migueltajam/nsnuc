@@ -170,7 +170,7 @@ function popToast() {
   const img = document.createElement('img'); img.src = item.iconURL; img.alt = ''; toastIcon.append(img);
   ui.achievementToastName.textContent = item.label;
   ui.achievementToast.classList.remove('hidden');
-  toastTimeout=setTimeout(popToast,2600);
+  toastTimeout=setTimeout(popToast,4000); // 4 s en pantalla
 }
 export function showAchievementToast(item) {
   toastQueue.push(item);
@@ -187,7 +187,7 @@ export function showEasterEgg() {
   clearTimeout(eggTimeout);
 
   // Solo aparece durante 1,6 segundos.
-  eggTimeout = setTimeout(hideEasterEgg, 3500); // 3,5 s: da tiempo a leerlo
+  eggTimeout = setTimeout(hideEasterEgg, 5500); // 5,5 s en pantalla
 }
 export function hideEasterEgg() {
   clearTimeout(eggTimeout);
