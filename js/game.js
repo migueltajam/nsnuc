@@ -85,7 +85,6 @@ facade.onload = () => {
   // Contadores de los logros
   let pumpkinsDodged = 0; // calabazas esquivadas seguidas sin recibir daño
   let nightKisses = 0; // besos recogidos en la noche actual
-  let lastRecovery = false; // se recuperó una vida estando con la última
   const isNight = () => { const h = getWorldHour(clock); return h >= 19 || h < 7; };
 
   const keys = { left: false, right: false };
@@ -316,7 +315,6 @@ facade.onload = () => {
     easterEggShown = false;
     pumpkinsDodged = 0;
     nightKisses = 0;
-    lastRecovery = false;
     hideEasterEgg();
     spawnTimer = 0.6;
     items = [];
@@ -536,7 +534,6 @@ facade.onload = () => {
             nightKisses++;
             if (nightKisses >= 25) award('colorWings');
           }
-          if (lastRecovery) award('notDead');
         } else {
           stats.hearts++;
           audio.sfx('heart', multiplier);
@@ -557,7 +554,7 @@ facade.onload = () => {
         break;
       }
       case 'life':
-        if (lives === 1) lastRecovery = true; // al límite: recupera una vida con la última
+        if (lives === 1) award('notDead'); // al límite: recupera una vida cuando solo queda una
         audio.sfx('bonus');
         lives = Math.min(MAX_LIVES, lives + 1);
         updateHud(score, level, lives);
@@ -567,7 +564,6 @@ facade.onload = () => {
         break;
       case 'bomb':
         pumpkinsDodged = 0;
-        lastRecovery = false;
         clearCombo();
         stats.pumpkins++;
         audio.sfx('damage');
@@ -601,7 +597,7 @@ facade.onload = () => {
 
     timeSinceGood += dt;
     if (combo > 0 && timeSinceGood > 6) clearCombo();
-    if (elapsed >= DAY_SECONDS) award('madrid24'); // de las 08:00 a las 08:00 del día siguiente
+    if (elapsed >= DAY_SECONDS * 23 / 24) award('madrid24'); // llega a las 07:00: ha pasado la noche entera
     if (!isNight()) nightKisses = 0; // cada noche empieza la cuenta
     timeWithoutCatching += dt;
     if (goTimer > 0) {

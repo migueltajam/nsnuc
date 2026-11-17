@@ -144,12 +144,11 @@ export function renderAchievements() {
   for (const item of list) {
     const li = document.createElement('li');
     li.className = 'achievement' + (!item.unlocked ? ' locked' : '') + (item.isNew ? ' just-unlocked' : '');
-    const icon = document.createElement('span'); icon.className='achievement-icon'; icon.textContent = item.icon;
+    const icon = document.createElement('img'); icon.className = 'achievement-icon'; icon.src = item.iconURL; icon.alt = '';
     const info = document.createElement('div');
-    const level = document.createElement('em'); level.className = 'achievement-level level-' + item.level.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]+/g, '-'); level.textContent = item.level;
     const title = document.createElement('strong'); title.textContent = item.label;
     const desc = document.createElement('small'); desc.textContent = item.desc;
-    info.append(level,title,desc); li.append(icon,info);
+    info.append(title,desc); li.append(icon,info);
     if (!item.unlocked) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
     ui.achievements.appendChild(li);
   }
@@ -163,7 +162,9 @@ export function resetToasts() {
 function popToast() {
   const item = toastQueue.shift();
   if (!item) { ui.achievementToast.classList.add('hidden'); toastTimeout=null; return; }
-  ui.achievementToast.querySelector('.achievement-toast-icon').textContent = item.icon;
+  const toastIcon = ui.achievementToast.querySelector('.achievement-toast-icon');
+  toastIcon.textContent = '';
+  const img = document.createElement('img'); img.src = item.iconURL; img.alt = ''; toastIcon.append(img);
   ui.achievementToastName.textContent = item.label;
   ui.achievementToast.classList.remove('hidden');
   toastTimeout=setTimeout(popToast,2600);
