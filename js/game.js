@@ -15,7 +15,9 @@ import {
   renderEnvironment,
   renderSceneExtensions,
   renderSideBuildings,
-  getWorldTimeLabel
+  getWorldTimeLabel,
+  getWorldHour,
+  DAY_SECONDS,
 } from './environment.js';
 
 const canvas = document.getElementById('game');
@@ -80,6 +82,10 @@ facade.onload = () => {
   let best = loadBest();
   let timeWithoutCatching = 0;
   let easterEggShown = false;
+  // Contadores de los logros
+  let pumpkinsDodged = 0; // calabazas esquivadas seguidas sin recibir daño
+  let nightKisses = 0; // besos recogidos en la noche actual
+  const isNight = () => { const h = getWorldHour(clock); return h >= 19 || h < 7; };
 
   const keys = { left: false, right: false };
 
@@ -307,6 +313,8 @@ facade.onload = () => {
     updateCombo(0, 1);
     timeWithoutCatching = 0;
     easterEggShown = false;
+    pumpkinsDodged = 0;
+    nightKisses = 0;
     hideEasterEgg();
     spawnTimer = 0.6;
     items = [];
@@ -521,14 +529,17 @@ facade.onload = () => {
         if (it.type.sprite === 'beso') {
           stats.kisses++;
           audio.sfx('kiss', multiplier);
-          award('firstKiss');
+          if (stats.kisses >= 2) award('twoKisses');
+          if (isNight()) {
+            nightKisses++;
+            if (nightKisses >= 25) award('colorWings');
+          }
         } else {
           stats.hearts++;
           audio.sfx('heart', multiplier);
         }
-        if (combo >= 5) award('combo5');
-        if (combo >= 10) award('combo10');
-        if (score >= 1000) award('points1000');
+        if (combo >= 17) award('combo17');
+        if (score >= 8000) award('points8000');
         if (multiplier > oldMultiplier) {
           audio.sfx('combo');
           addText(x, y - 18, `x${multiplier}`, '#f2c58a');
@@ -543,6 +554,7 @@ facade.onload = () => {
         break;
       }
       case 'life':
+        if (lives === 1) award('notDead'); // al límite: recupera una vida cuando solo queda una
         audio.sfx('bonus');
         lives = Math.min(MAX_LIVES, lives + 1);
         updateHud(score, level, lives);
@@ -551,6 +563,7 @@ facade.onload = () => {
         vibrate(25);
         break;
       case 'bomb':
+        pumpkinsDodged = 0;
         clearCombo();
         stats.pumpkins++;
         audio.sfx('damage');
@@ -566,6 +579,10 @@ facade.onload = () => {
 
   // Solo las calabazas atrapadas restan vidas. Dejar pasar otros objetos no penaliza.
   function onMiss(it) {
+    if (it.type.kind === 'bomb') {
+      pumpkinsDodged++;
+      if (pumpkinsDodged >= 10) award('outlaw');
+    }
     if (it.type.kind === 'good') {
       clearCombo(); // no quita vidas: solo rompe la racha.
       burst(it.x, groundY, it.type.colors, 3, 25);
@@ -580,7 +597,8 @@ facade.onload = () => {
 
     timeSinceGood += dt;
     if (combo > 0 && timeSinceGood > 6) clearCombo();
-    if (elapsed >= 90) award('survivor');
+    if (elapsed >= DAY_SECONDS * 23 / 24) award('madrid24'); // llega a las 07:00: ha pasado la noche entera
+    if (!isNight()) nightKisses = 0; // cada noche empieza la cuenta
     timeWithoutCatching += dt;
     if (goTimer > 0) {
       goTimer -= dt;

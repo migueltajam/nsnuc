@@ -730,3 +730,25 @@ html, body { touch-action: manipulation; }
 .easter-egg .jersey strong { font-size: 20px; line-height: 1; padding-top: 2px; color: #f4fbff; text-shadow: 0 1px 0 #2f97cf; }
 .easter-egg .jersey { width: 76px; height: 64px; }
 .easter-egg .jersey small { text-shadow: none; font-weight: normal; }
+
+/* Logros: dos columnas, con la dificultad encima del nombre */
+.achievement { position: relative; align-items: flex-start; padding: 10px 8px; }
+.achievement-icon { font-size: 18px; line-height: 1; padding-top: 2px; }
+.achievement .achievement-level { font-style: normal; font-size: 10px; line-height: 1; color: var(--shirt-mid); }
+.achievement .level-facil { color: #8fd18a; }
+.achievement .level-medio { color: var(--shirt); }
+.achievement .level-dificil { color: var(--gold); }
+.achievement .level-muy-dificil { color: var(--stitch); }
+.achievement .level-extremo { color: var(--embroidery-light); }
+.achievement .level-secreto { color: #b89ad8; }
+.achievement strong { font-size: 10px; line-height: 1.3; }
+.achievement small { font-size: 10px; line-height: 1.3; text-transform: none; }
+.achievement.locked { opacity: .55; filter: grayscale(.5); }
+.achievement-lock { position: absolute; top: 6px; right: 6px; font-family: sans-serif; font-size: 10px; }
+
+/* Iconos de logros a píxel */
+img.achievement-icon { width: 32px; height: 32px; flex: 0 0 auto; image-rendering: pixelated; padding-top: 0; }
+.achievement { align-items: center; }
+.achievement-toast-icon img { width: 40px; height: 40px; display: block; image-rendering: pixelated; }
+.achievement.locked { padding-right: 18px; }
+.achievement.hidden-achievement { padding-right: 8px; opacity: .75; filter: none; }

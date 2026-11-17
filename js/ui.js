@@ -2,6 +2,7 @@ import { MAX_LIVES } from './config.js';
 import { HUD_FULL, HUD_EMPTY, spriteURLs } from './sprites.js';
 import { audio } from './audio.js';
 import { getAchievements } from './achievements.js';
+import { achievementIconURLs } from './achievement-icons.js';
 
 const $ = (id) => document.getElementById(id);
 export const ui = {
@@ -144,11 +145,15 @@ export function renderAchievements() {
   for (const item of list) {
     const li = document.createElement('li');
     li.className = 'achievement' + (!item.unlocked ? ' locked' : '') + (item.isNew ? ' just-unlocked' : '');
-    const icon = document.createElement('span'); icon.className='achievement-icon'; icon.textContent = item.unlocked ? item.icon : '❔';
+    const icon = document.createElement('img'); icon.className = 'achievement-icon'; const secret = item.hidden && !item.unlocked; // logro oculto: no se enseña hasta conseguirlo
+    icon.src = secret ? achievementIconURLs.hidden : item.iconURL; icon.alt = '';
     const info = document.createElement('div');
-    const title = document.createElement('strong'); title.textContent = item.unlocked ? item.label : '???';
-    const desc = document.createElement('small'); desc.textContent = item.unlocked ? item.desc : 'Descúbrelo jugando';
-    info.append(title,desc); li.append(icon,info); ui.achievements.appendChild(li);
+    const title = document.createElement('strong'); title.textContent = secret ? '???' : item.label;
+    const desc = document.createElement('small'); desc.textContent = secret ? 'Descúbrelo jugando' : item.desc;
+    info.append(title,desc); li.append(icon,info);
+    if (secret) li.classList.add('hidden-achievement');
+    if (!item.unlocked && !secret) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
+    ui.achievements.appendChild(li);
   }
 }
 export function resetToasts() {
@@ -160,7 +165,9 @@ export function resetToasts() {
 function popToast() {
   const item = toastQueue.shift();
   if (!item) { ui.achievementToast.classList.add('hidden'); toastTimeout=null; return; }
-  ui.achievementToast.querySelector('.achievement-toast-icon').textContent = item.icon;
+  const toastIcon = ui.achievementToast.querySelector('.achievement-toast-icon');
+  toastIcon.textContent = '';
+  const img = document.createElement('img'); img.src = item.iconURL; img.alt = ''; toastIcon.append(img);
   ui.achievementToastName.textContent = item.label;
   ui.achievementToast.classList.remove('hidden');
   toastTimeout=setTimeout(popToast,2600);
