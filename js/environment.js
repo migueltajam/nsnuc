@@ -235,12 +235,6 @@ const SHADOW_PEOPLE = [
   { windowIndex: 4, start: 20.4, end: 21.0 }
 ];
 
-// Estrellas
-const STARS = Array.from({ length: 36 }, (_, i) => ({
-  x: (i * 31 + 11) % FIELD_W,
-  y: 3 + (i * 9) % 34,
-  offset: i * 1.19
-}));
 
 // Paleta horaria
 const SKY_COLORS = [
@@ -378,18 +372,138 @@ export function prepareEnvironment(facade) {
   prepareFacadeDetails(facade);
 }
 
+
+/* =========================
+   VIDA DEL CIELO (TODA LA PANTALLA)
+   Nubes, pájaros y estrellas en coordenadas del juego, de borde a borde: el cielo del
+   centro, el de los lados y el de encima en móviles altos los dibujan con la misma función,
+   así que todo encaja. El sol y la luna solo recorren el cielo central, como siempre.
+   ========================= */
+const SKY_SPAN = FIELD_W + 2 * MAX_SIDE_UNITS + 80; // de un borde al otro de la pantalla más ancha
+const SKY_LEFT = -MAX_SIDE_UNITS - 40;
+
+// Nubes pixeladas: varias formas, velocidades y alturas
+const CLOUD_SHAPES = [
+  ['....####........', '..########..##..', '.#############..', '################', '.##############.'],
+  ['...###.....', '.#######...', '##########.', '.#########.'],
+  ['.....###..........', '...#######..###...', '.##############...', '##################', '.################.'],
+  ['..##.....', '.#####...', '#########'],
+];
+const CLOUDS = [
+  { shape: 0, y: 14, speed: 2.3, offset: 40, alpha: 1 },
+  { shape: 1, y: 7, speed: 1.0, offset: 220, alpha: 0.75 },
+  { shape: 3, y: 27, speed: 1.45, offset: 380, alpha: 0.8 },
+  { shape: 2, y: 4, speed: 1.7, offset: 560, alpha: 0.9 },
+  { shape: 1, y: 21, speed: 2.0, offset: 700, alpha: 0.85 },
+  { shape: 0, y: 30, speed: 1.2, offset: 120, alpha: 0.7 },
+  { shape: 3, y: 11, speed: 2.6, offset: 470, alpha: 0.8 },
+  { shape: 2, y: -14, speed: 1.1, offset: 300, alpha: 0.85 },
+  { shape: 1, y: -30, speed: 1.6, offset: 640, alpha: 0.8 },
+  { shape: 0, y: -44, speed: 0.9, offset: 90, alpha: 0.75 },
+];
+
+// Pocas estrellas, repartidas por todo el ancho; alguna algo más grande
+const SKY_STARS = Array.from({ length: 22 }, (_, i) => ({
+  x: SKY_LEFT + ((i * 97 + 31) % SKY_SPAN),
+  y: -60 + ((i * 53 + 7) % 96),
+  big: i % 7 === 3,
+  offset: i * 1.7,
+}));
+
+// Bandadas de pájaros (2–4) cruzando a distintas alturas y momentos
+const FLOCKS = [
+  { period: 34, start: 0, y: 12, birds: 2, dir: 1, speed: 1 },
+  { period: 46, start: 15, y: 22, birds: 3, dir: -1, speed: 0.8 },
+  { period: 58, start: 30, y: 6, birds: 4, dir: 1, speed: 0.7 },
+  { period: 40, start: 24, y: -20, birds: 2, dir: -1, speed: 0.9 },
+];
+
+function drawSkyLife(g, seconds, hour, xMin, xMax) {
+  const night = nightAmount(hour);
+  const dusk = duskAmount(hour);
+  const day = dayAmount(hour);
+
+  // Estrellas: aparecen al hacerse de noche y titilan
+  if (night > 0.15) {
+    for (const st of SKY_STARS) {
+      if (st.x < xMin - 2 || st.x > xMax + 2) continue;
+      const a = night * (0.35 + 0.6 * (1 + Math.sin(seconds * 1.2 + st.offset)) / 2);
+      g.fillStyle = `rgba(255,245,210,${a.toFixed(3)})`;
+      g.fillRect(st.x, st.y, 1, 1);
+      if (st.big) {
+        g.fillStyle = `rgba(255,245,210,${(a * 0.55).toFixed(3)})`;
+        g.fillRect(st.x - 1, st.y, 1, 1);
+        g.fillRect(st.x + 1, st.y, 1, 1);
+        g.fillRect(st.x, st.y - 1, 1, 1);
+        g.fillRect(st.x, st.y + 1, 1, 1);
+      }
+    }
+  }
+
+  // Nubes: de día blancas y de noche más tenues y azuladas
+  const cloudA = 0.3 + day * 0.4 + dusk * 0.15 - night * 0.12;
+  const tint = night > 0.5 ? '170,182,214' : dusk > 0.3 ? '252,222,214' : '250,240,240';
+  for (const c of CLOUDS) {
+    const rows = CLOUD_SHAPES[c.shape];
+    const w = rows[0].length;
+    const x = Math.round(SKY_LEFT + ((seconds * c.speed + c.offset) % (SKY_SPAN + w)) - w);
+    if (x + w < xMin || x > xMax) continue;
+    const alpha = cloudA * c.alpha;
+    rows.forEach((row, ry) => {
+      const shade = ry === rows.length - 1;
+      g.fillStyle = `rgba(${tint},${(shade ? alpha * 0.7 : alpha).toFixed(3)})`;
+      for (let rx = 0; rx < w; rx++) {
+        if (row[rx] !== '#') continue;
+        let run = 1;
+        while (row[rx + run] === '#') run++;
+        g.fillRect(x + rx, c.y + ry, run, 1);
+        rx += run - 1;
+      }
+    });
+  }
+
+  // Pájaros: solo con luz, minimalistas como los de siempre
+  if (night < 0.82) {
+    g.fillStyle = dusk > 0.2 ? '#544252' : '#33405b';
+    for (const f of FLOCKS) {
+      const t = (seconds + f.start) % f.period;
+      const cross = f.period * 0.6;
+      if (t > cross) continue;
+      const p = t / cross;
+      const bx = f.dir > 0 ? SKY_LEFT + p * SKY_SPAN : SKY_LEFT + (1 - p) * SKY_SPAN;
+      for (let i = 0; i < f.birds; i++) {
+        const px = Math.round(bx - f.dir * i * 8);
+        const py = Math.round(f.y + (i % 2) * 4 + i + Math.sin(seconds * 1.3 + i) * 1.2);
+        if (px < xMin - 4 || px > xMax + 4) continue;
+        const flap = Math.sin(seconds * 13 + i * 1.7) > 0 ? -2 : 1;
+        g.fillRect(px, py, 2, 1);
+        g.fillRect(px - 2, py + flap, 2, 1);
+        g.fillRect(px + 2, py + flap, 2, 1);
+      }
+    }
+  }
+}
+
+// Luna creciente pixelada (en vez de un círculo tapado por otro)
+const MOON = (() => {
+  const out = [];
+  for (let y = 0; y < 11; y++) {
+    for (let x = 0; x < 11; x++) {
+      const inA = (x - 5) ** 2 + (y - 5) ** 2 <= 5.2 ** 2;
+      const inB = (x - 7.6) ** 2 + (y - 3.6) ** 2 <= 4.6 ** 2;
+      if (inA && !inB) {
+        const edge = (x - 7.6) ** 2 + (y - 3.6) ** 2 <= 5.8 ** 2; // borde interior más claro
+        out.push([x - 5, y - 5, edge ? 'light' : (x + y) % 5 === 0 ? 'crater' : 'body']);
+      }
+    }
+  }
+  return out;
+})();
+
 /* =========================
    DIBUJO DEL CIELO
    ========================= */
 
-function drawCloud(x, y, size, alpha) {
-  const w = Math.round(15 * size);
-
-  sky.fillStyle = `rgba(250,235,236,${alpha})`;
-  sky.fillRect(Math.round(x), Math.round(y), w, 3);
-  sky.fillRect(Math.round(x + 4 * size), Math.round(y - 3 * size), Math.round(w * 0.65), 3);
-  sky.fillRect(Math.round(x + 2 * size), Math.round(y + 2), Math.round(w * 0.8), 2);
-}
 
 function drawSky(seconds, hour, night) {
   sky.clearRect(0, 0, FIELD_W, SKY_HEIGHT);
@@ -429,24 +543,18 @@ function drawSky(seconds, hour, night) {
   sky.fill();
 
   // sol / luna
-  sky.fillStyle = daytime ? '#ffe28c' : '#e8ecff';
-  sky.beginPath();
-  sky.arc(Math.round(x), Math.round(y), daytime ? 4 : 3.5, 0, Math.PI * 2);
-  sky.fill();
-
-  // media luna
-  if (!daytime) {
-    sky.fillStyle = cssRGB(base);
+  if (daytime) {
+    sky.fillStyle = '#ffe28c';
     sky.beginPath();
-    sky.arc(Math.round(x + 1.5), Math.round(y - 1.2), 3.1, 0, Math.PI * 2);
+    sky.arc(Math.round(x), Math.round(y), 4, 0, Math.PI * 2);
     sky.fill();
-  }
-
-  // estrellas
-  for (const star of STARS) {
-    const strength = night * (0.35 + 0.6 * (1 + Math.sin(seconds * 1.2 + star.offset)) / 2);
-    sky.fillStyle = `rgba(255,245,210,${strength.toFixed(3)})`;
-    sky.fillRect(star.x, star.y, 1, 1);
+  } else {
+    const mx = Math.round(x), my = Math.round(y);
+    const MOON_COL = { body: '#e8e2c8', light: '#fbf6e2', crater: '#cfc6a6' };
+    for (const [dx, dy, kind] of MOON) {
+      sky.fillStyle = MOON_COL[kind];
+      sky.fillRect(mx + dx, my + dy, 1, 1);
+    }
   }
 
   // franja superior más profunda
@@ -455,28 +563,8 @@ function drawSky(seconds, hour, night) {
     sky.fillRect(0, 0, FIELD_W, SKY_HEIGHT * 0.58);
   }
 
-  // nubes
-  const travel = FIELD_W + 42;
-
-  drawCloud(((seconds * 2.3 + 14) % travel) - 28, 18, 1.0, 0.22 + day * 0.12);
-  drawCloud(((seconds * 1.0 + 108) % travel) - 28, 10, 0.75, 0.14 + day * 0.08);
-  drawCloud(((seconds * 1.45 + 180) % travel) - 28, 27, 0.6, 0.18 + day * 0.05);
-
-  // pájaros solo con luz / atardecer
-  if ((seconds % 28) < 13 && night < 0.82) {
-    const bx = ((seconds % 28) / 13) * (FIELD_W + 24) - 12;
-
-    for (let i = 0; i < 2; i++) {
-      const px = Math.round(bx - i * 9);
-      const py = 11 + i * 6;
-      const flap = Math.sin(seconds * 13 + i) > 0 ? -2 : 1;
-
-      sky.fillStyle = dusk > 0.2 ? '#544252' : '#33405b';
-      sky.fillRect(px, py, 2, 1);
-      sky.fillRect(px - 2, py + flap, 2, 1);
-      sky.fillRect(px + 2, py + flap, 2, 1);
-    }
-  }
+  // nubes, pájaros y estrellas: los mismos que en el resto de la pantalla
+  drawSkyLife(sky, seconds, hour, 0, FIELD_W);
 
   if (maskReady) {
     sky.globalCompositeOperation = 'destination-in';
@@ -1125,25 +1213,16 @@ export function renderSceneExtensions(
       topSpace
     );
 
-    // Estrellas adicionales en el espacio
-    // superior cuando se hace de noche.
     if (night > 0.15) {
-      for (let i = 0; i < 18; i++) {
-        const x = (i * 37 + 11) % FIELD_W;
-        const y = -1 - (
-          (i * 13 + 4) % Math.max(1, topSpace)
-        );
-
-        const twinkle =
-          0.4 + 0.3 * Math.sin(seconds * 1.4 + i);
-
-        ctx.globalAlpha = night * twinkle;
-        ctx.fillStyle = '#fff3d7';
-        ctx.fillRect(x, y, 1, 1);
-      }
-
-      ctx.globalAlpha = 1;
+      ctx.fillStyle = `rgba(7, 10, 24, ${0.08 + night * 0.24})`;
+      ctx.fillRect(0, -topSpace, FIELD_W, topSpace);
     }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, -topSpace, FIELD_W, topSpace);
+    ctx.clip();
+    drawSkyLife(ctx, seconds, hour, 0, FIELD_W);
+    ctx.restore();
   }
 
   // ----------------------------------------
@@ -2241,7 +2320,8 @@ function drawAttic(g, x, w, night) {
     fillRect(g, '#59607a', px + 1, 37, 10, 21);
     fillRect(g, '#6b4e3c', px + 6, 37, 1, 21);
     fillRect(g, '#7a82a0', px + 2, 38, 1, 6);
-    roofLit.push([px + 1, 37, 10, 21]);
+    // Con la persiana a medias, la luz empieza debajo de la persiana
+    roofLit.push(i % 2 === 0 ? [px + 1, 45, 10, 13] : [px + 1, 37, 10, 21]);
     if (i % 2 === 0) {
       fillRect(g, '#7c9a74', px, 36, 12, 9);
       for (let sx = px + 1; sx < px + 12; sx += 3) fillRect(g, '#8eaa86', sx, 36, 1, 9);
@@ -2365,6 +2445,7 @@ export function renderSideBuildings(
       ctx.fillStyle = `rgba(7, 10, 24, ${0.08 + night * 0.24})`;
       ctx.fillRect(a, top, b - a, SKY_HEIGHT * 0.58 - top);
     }
+    drawSkyLife(ctx, seconds, hour, a, b);
   }
 
   // Franja crema sobre el tejado (filas 43–45 de la fachada), continua a ambos lados
@@ -2429,6 +2510,20 @@ export function renderSideBuildings(
       drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
     });
   }
+  if (roofExtras.length) {
+    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    if (night > 0.08) {
+      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
+    }
+  }
+  // Buhardillas y ático: también con su propio horario (antes de la capa delantera,
+  // para que la barandilla del ático quede por delante de la luz)
+  roofLit.forEach(([rx, ry, rw, rh], i) => {
+    const sch = windowSchedule(3000 + i);
+    if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
+  });
   // Capa delantera (balcones, plantas, toldos) con la misma luz de noche que el muro,
   // pintada por encima de las ventanas encendidas
   fgCtx.save();
@@ -2449,19 +2544,6 @@ export function renderSideBuildings(
   // la floristería cierra pronto, el bar trasnocha y la luz del portal se apaga de madrugada
   if (x0 < FLORIST_X + FLORIST_W) drawShopLight(ctx, FLORIST_X + 3, 328, FLORIST_W - 6, 44, 18.3, 21.4, hour, seconds, 0.32, 701);
   if (LEFT_X - 8 >= x0) drawShopLight(ctx, LEFT_X + 4, 332, 28, 48, 19.1, 1.6, hour, seconds, 0.3, 702);
-  if (roofExtras.length) {
-    ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
-    for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    if (night > 0.08) {
-      ctx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
-      for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
-    }
-  }
-  // Buhardillas y ático: también con su propio horario
-  roofLit.forEach(([rx, ry, rw, rh], i) => {
-    const sch = windowSchedule(3000 + i);
-    if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
-  });
   if (BAR_X + BAR_W + 4 <= x1) {
     for (const [px, pw] of BAR_PANES) drawShopLight(ctx, BAR_X + px, 328, pw, pw < 20 ? 52 : 42, 18.6, 2.4, hour, seconds, 0.28, 703 + px);
   }
