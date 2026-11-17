@@ -1388,10 +1388,28 @@ function rightLit(x1) {
     RIGHT_FLOORS.forEach((y, f) => {
       if (RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f].shutters) return; // contraventanas cerradas
       const sch = windowSchedule(2000 + c * 10 + f);
-      if (!sch.dark) out.push([rightColumnX(c), y + 2, 16, 22, sch.on, sch.off]);
+      // Con toldo, la luz empieza justo debajo de la tela (el toldo no se ilumina)
+      const awn = RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f].awning || 0;
+      const top = Math.max(y + 2, y + awn + 2);
+      if (!sch.dark) out.push([rightColumnX(c), top, 16, y + 24 - top, sch.on, sch.off]);
     });
   }
   return out;
+}
+
+// Luz cálida de una tienda o del portal, que se enciende y apaga gradualmente según su horario
+function drawShopLight(ctx, x, y, w, h, on, off, hour, seconds, strength, id) {
+  const brightness = windowBrightness(hour, on, off);
+  if (brightness <= 0.01) return;
+  const intensity = Math.min(1, brightness * (0.97 + Math.sin(seconds * 0.7 + id * 2.3) * 0.03));
+  const cx = x + w / 2, cy = y + h / 2, radius = Math.max(w, h) * 0.75;
+  const glow = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius);
+  glow.addColorStop(0, `rgba(255,196,103,${intensity * 0.16})`);
+  glow.addColorStop(1, 'rgba(255,180,83,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+  ctx.fillStyle = `rgba(255,200,120,${(intensity * strength).toFixed(3)})`;
+  ctx.fillRect(x, y, w, h);
 }
 
 // Luz de una ventana de los lados con el mismo encendido gradual, parpadeo y halo que las del centro
@@ -1440,9 +1458,9 @@ function drawPortal(g, x, night) {
     });
   });
   // Hoja de cristal con barrotes y remates dorados
-  fillRect(g, night > 0.5 ? '#c99a5c' : '#5f6576', x + 6, 332, 28, 48);
-  fillRect(g, night > 0.5 ? '#e0b46e' : '#8a91a5', x + 8, 334, 3, 18);
-  fillRect(g, night > 0.5 ? '#e0b46e' : '#8a91a5', x + 11, 337, 2, 9);
+  fillRect(g, '#5f6576', x + 6, 332, 28, 48);
+  fillRect(g, '#8a91a5', x + 8, 334, 3, 18);
+  fillRect(g, '#8a91a5', x + 11, 337, 2, 9);
   for (let bx = x + 7; bx < x + 34; bx += 3) fillRect(g, '#1d1c21', bx, 332, 1, 48);
   fillRect(g, '#25242a', x + 19, 332, 2, 48);
   for (let bx = x + 7; bx < x + 34; bx += 6) {
@@ -1647,7 +1665,7 @@ const RIGHT_DECOR = [
   [
     { vines: 8 },                                            // 2
     { pots: [3, 3] },                                        // 6
-    { pots: [3, 4], vines: 10 }                              // 10
+    { shutters: true }                                       // 10
   ],
   [
     { pots: [3, 7], vines: 12 },                             // 3
@@ -1695,7 +1713,7 @@ function drawFlorist(g, x, night) {
   const w = FLORIST_W;
   // Hueco de la tienda y fondo del interior
   fillRect(g, '#2a2826', x, 314, w, 68);
-  fillRect(g, night > 0.5 ? '#4a3a2a' : '#26332b', x + 3, 328, w - 6, 44);
+  fillRect(g, '#26332b', x + 3, 328, w - 6, 44);
   // Estanterías con macetas de tamaños distintos y alguna planta que cuelga
   for (const [i, sy] of [336, 347, 358].entries()) {
     fillRect(g, '#6b5440', x + 3, sy, w - 6, 1);
@@ -1859,7 +1877,7 @@ function drawBar(g, x, night) {
   fillRect(g, BAR_RED_DARK, x, 324, w, 58);
   fillRect(g, BAR_RED, x + 1, 325, w - 2, 56);
   // Interior visto a través del cristal
-  const back = night > 0.5 ? '#7a4a30' : '#5e3e30';
+  const back = '#5e3e30';
   for (const [px, pw] of BAR_PANES) {
     const gx = x + px;
     const door = pw < 20;
@@ -2368,10 +2386,10 @@ export function renderSideBuildings(
       drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
     });
   }
-  if (night > 0.35 && x0 < FLORIST_X + FLORIST_W) {
-    ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
-    ctx.fillRect(FLORIST_X + 3, 328, FLORIST_W - 6, 44);
-  }
+  // Tiendas y portal con su propio horario, como las ventanas:
+  // la floristería cierra pronto, el bar trasnocha y la luz del portal se apaga de madrugada
+  if (x0 < FLORIST_X + FLORIST_W) drawShopLight(ctx, FLORIST_X + 3, 328, FLORIST_W - 6, 44, 18.3, 21.4, hour, seconds, 0.32, 701);
+  if (LEFT_X - 8 >= x0) drawShopLight(ctx, LEFT_X + 4, 332, 28, 48, 19.1, 1.6, hour, seconds, 0.3, 702);
   if (roofExtras.length) {
     ctx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
     for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
@@ -2385,9 +2403,8 @@ export function renderSideBuildings(
     const sch = windowSchedule(3000 + i);
     if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
   });
-  if (night > 0.35 && BAR_X + BAR_W + 4 <= x1) {
-    ctx.fillStyle = `rgba(255,190,110,${(night * 0.35).toFixed(3)})`;
-    for (const [px, pw] of BAR_PANES) ctx.fillRect(BAR_X + px, 328, pw, pw < 20 ? 52 : 42);
+  if (BAR_X + BAR_W + 4 <= x1) {
+    for (const [px, pw] of BAR_PANES) drawShopLight(ctx, BAR_X + px, 328, pw, pw < 20 ? 52 : 42, 18.6, 2.4, hour, seconds, 0.28, 703 + px);
   }
   if (night > 0.3 && LEFT_X - 8 >= x0) {
     for (const [lx, ly] of STRING_LIGHTS) {
