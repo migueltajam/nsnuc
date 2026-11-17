@@ -152,7 +152,7 @@ export function renderAchievements() {
     const desc = document.createElement('small'); desc.textContent = secret ? 'Descúbrelo jugando' : item.desc;
     info.append(title,desc); li.append(icon,info);
     if (secret) li.classList.add('hidden-achievement');
-    if (!item.unlocked && !secret) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
+    if (!item.unlocked && !secret) { const lock = document.createElement('img'); lock.className = 'achievement-lock'; lock.src = achievementIconURLs.lock; lock.alt = 'Bloqueado'; li.append(lock); }
     ui.achievements.appendChild(li);
   }
 }
