@@ -1,7 +1,7 @@
 import { FIELD_W, FIELD_H, MAX_SIDE_UNITS, SIDE_TOLERANCE, clamp } from './config.js';
 
 const DAY_SECONDS = 180;
-const START_HOUR = 17;
+const START_HOUR = 8; // la partida empieza a las 8:00 de la mañana
 const SKY_HEIGHT = 56;
 
 const skyMask = document.createElement('canvas');
