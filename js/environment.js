@@ -1248,6 +1248,10 @@ function rects(g, list, ox, oy) {
 // Vaivén de las plantas, el mismo que usan las jardineras del edificio central (drawPlanter):
 // cada planta se mueve 1 px a un lado u otro según su posición y el tiempo.
 let WIND_T = 0;
+// Lo que está fuera de las ventanas (barandillas, plantas, ropa, toldos) se pinta en una capa
+// aparte que va por delante de la luz de las ventanas: la luz sale de dentro y no tapa las plantas.
+let FG = null;
+const fore = (g) => FG || g;
 function swayAt(key) {
   return Math.round(Math.sin(WIND_T * 1.1 + key) * 0.6);
 }
@@ -1833,37 +1837,38 @@ function drawLeftBuilding(g, facade, x0, night) {
     const set = k === 0 ? 0 : 1 + ((k - 1) % 3);
     LEFT_FLOORS.forEach((y, i) => {
       rects(g, VANO, lx, y);
+      const fg = fore(g);
       // Lo que va detrás de la barandilla
-      if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, false); drawTableAndChair(g, lx, y, '#f4efe4', '#c9c1b2', '#ffffff'); }
+      if (set === 0 && i === 0) { drawInteriorShutters(g, lx, y, false); drawTableAndChair(fg, lx, y, '#f4efe4', '#c9c1b2', '#ffffff'); }
       if (set === 1 && i === 1) drawInteriorShutters(g, lx, y, false);
-      if (set === 1 && i === 2) drawTallPlant(g, lx + 30, y + 53, 21 + k);
-      if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(g, lx + 22, y, true); }
-      if (set === 3 && i === 0) drawTableAndChair(g, lx, y);
+      if (set === 1 && i === 2) drawTallPlant(fg, lx + 30, y + 53, 21 + k);
+      if (set === 2 && i === 1) { fillRect(g, '#3a302c', lx + 20, y + 1, 17, 53); drawGeraniums(fg, lx + 22, y, true); }
+      if (set === 3 && i === 0) drawTableAndChair(fg, lx, y);
       if (set === 3 && i === 2) drawInteriorShutters(g, lx, y, true);
-      drawBalcony(g, lx - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
+      drawBalcony(fg, lx - 6, y + 36, 50, '#3e3a42', '#e2d8c4', '#a39582');
       // Lo que cuelga de la barandilla o va en la repisa
-      if (set === 0 && i === 1) { drawBlanket(g, lx, y, '#5b7bb5', '#46629a', '#8aa6d6'); drawGeraniums(g, lx + 24, y, true); }
+      if (set === 0 && i === 1) { drawBlanket(fg, lx, y, '#5b7bb5', '#46629a', '#8aa6d6'); drawGeraniums(fg, lx + 24, y, true); }
       if (set === 0 && i === 2) {
         // Cactus en maceta colgada del pasamanos
-        fillRect(g, '#2a2628', lx + 30, y + 35, 1, 3);
-        fillRect(g, '#2a2628', lx + 35, y + 35, 1, 3);
-        fillRect(g, '#a8775f', lx + 30, y + 37, 6, 6);
-        fillRect(g, 'rgba(42,22,38,0.25)', lx + 30, y + 42, 6, 1);
-        fillRect(g, '#6f8f5c', lx + 32, y + 28, 2, 9);
-        fillRect(g, '#6f8f5c', lx + 30, y + 31, 2, 3);
-        fillRect(g, '#6f8f5c', lx + 34, y + 30, 2, 3);
-        fillRect(g, '#ff9fbe', lx + 32, y + 27, 2, 1);
-        for (let n = 0; n < STRING_LIGHTS.length - 1; n++) fillRect(g, '#4a4450', STRING_LIGHTS[n][0], STRING_LIGHTS[n][1], 4, 1);
-        for (const [sx, sy] of STRING_LIGHTS) fillRect(g, '#f4e6c0', sx + 1, sy + 1, 1, 2);
+        fillRect(fg, '#2a2628', lx + 30, y + 35, 1, 3);
+        fillRect(fg, '#2a2628', lx + 35, y + 35, 1, 3);
+        fillRect(fg, '#a8775f', lx + 30, y + 37, 6, 6);
+        fillRect(fg, 'rgba(42,22,38,0.25)', lx + 30, y + 42, 6, 1);
+        fillRect(fg, '#6f8f5c', lx + 32, y + 28, 2, 9);
+        fillRect(fg, '#6f8f5c', lx + 30, y + 31, 2, 3);
+        fillRect(fg, '#6f8f5c', lx + 34, y + 30, 2, 3);
+        fillRect(fg, '#ff9fbe', lx + 32, y + 27, 2, 1);
+        for (let n = 0; n < STRING_LIGHTS.length - 1; n++) fillRect(fg, '#4a4450', STRING_LIGHTS[n][0], STRING_LIGHTS[n][1], 4, 1);
+        for (const [sx, sy] of STRING_LIGHTS) fillRect(fg, '#f4e6c0', sx + 1, sy + 1, 1, 2);
       }
       if (set === 1 && i === 0) {
-        drawPotRow(g, lx + 19, y + 36, 5, 50 + k, 6, { hang: true });
-        drawVines(g, lx - 4, y + 54, 46, 60 + k, 12);
+        drawPotRow(fg, lx + 19, y + 36, 5, 50 + k, 6, { hang: true });
+        drawVines(fg, lx - 4, y + 54, 46, 60 + k, 12);
       }
-      if (set === 2 && i === 0) { drawGeraniums(g, lx, y, true); drawVines(g, lx - 4, y + 54, 22, 70 + k, 14); }
-      if (set === 2 && i === 2) drawBlanket(g, lx + 18, y, '#d98aa6', '#c2708e', '#efb3c8');
-      if (set === 1 && i === 2) { drawPotRow(g, lx + 8, y + 36, 2, 40 + k, 6, { hang: true }); drawVines(g, lx + 20, y + 54, 20, 45 + k, 16); }
-      if (set === 3 && i === 1) { drawPotRow(g, lx + 19, y + 36, 3, 80 + k, 6, { hang: true }); drawVines(g, lx + 8, y + 54, 24, 90 + k, 10); }
+      if (set === 2 && i === 0) { drawGeraniums(fg, lx, y, true); drawVines(fg, lx - 4, y + 54, 22, 70 + k, 14); }
+      if (set === 2 && i === 2) drawBlanket(fg, lx + 18, y, '#d98aa6', '#c2708e', '#efb3c8');
+      if (set === 1 && i === 2) { drawPotRow(fg, lx + 8, y + 36, 2, 40 + k, 6, { hang: true }); drawVines(fg, lx + 20, y + 54, 20, 45 + k, 16); }
+      if (set === 3 && i === 1) { drawPotRow(fg, lx + 19, y + 36, 3, 80 + k, 6, { hang: true }); drawVines(fg, lx + 8, y + 54, 24, 90 + k, 10); }
     });
   }
 
@@ -2024,15 +2029,16 @@ function drawRightBuilding(g, facade, x1, night) {
       fillRect(g, '#6b4e3c', x + 7, y, 2, 44);
       const d = RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f];
       const seed = 100 + c * 10 + f;
-      if (d.awning) drawGreenAwning(g, x, y, d.awning);
-      if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
       if (d.shutters) drawWoodShutters(g, x, y);
-      if (d.lavender) drawLavender(g, x + 12, y + 43);
-      if (d.floorPot) drawPotRow(g, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
-      drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
-      if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
-      if (d.vines) drawVines(g, x - 3, y + 44, 22, seed, d.vines);
-      if (d.pots) drawPotRow(g, x + 8, y + 26, d.pots[0], seed + d.pots[1], 6, { first: d.first || 0, hang: true });
+      const fg = fore(g);
+      if (d.awning) drawGreenAwning(fg, x, y, d.awning);
+      if (d.tall) drawTallPlant(fg, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
+      if (d.lavender) drawLavender(fg, x + 12, y + 43);
+      if (d.floorPot) drawPotRow(fg, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
+      drawBalcony(fg, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
+      if (d.laundry) drawLaundry(fg, x, y, d.laundry[0], d.laundry[1]);
+      if (d.vines) drawVines(fg, x - 3, y + 44, 22, seed, d.vines);
+      if (d.pots) drawPotRow(fg, x + 8, y + 26, d.pots[0], seed + d.pots[1], 6, { first: d.first || 0, hang: true });
     });
   }
   // Planta baja: solo pared, con el zócalo de granito
@@ -2243,19 +2249,19 @@ function drawAttic(g, x, w, night) {
     }
   }
   // Suelo de la terraza y barandilla de hierro sobre la cornisa
-  fillRect(g, '#b8a888', x - 6, 61, w + 12, 1);
+  fillRect(fore(g), '#b8a888', x - 6, 61, w + 12, 1);
   // Macetas y una mesita
   const pots = [[x - 3, '#b5684a'], [x + w - 14, '#c9504a'], [x + w + 1, '#b5684a']];
   for (const [px, c] of pots) {
     const sw = swayAt(px + 0.5);
-    fillRect(g, c, px, 56, 5, 5);
-    fillRect(g, '#5f8a4e', px - 1 + sw, 51, 7, 5);
-    fillRect(g, '#7fa65f', px + sw, 50, 4, 2);
+    fillRect(fore(g), c, px, 56, 5, 5);
+    fillRect(fore(g), '#5f8a4e', px - 1 + sw, 51, 7, 5);
+    fillRect(fore(g), '#7fa65f', px + sw, 50, 4, 2);
   }
-  fillRect(g, '#f2d16b', x + w + 2 + swayAt(x + w + 1.5), 50, 2, 1);
-  fillRect(g, '#e0708e', x - 2 + swayAt(x - 2.5), 50, 2, 1);
-  fillRect(g, '#3a363e', x - 6, 52, w + 12, 1);
-  for (let bx = x - 6; bx <= x + w + 6; bx += 3) fillRect(g, '#3a363e', bx, 52, 1, 10);
+  fillRect(fore(g), '#f2d16b', x + w + 2 + swayAt(x + w + 1.5), 50, 2, 1);
+  fillRect(fore(g), '#e0708e', x - 2 + swayAt(x - 2.5), 50, 2, 1);
+  fillRect(fore(g), '#3a363e', x - 6, 52, w + 12, 1);
+  for (let bx = x - 6; bx <= x + w + 6; bx += 3) fillRect(fore(g), '#3a363e', bx, 52, 1, 10);
   roofExtras.push([x - 2, 24, w + 4, 22]);
 }
 
@@ -2288,6 +2294,7 @@ function drawRoofs(g, x0, x1, night) {
 // Los edificios de los lados se pintan a 1 píxel por unidad en un lienzo aparte y se
 // escalan de una vez: así no aparecen líneas entre las piezas de muro en ninguna tarjeta gráfica.
 let sideCanvas = null;
+let fgCanvas = null;
 export function renderSideBuildings(
   out,
   facade,
@@ -2326,6 +2333,16 @@ export function renderSideBuildings(
     sideCanvas.height = sh;
   }
   const ctx = sideCanvas.getContext('2d');
+  fgCanvas ||= document.createElement('canvas');
+  if (fgCanvas.width !== sw || fgCanvas.height !== sh) {
+    fgCanvas.width = sw;
+    fgCanvas.height = sh;
+  }
+  const fgCtx = fgCanvas.getContext('2d');
+  fgCtx.setTransform(1, 0, 0, 1, 0, 0);
+  fgCtx.clearRect(0, 0, sw, sh);
+  fgCtx.imageSmoothingEnabled = false;
+  fgCtx.translate(-x0, -top);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, sw, sh);
   ctx.save();
@@ -2357,9 +2374,11 @@ export function renderSideBuildings(
     }
   }
 
+  FG = fgCtx;
   if (left > 2) drawLeftBuilding(ctx, facade, x0, night);
   if (right > 2) drawRightBuilding(ctx, facade, x1, night);
   drawRoofs(ctx, x0, x1, night);
+  FG = null;
 
   // Acera, bordillo y calzada continuos
   const slice = getSidewalkSlice(facade);
@@ -2410,6 +2429,22 @@ export function renderSideBuildings(
       drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
     });
   }
+  // Capa delantera (balcones, plantas, toldos) con la misma luz de noche que el muro,
+  // pintada por encima de las ventanas encendidas
+  fgCtx.save();
+  fgCtx.globalCompositeOperation = 'source-atop';
+  fgCtx.fillStyle = `rgba(10,14,35,${darkness.toFixed(3)})`;
+  fgCtx.fillRect(x0, top, x1 - x0, bottom - top);
+  if (night > 0.08) {
+    fgCtx.fillStyle = `rgba(59,80,139,${(night * 0.07).toFixed(3)})`;
+    fgCtx.fillRect(x0, top, x1 - x0, bottom - top);
+  }
+  if (night > 0.2) {
+    fgCtx.fillStyle = `rgba(255,205,135,${(night * 0.12).toFixed(3)})`;
+    fgCtx.fillRect(x0, FIELD_H - 72, x1 - x0, bottom - FIELD_H + 72);
+  }
+  fgCtx.restore();
+  ctx.drawImage(fgCanvas, x0, top);
   // Tiendas y portal con su propio horario, como las ventanas:
   // la floristería cierra pronto, el bar trasnocha y la luz del portal se apaga de madrugada
   if (x0 < FLORIST_X + FLORIST_W) drawShopLight(ctx, FLORIST_X + 3, 328, FLORIST_W - 6, 44, 18.3, 21.4, hour, seconds, 0.32, 701);
