@@ -742,6 +742,168 @@ function drawStreetGlow(g, night) {
    ========================= */
 
 
+// ---------------- Cuervo animado sobre la veleta ----------------
+// El poste está en fachada.png; el cuervo se dibuja aquí para poder moverlo: parpadea,
+// mira hacia atrás, se rasca bajo el ala y aletea sin moverse de la percha.
+// Fotogramas de 20 x 12 px: la columna 0 cae en x = 117 y la fila 0 en y = 21 (percha en y = 33).
+const CROW_PAL = {"K": "#1b1820", "N": "#27232f", "S": "#383a56", "H": "#56597c", "B": "#2c2932", "b": "#615e6a", "E": "#e8ecf4", "L": "#3b3740"};
+const CROW_FRAMES = {
+ "idle": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...........KKKKK....",
+  "...........KKKEKBBb.",
+  "..........KKKKKKBB..",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "blink": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...........KKKKK....",
+  "...........KKKKKBBb.",
+  "..........KKKKKKBB..",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "back": [
+  "....................",
+  "....................",
+  "...........KKK......",
+  "..........KKKKK.....",
+  ".......bBBKEKKK.....",
+  "........BBKKKKKK....",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "preen1": [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  ".....KKK..KKKK......",
+  "....KSHHKKKEKKK.....",
+  ".....KKbBKKKKKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "preen2": [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "..........KKKK......",
+  ".......KKKKEKKK.....",
+  ".....KKbBKKKKKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "flap1": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...K.K.....KKKKK....",
+  "...KSKK....KKKEKBBb.",
+  "...KSHSK..KKKKKKBB..",
+  "....KSSHKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "flap2": [
+  "..K.K.K.............",
+  "..KSKSK.............",
+  "...KSHSK....KKK.....",
+  "...KSSHK...KKKKK....",
+  "....KSSK...KKKEKBBb.",
+  "....KKSSK.KKKKKKBB..",
+  ".....KKSKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ]
+};
+const CROW_X = 117;
+const CROW_Y = 21;
+const CROW_NIGHT = [10, 14, 35];
+// Acciones: lista de [fotograma, duración en segundos]
+const CROW_ACTIONS = {
+  look: [['back', 1.4]],
+  preen: [['preen1', 0.22], ['preen2', 0.22], ['preen1', 0.22], ['preen2', 0.22], ['preen1', 0.22], ['preen2', 0.3]],
+  flap: [['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.1]],
+  blink: [['blink', 0.14]],
+};
+const crow = { action: null, step: 0, stepEnd: 0, next: 3, lastSeconds: 0 };
+
+function crowFrameAt(seconds) {
+  // Si el reloj vuelve atrás (partida nueva), se reinicia
+  if (seconds < crow.lastSeconds) Object.assign(crow, { action: null, next: seconds + 3 });
+  crow.lastSeconds = seconds;
+  if (crow.action) {
+    if (seconds >= crow.stepEnd) {
+      crow.step += 1;
+      const seq = CROW_ACTIONS[crow.action];
+      if (crow.step >= seq.length) {
+        crow.action = null;
+        crow.next = seconds + 2.5 + Math.random() * 5;
+      } else {
+        crow.stepEnd = seconds + seq[crow.step][1];
+      }
+    }
+  } else if (seconds >= crow.next) {
+    const r = Math.random();
+    crow.action = r < 0.35 ? 'blink' : r < 0.6 ? 'look' : r < 0.82 ? 'preen' : 'flap';
+    crow.step = 0;
+    crow.stepEnd = seconds + CROW_ACTIONS[crow.action][0][1];
+  }
+  return crow.action ? CROW_ACTIONS[crow.action][crow.step][0] : 'idle';
+}
+
+function drawCrow(ctx, seconds, darkness) {
+  const rows = CROW_FRAMES[crowFrameAt(seconds)];
+  const tint = (hex) => {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v, i) => Math.round(v * (1 - darkness) + CROW_NIGHT[i] * darkness));
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  };
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      let run = 1;
+      while (row[c + run] === ch) run++;
+      ctx.fillStyle = tint(CROW_PAL[ch]);
+      ctx.fillRect(CROW_X + c, CROW_Y + r, run, 1);
+      c += run - 1;
+    }
+  }
+}
+
 export function renderEnvironment(
   ctx,
   fieldX,
@@ -774,6 +936,9 @@ export function renderEnvironment(
   // Se evita oscurecerlo dos veces.
   drawSky(seconds, hour, night);
   ctx.drawImage(skyLayer, 0, 0);
+
+  // 2b. El cuervo de la veleta, con el mismo oscurecimiento que la fachada
+  drawCrow(ctx, seconds, night * 0.56 + dusk * 0.07);
 
   // 3. Tinte azulado ambiental.
   if (night > 0.08) {
