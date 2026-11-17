@@ -742,6 +742,168 @@ function drawStreetGlow(g, night) {
    ========================= */
 
 
+// ---------------- Cuervo animado sobre la veleta ----------------
+// El poste está en fachada.png; el cuervo se dibuja aquí para poder moverlo: parpadea,
+// mira hacia atrás, se rasca bajo el ala y aletea sin moverse de la percha.
+// Fotogramas de 20 x 12 px: la columna 0 cae en x = 117 y la fila 0 en y = 21 (percha en y = 33).
+const CROW_PAL = {"K": "#1b1820", "N": "#27232f", "S": "#383a56", "H": "#56597c", "B": "#2c2932", "b": "#615e6a", "E": "#e8ecf4", "L": "#3b3740"};
+const CROW_FRAMES = {
+ "idle": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...........KKKKK....",
+  "...........KKKEKBBb.",
+  "..........KKKKKKBB..",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "blink": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...........KKKKK....",
+  "...........KKKKKBBb.",
+  "..........KKKKKKBB..",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "back": [
+  "....................",
+  "....................",
+  "...........KKK......",
+  "..........KKKKK.....",
+  ".......bBBKEKKK.....",
+  "........BBKKKKKK....",
+  ".......KKNNNKK......",
+  ".....KKNSSHSNKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "preen1": [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  ".....KKK..KKKK......",
+  "....KSHHKKKEKKK.....",
+  ".....KKbBKKKKKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "preen2": [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "..........KKKK......",
+  ".......KKKKEKKK.....",
+  ".....KKbBKKKKKKK....",
+  "...KKKNSSHHSNNKK....",
+  "KKKKKKKNSSSNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "flap1": [
+  "....................",
+  "....................",
+  "............KKK.....",
+  "...........KKKKK....",
+  "...KK......KKKEKBBb.",
+  "..KSSKK...KKKKKKBB..",
+  "...KSHSSKKNNKK......",
+  "....KKSSHSKNNKKK....",
+  "...KKKNNNNNNNNKK....",
+  "KKKKKKKNNNNNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ],
+ "flap2": [
+  "......K.K...........",
+  ".....KSKSK..........",
+  ".....KSSHK..KKK.....",
+  "......KSSHKKKKKK....",
+  "......KSSSKKKKEKBBb.",
+  ".......KSHKKKKKKBB..",
+  ".......KKSKKKK......",
+  ".....KKNKKSKNKKK....",
+  "...KKKNNNNNNNNKK....",
+  "KKKKKKKNNNNNNNKK....",
+  ".KKK....NNNNNNK.....",
+  ".........L..L......."
+ ]
+};
+const CROW_X = 117;
+const CROW_Y = 21;
+const CROW_NIGHT = [10, 14, 35];
+// Acciones: lista de [fotograma, duración en segundos]
+const CROW_ACTIONS = {
+  look: [['back', 1.4]],
+  preen: [['preen1', 0.22], ['preen2', 0.22], ['preen1', 0.22], ['preen2', 0.22], ['preen1', 0.22], ['preen2', 0.3]],
+  flap: [['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.09], ['flap2', 0.11], ['flap1', 0.1]],
+  blink: [['blink', 0.14]],
+};
+const crow = { action: null, step: 0, stepEnd: 0, next: 3, lastSeconds: 0 };
+
+function crowFrameAt(seconds) {
+  // Si el reloj vuelve atrás (partida nueva), se reinicia
+  if (seconds < crow.lastSeconds) Object.assign(crow, { action: null, next: seconds + 3 });
+  crow.lastSeconds = seconds;
+  if (crow.action) {
+    if (seconds >= crow.stepEnd) {
+      crow.step += 1;
+      const seq = CROW_ACTIONS[crow.action];
+      if (crow.step >= seq.length) {
+        crow.action = null;
+        crow.next = seconds + 2.5 + Math.random() * 5;
+      } else {
+        crow.stepEnd = seconds + seq[crow.step][1];
+      }
+    }
+  } else if (seconds >= crow.next) {
+    const r = Math.random();
+    crow.action = r < 0.35 ? 'blink' : r < 0.6 ? 'look' : r < 0.82 ? 'preen' : 'flap';
+    crow.step = 0;
+    crow.stepEnd = seconds + CROW_ACTIONS[crow.action][0][1];
+  }
+  return crow.action ? CROW_ACTIONS[crow.action][crow.step][0] : 'idle';
+}
+
+function drawCrow(ctx, seconds, darkness) {
+  const rows = CROW_FRAMES[crowFrameAt(seconds)];
+  const tint = (hex) => {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v, i) => Math.round(v * (1 - darkness) + CROW_NIGHT[i] * darkness));
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  };
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      let run = 1;
+      while (row[c + run] === ch) run++;
+      ctx.fillStyle = tint(CROW_PAL[ch]);
+      ctx.fillRect(CROW_X + c, CROW_Y + r, run, 1);
+      c += run - 1;
+    }
+  }
+}
+
 export function renderEnvironment(
   ctx,
   fieldX,
@@ -774,6 +936,9 @@ export function renderEnvironment(
   // Se evita oscurecerlo dos veces.
   drawSky(seconds, hour, night);
   ctx.drawImage(skyLayer, 0, 0);
+
+  // 2b. El cuervo de la veleta, con el mismo oscurecimiento que la fachada
+  drawCrow(ctx, seconds, night * 0.56 + dusk * 0.07);
 
   // 3. Tinte azulado ambiental.
   if (night > 0.08) {
@@ -1518,10 +1683,13 @@ function drawFlorist(g, x, night) {
     fillRect(g, FLOWER_COLORS[(n + 2) % FLOWER_COLORS.length], bx + 3, by - 4, 2, 2);
     fillRect(g, FLOWER_COLORS[(n + 4) % FLOWER_COLORS.length], bx + 1, by - 6, 2, 1);
   }
-  // Postes oscuros
-  fillRect(g, '#1f1c1b', x, 314, 3, 68);
-  fillRect(g, '#1f1c1b', x + w - 3, 314, 3, 68);
-  // Toldo granate con festón crema
+  // Postes: contorno de 1 px como el de la librería central y madera oscura
+  fillRect(g, '#3e3432', x, 314, 1, 68);
+  fillRect(g, '#4a3a2c', x + 1, 314, 2, 68);
+  fillRect(g, '#3e3432', x + w - 1, 314, 1, 68);
+  fillRect(g, '#4a3a2c', x + w - 3, 314, 2, 68);
+  // Toldo granate con festón crema, con el mismo contorno de 1 px
+  fillRect(g, '#3e3432', x - 3, 311, w + 6, 16);
   fillRect(g, '#5e1e28', x - 2, 312, w + 4, 3);
   fillRect(g, '#7a2833', x - 2, 315, w + 4, 10);
   fillRect(g, '#8c3440', x - 2, 315, w + 4, 1);
@@ -1639,15 +1807,23 @@ function drawBar(g, x, night) {
     fillRect(g, back, gx, 328, pw, bottom - 328);
     if (!door) {
       // Estante con botellas y barra
-      fillRect(g, '#3e2a22', gx, 340, pw, 1);
-      for (let bx = gx + 1, n = 0; bx < gx + pw - 1; bx += 3, n++) {
-        const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][(n + px) % 5];
-        const bh = 4 + (n % 2);
-        fillRect(g, c, bx, 340 - bh, 2, bh);
-        fillRect(g, c, bx, 340 - bh - 1, 1, 1);
+      // Estante algo más bajo para que las botellas no toquen la lámpara; botellas al azar
+      fillRect(g, '#3e2a22', gx, 344, pw, 1);
+      for (let bx = gx + 1, n = 0, ci = px % 5; bx < gx + pw - 1; bx += 3, n++) {
+        const seed = px * 31 + n * 7;
+        ci = (ci + 1 + Math.floor(hash01(seed) * 4)) % 5; // nunca dos seguidas del mismo color
+        const c = ['#3f6a4a', '#9a5a2a', '#d8c08a', '#6a2a3a', '#2f4a6a'][ci];
+        const bh = 3 + Math.floor(hash01(seed + 11) * 3);
+        fillRect(g, c, bx, 344 - bh, 2, bh);
+        fillRect(g, c, bx + (hash01(seed + 5) > 0.5 ? 1 : 0), 344 - bh - 1, 1, 1);
       }
       fillRect(g, '#2e1c18', gx, 358, pw, 12);
       fillRect(g, '#8a5a3a', gx, 357, pw, 2);
+      if (px < 30) {
+        // Una caña en la barra del escaparate izquierdo
+        fillRect(g, '#f2c24a', gx + pw - 9, 353, 2, 4);
+        fillRect(g, '#fff6d8', gx + pw - 9, 353, 2, 1);
+      }
       // Taburetes
       for (let tx = gx + 4; tx < gx + pw - 3; tx += 9) {
         fillRect(g, BAR_RED_DARK, tx, 362, 4, 2);
@@ -1676,8 +1852,14 @@ function drawBar(g, x, night) {
     fillRect(g, '#45604f', x + px, 371, pw, 9);
   }
   fillRect(g, '#9a9488', x + 37, 380, 18, 2);
-  // Rótulo rojo corrido
-  fillRect(g, BAR_RED_DARK, x - 3, 310, w + 6, 15);
+  // Postes: contorno de 1 px como el de la librería central y el color oscuro del bar
+  fillRect(g, '#3e3432', x, 324, 1, 58);
+  fillRect(g, BAR_RED_DARK, x + 1, 324, 2, 58);
+  fillRect(g, '#3e3432', x + w - 1, 324, 1, 58);
+  fillRect(g, BAR_RED_DARK, x + w - 3, 324, 2, 58);
+  // Rótulo corrido con el mismo contorno de 1 px y banda oscura arriba, como el toldo de la floristería
+  fillRect(g, '#3e3432', x - 4, 306, w + 8, 20);
+  fillRect(g, BAR_RED_DARK, x - 3, 307, w + 6, 18);
   fillRect(g, BAR_RED, x - 3, 311, w + 6, 12);
   fillRect(g, BAR_RED_LIGHT, x - 3, 311, w + 6, 1);
   fillRect(g, BAR_GOLD, x + 2, 316, 34, 1);
@@ -1692,9 +1874,11 @@ function drawBar(g, x, night) {
   fillRect(g, BAR_GOLD, ex + 7, 321, 1, 1);
   fillRect(g, BAR_GOLD, ex, 314, 1, 7);
   fillRect(g, BAR_GOLD, ex + 8, 314, 1, 7);
-  fillRect(g, '#f4efe6', ex + 2, 314, 5, 1);
-  fillRect(g, '#f4efe6', ex + 3, 315, 3, 1);
-  fillRect(g, '#f4efe6', ex + 4, 316, 1, 3);
+  // Copa centrada en el círculo: el interior va de la fila 313 a la 321 (centro 317);
+  // la copa ocupa 315–319, con el mismo hueco arriba y abajo
+  fillRect(g, '#f4efe6', ex + 2, 315, 5, 1);
+  fillRect(g, '#f4efe6', ex + 3, 316, 3, 1);
+  fillRect(g, '#f4efe6', ex + 4, 317, 1, 2);
   fillRect(g, '#f4efe6', ex + 3, 319, 3, 1);
 }
 
