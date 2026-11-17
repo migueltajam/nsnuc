@@ -1386,6 +1386,7 @@ function rightLit(x1) {
   const out = [];
   for (let c = 0; rightColumnX(c) + 21 <= x1; c++) {
     RIGHT_FLOORS.forEach((y, f) => {
+      if (RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f].shutters) return; // contraventanas cerradas
       const sch = windowSchedule(2000 + c * 10 + f);
       if (!sch.dark) out.push([rightColumnX(c), y + 2, 16, 22, sch.on, sch.off]);
     });
