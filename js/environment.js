@@ -1362,12 +1362,22 @@ const RIGHT_FLOORS = [86, 164, 242];
 const rightColumnX = (c) => FIELD_W + RIGHT_MODULE * Math.floor(c / 2) + (c % 2 === 0 ? 16 : 80);
 
 // Ventanas que se encienden de noche (solo los cristales altos: los bajos quedan tras el balcón).
+// Igual que en el edificio central (WINDOWS), cada ventana tiene su propia hora de encender y
+// de apagar, así que se van encendiendo y apagando poco a poco y no todas a la vez.
+// Las horas salen de hash01, así que cada ventana se comporta siempre igual en cada partida.
+function windowSchedule(id) {
+  const on = 18.2 + hash01(id * 13 + 1) * 3.2; // entre las 18:12 y las 21:24
+  const off = (22.3 + hash01(id * 29 + 7) * 8.2) % 24; // entre las 22:18 y las 6:30
+  return { on, off, dark: hash01(id * 41 + 3) < 0.2 }; // 1 de cada 5 no se enciende esa noche
+}
 function leftLit(x0) {
   const out = [];
   for (let k = 0; leftColumnX(k) - 8 >= x0; k++) {
     LEFT_FLOORS.forEach((y, i) => {
-      if ((k * 3 + i + 1) % 4 === 0 || (k === 0 && i === 1)) return;
-      for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) out.push([leftColumnX(k) + gx, y + gy, gw, gh]);
+      if (k === 0 && i === 1) return; // ventana con contraventanas cerradas
+      const sch = windowSchedule(1000 + k * 10 + i);
+      if (sch.dark) return;
+      for (const [gx, gy, gw, gh] of VANO_GLASS.filter(([, gy]) => gy < 10)) out.push([leftColumnX(k) + gx, y + gy, gw, gh, sch.on, sch.off]);
     });
   }
   return out;
@@ -1376,10 +1386,28 @@ function rightLit(x1) {
   const out = [];
   for (let c = 0; rightColumnX(c) + 21 <= x1; c++) {
     RIGHT_FLOORS.forEach((y, f) => {
-      if ((f * 5 + c * 3 + 1) % 4 === 0) out.push([rightColumnX(c), y + 2, 16, 22]);
+      if (RIGHT_DECOR[Math.min(c, RIGHT_DECOR.length - 1)][f].shutters) return; // contraventanas cerradas
+      const sch = windowSchedule(2000 + c * 10 + f);
+      if (!sch.dark) out.push([rightColumnX(c), y + 2, 16, 22, sch.on, sch.off]);
     });
   }
   return out;
+}
+
+// Luz de una ventana de los lados con el mismo encendido gradual, parpadeo y halo que las del centro
+function drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, id) {
+  const brightness = windowBrightness(hour, on, off);
+  if (brightness <= 0.01) return;
+  const intensity = Math.min(1, brightness * (0.97 + Math.sin(seconds * 0.7 + id * 2.3) * 0.03));
+  const cx = wx + ww / 2, cy = wy + wh / 2, radius = Math.max(ww, wh) * 0.85;
+  const glow = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius);
+  glow.addColorStop(0, `rgba(255,196,103,${intensity * 0.2})`);
+  glow.addColorStop(0.5, `rgba(255,180,83,${intensity * 0.09})`);
+  glow.addColorStop(1, 'rgba(255,180,83,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+  ctx.fillStyle = `rgba(255,196,110,${(intensity * 0.75).toFixed(3)})`;
+  ctx.fillRect(wx, wy, ww, wh);
 }
 
 // Guirnalda de bombillas del balcón de abajo de la primera columna amarilla.
@@ -2335,13 +2363,10 @@ export function renderSideBuildings(
       ctx.fillStyle = `rgba(255,205,135,${(night * 0.12).toFixed(3)})`;
       ctx.fillRect(a, FIELD_H - 72, b - a, bottom - FIELD_H + 72);
     }
-    if (night > 0.35) {
-      ctx.fillStyle = `rgba(255,196,110,${(night * 0.75).toFixed(3)})`;
-      for (const [wx, wy, ww, wh] of lit) {
-        if (wx + ww < a || wx > b) continue;
-        ctx.fillRect(wx, wy, ww, wh);
-      }
-    }
+    lit.forEach(([wx, wy, ww, wh, on, off], i) => {
+      if (wx + ww < a || wx > b) return;
+      drawSideWindowLight(ctx, wx, wy, ww, wh, on, off, hour, seconds, i + (a < 0 ? 100 : 300));
+    });
   }
   if (night > 0.35 && x0 < FLORIST_X + FLORIST_W) {
     ctx.fillStyle = `rgba(255,200,120,${(night * 0.3).toFixed(3)})`;
@@ -2355,10 +2380,11 @@ export function renderSideBuildings(
       for (const [rx, ry, rw, rh] of roofExtras) ctx.fillRect(rx, ry, rw, Math.min(ry + rh, 43) - ry);
     }
   }
-  if (night > 0.35) {
-    ctx.fillStyle = `rgba(255,196,110,${(night * 0.6).toFixed(3)})`;
-    roofLit.forEach(([rx, ry, rw, rh], i) => { if (i % 3 !== 1) ctx.fillRect(rx, ry, rw, rh); });
-  }
+  // Buhardillas y ático: también con su propio horario
+  roofLit.forEach(([rx, ry, rw, rh], i) => {
+    const sch = windowSchedule(3000 + i);
+    if (!sch.dark) drawSideWindowLight(ctx, rx, ry, rw, rh, sch.on, sch.off, hour, seconds, 500 + i);
+  });
   if (night > 0.35 && BAR_X + BAR_W + 4 <= x1) {
     ctx.fillStyle = `rgba(255,190,110,${(night * 0.35).toFixed(3)})`;
     for (const [px, pw] of BAR_PANES) ctx.fillRect(BAR_X + px, 328, pw, pw < 20 ? 52 : 42);
