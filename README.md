@@ -217,7 +217,7 @@ El videojuego incorpora un reloj ficticio independiente de la hora real.
 
 **Configuración actual:**
 
-- Hora inicial: 17:00.
+- Hora inicial: 08:00.
 - Duración prevista de un día completo: 180 segundos de juego activo.
 - El reloj se detiene en pausa.
 - El reloj comienza después de la cuenta atrás.
