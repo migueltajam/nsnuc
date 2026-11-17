@@ -1582,14 +1582,15 @@ function drawLaundry(g, x, y, color, second) {
 // hasta el borde, detrás de la barandilla.
 // Hoja dibujada mirando a la derecha (el tallo entra por la izquierda); M = nervio central.
 const MONSTERA_LEAF = [
-  '..###.##.....',
-  '.####.###.#..',
-  '#####.###.##.',
-  '######.###.##',
-  'MMMMMMMMMMMMM',
-  '######.###.#.',
-  '#####.###.#..',
-  '.###.##.#....',
+  '..##.##......',
+  '.###.###.....',
+  '####.###.##..',
+  'MMM##.###.##.',
+  '###MMM###.###',
+  '.####.MMM##.#',
+  '..###.###MMM.',
+  '...##.##.###M',
+  '.....#.#..#..',
 ];
 function drawMonsteraLeaf(g, x0, y0, flip, k) {
   const w = MONSTERA_LEAF[0].length;
@@ -1597,23 +1598,27 @@ function drawMonsteraLeaf(g, x0, y0, flip, k) {
     for (let xx = 0; xx < w; xx++) {
       const ch = row[xx];
       if (ch === '.') continue;
-      const color = ch === 'M' ? '#7fb86a' : yy < 3 ? '#4f9a5a' : (xx + k) % 4 === 0 ? '#2f6b3e' : '#3e8a4c';
+      const color = ch === 'M' ? '#7fb86a' : yy < 3 ? '#4f9a5a' : (xx + yy + k) % 5 === 0 ? '#2f6b3e' : '#3e8a4c';
       fillRect(g, color, flip ? x0 + w - 1 - xx : x0 + xx, y0 + yy, 1, 1);
     }
   });
 }
+// Monstera grande: tallos que suben y se arquean, con las hojas caídas hacia los lados
 function drawMonstera(g, cx, floor) {
   fillRect(g, '#e9e4da', cx - 5, floor - 7, 11, 7);
   fillRect(g, '#d3c9b8', cx + 3, floor - 7, 3, 7);
   const top = floor - 7;
-  // [x de la base del tallo, y de la hoja, mira a la izquierda]
-  const leaves = [[-2, -36, true], [2, -31, false], [-1, -25, true], [1, -19, false], [-3, -14, true]];
+  // [desplazamiento de la base de la hoja, altura de la base, mira a la izquierda]
+  const leaves = [[-3, -33, true], [3, -30, false], [-2, -24, true], [2, -19, false], [-3, -14, true], [1, -36, false]];
   leaves.forEach(([bx, ly, left], k) => {
-    const y0 = top + ly;
     const baseX = cx + bx;
-    // Tallo curvo desde la maceta hasta la base de la hoja
-    for (let yy = y0 + 4; yy < top; yy++) fillRect(g, '#2f5a34', baseX + Math.round((cx - baseX) * (yy - y0 - 4) / (top - y0 - 4)), yy, 1, 1);
-    drawMonsteraLeaf(g, left ? baseX - 13 : baseX + 1, y0, left, k);
+    const by = top + ly;
+    // Tallo: sube desde la maceta y se curva hacia la hoja
+    for (let yy = by + 3; yy < top; yy++) {
+      const t = (yy - by - 3) / Math.max(1, top - by - 3);
+      fillRect(g, '#2f5a34', Math.round(baseX + (cx - baseX) * t * t), yy, 1, 1);
+    }
+    drawMonsteraLeaf(g, left ? baseX - 13 : baseX + 1, by, left, k);
   });
 }
 
@@ -1636,7 +1641,7 @@ function drawLavender(g, cx, floor) {
 const RIGHT_DECOR = [
   [
     { awning: 11, pots: [2, 1], first: 1 },                // 1
-    { monstera: true },                                      // 5
+    { lavender: true },                                      // 5
     { pots: [2, 2], vines: 16 }                              // 9
   ],
   [
@@ -1657,7 +1662,7 @@ const RIGHT_DECOR = [
   // Columna extra de las pantallas anchas: como la primera pero sin toldo
   [
     { pots: [2, 21], first: 1 },
-    { lavender: true },
+    { monstera: true },
     { pots: [2, 22], vines: 16 }
   ]
 ];
@@ -1982,8 +1987,8 @@ function drawRightBuilding(g, facade, x1, night) {
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
       if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
-      if (d.monstera) drawMonstera(g, x + 14, y + 43);
-      if (d.lavender) drawLavender(g, x + 11, y + 43);
+      if (d.monstera) drawMonstera(g, x + 13, y + 43);
+      if (d.lavender) drawLavender(g, x + 12, y + 43);
       if (d.floorPot) drawPotRow(g, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
       if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
