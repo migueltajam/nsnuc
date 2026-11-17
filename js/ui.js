@@ -144,11 +144,14 @@ export function renderAchievements() {
   for (const item of list) {
     const li = document.createElement('li');
     li.className = 'achievement' + (!item.unlocked ? ' locked' : '') + (item.isNew ? ' just-unlocked' : '');
-    const icon = document.createElement('span'); icon.className='achievement-icon'; icon.textContent = item.unlocked ? item.icon : '❔';
+    const icon = document.createElement('span'); icon.className='achievement-icon'; icon.textContent = item.icon;
     const info = document.createElement('div');
-    const title = document.createElement('strong'); title.textContent = item.unlocked ? item.label : '???';
-    const desc = document.createElement('small'); desc.textContent = item.unlocked ? item.desc : 'Descúbrelo jugando';
-    info.append(title,desc); li.append(icon,info); ui.achievements.appendChild(li);
+    const level = document.createElement('em'); level.className = 'achievement-level level-' + item.level.toLowerCase().normalize('NFD').replace(/[^a-z]+/g, '-'); level.textContent = item.level;
+    const title = document.createElement('strong'); title.textContent = item.label;
+    const desc = document.createElement('small'); desc.textContent = item.desc;
+    info.append(level,title,desc); li.append(icon,info);
+    if (!item.unlocked) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
+    ui.achievements.appendChild(li);
   }
 }
 export function resetToasts() {

@@ -1,12 +1,15 @@
 // Insignias secretas persistentes, SOLO locales hasta disponer de backend.
 const STORAGE_KEY = 'nsnuc-achievements-v2';
+// En este orden se muestran, en dos columnas.
 export const ACHIEVEMENTS = {
-  firstKiss: { icon: '💋', label: 'PRIMER BESO', desc: 'Recoge tu primer beso' },
-  combo5: { icon: '⚡', label: 'EN RACHA', desc: 'Consigue un combo de 5' },
-  combo10: { icon: '🔥', label: 'IMPARABLE', desc: 'Consigue un combo de 10' },
-  secret17: { icon: '🎽', label: 'EL DORSAL 17', desc: '17 segundos sin recoger nada' },
-  points1000: { icon: '🏆', label: 'MIL RAZONES', desc: 'Llega a 1.000 puntos' },
-  survivor: { icon: '🌙', label: 'MADRID NO DUERME', desc: 'Sobrevive 90 segundos' },
+  twoKisses: { icon: '💋', level: 'FÁCIL', label: 'DOS BESOS', desc: 'Recoge 2 besos en una partida.' },
+  outlaw: { icon: '🗡️', level: 'MEDIO', label: 'FORAJIDO', desc: 'Esquiva 10 calabazas sin recibir daño.' },
+  combo17: { icon: '🔥', level: 'DIFÍCIL', label: 'SIN PERDER EL RITMO', desc: 'Consigue un combo de 17.' },
+  points8000: { icon: '🏆', level: 'MUY DIFÍCIL', label: 'ROMÁNTICO DE LEYENDA', desc: 'Alcanza 8.000 puntos.' },
+  colorWings: { icon: '🐦‍⬛', level: 'DIFÍCIL', label: 'ALAS DE COLOR', desc: 'Recoge 25 besos durante una misma noche.' },
+  notDead: { icon: '❤️‍🩹', level: 'MUY DIFÍCIL', label: 'NO ESTOY MUERTO', desc: 'Recupérate al límite y atrapa un beso.' },
+  madrid24: { icon: '🌙', level: 'EXTREMO', label: 'MADRID NO DUERME', desc: 'Sobrevive desde las 08:00 hasta las 08:00 del día siguiente.' },
+  secret17: { icon: '🎽', level: 'SECRETO', label: 'EL DORSAL 17', desc: '17 segundos sin recoger nada.' },
 };
 function read() {
   try {
