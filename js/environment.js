@@ -1617,26 +1617,19 @@ function drawMonstera(g, cx, floor) {
   });
 }
 
-// Limonero en maceta de barro (no sale en ningún otro sitio del juego): la copa asoma por
-// encima de la barandilla.
-function drawLemonTree(g, cx, floor) {
-  fillRect(g, '#b5684a', cx - 4, floor - 6, 9, 6);
-  fillRect(g, '#a35a42', cx + 2, floor - 5, 3, 5);
-  fillRect(g, '#6b5440', cx, floor - 26, 1, 20);
-  fillRect(g, '#6b5440', cx - 2, floor - 24, 2, 1);
-  fillRect(g, '#6b5440', cx + 1, floor - 25, 2, 1);
-  const COLS = ['#3f6a3a', '#4f8048', '#62945a'];
-  for (let yy = 0; yy < 12; yy++) {
-    for (let xx = 0; xx < 15; xx++) {
-      const dx = (xx - 7) / 7.5, dy = (yy - 5.5) / 6;
-      const r = dx * dx + dy * dy;
-      if (r > 1 || (r > 0.7 && (xx * 3 + yy) % 3 === 0)) continue;
-      fillRect(g, COLS[(xx + yy * 2) % 3], cx - 7 + xx, floor - 37 + yy, 1, 1);
-    }
-  }
-  for (const [lx, ly] of [[-5, -33], [2, -35], [4, -29], [-2, -28], [-6, -30], [1, -31]]) {
-    fillRect(g, '#f2d14a', cx + lx, floor + ly, 2, 2);
-    fillRect(g, '#fff0a0', cx + lx, floor + ly, 1, 1);
+// Lavanda en maceta de barro: matas de tallos finos con espigas moradas (sin frutos).
+function drawLavender(g, cx, floor) {
+  fillRect(g, '#c9785a', cx - 5, floor - 6, 11, 6);
+  fillRect(g, '#b5684a', cx + 3, floor - 5, 3, 5);
+  const top = floor - 6;
+  for (let i = 0; i < 9; i++) {
+    const sx = cx - 5 + Math.round(i * 1.4);
+    const h = 13 + ((i * 7) % 5) * 2;
+    const lean = i < 3 ? -1 : i > 5 ? 1 : 0;
+    for (let k = 0; k < h; k++) fillRect(g, k < 5 ? '#6f8f6a' : '#7f9a74', sx + Math.round(lean * k / 6), top - k, 1, 1);
+    const tx = sx + Math.round(lean * h / 6);
+    for (let k = 0; k < 5; k++) fillRect(g, k % 2 ? '#9a7ac8' : '#7a5aa8', tx + (k % 2 ? lean || 1 : 0) - (k % 2 ? 0 : 0), top - h - k, 1, 1);
+    fillRect(g, '#b89ad8', tx, top - h - 4, 1, 1);
   }
 }
 
@@ -1644,7 +1637,7 @@ const RIGHT_DECOR = [
   [
     { awning: 11, pots: [2, 1], first: 1 },                // 1
     { monstera: true },                                      // 5
-    { lemon: true, vines: 16 }                               // 9
+    { pots: [2, 2], vines: 16 }                              // 9
   ],
   [
     { vines: 8 },                                            // 2
@@ -1664,7 +1657,7 @@ const RIGHT_DECOR = [
   // Columna extra de las pantallas anchas: como la primera pero sin toldo
   [
     { pots: [2, 21], first: 1 },
-    { tall: 25, tallDx: 15 },
+    { lavender: true },
     { pots: [2, 22], vines: 16 }
   ]
 ];
@@ -1989,8 +1982,8 @@ function drawRightBuilding(g, facade, x1, night) {
       const seed = 100 + c * 10 + f;
       if (d.awning) drawGreenAwning(g, x, y, d.awning);
       if (d.tall) drawTallPlant(g, x + (d.tallDx ?? 8), y + 43, d.tall, d.tallPot);
-      if (d.monstera) drawMonstera(g, x + 8, y + 43);
-      if (d.lemon) drawLemonTree(g, x + 9, y + 43);
+      if (d.monstera) drawMonstera(g, x + 14, y + 43);
+      if (d.lavender) drawLavender(g, x + 11, y + 43);
       if (d.floorPot) drawPotRow(g, x + 15, y + 43, d.floorPot[0], seed + d.floorPot[1]);
       drawBalcony(g, x - 4, y + 26, 24, '#3a363e', trim, trimShade);
       if (d.laundry) drawLaundry(g, x, y, d.laundry[0], d.laundry[1]);
