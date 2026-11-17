@@ -2,6 +2,7 @@ import { MAX_LIVES } from './config.js';
 import { HUD_FULL, HUD_EMPTY, spriteURLs } from './sprites.js';
 import { audio } from './audio.js';
 import { getAchievements } from './achievements.js';
+import { achievementIconURLs } from './achievement-icons.js';
 
 const $ = (id) => document.getElementById(id);
 export const ui = {
@@ -144,12 +145,14 @@ export function renderAchievements() {
   for (const item of list) {
     const li = document.createElement('li');
     li.className = 'achievement' + (!item.unlocked ? ' locked' : '') + (item.isNew ? ' just-unlocked' : '');
-    const icon = document.createElement('img'); icon.className = 'achievement-icon'; icon.src = item.iconURL; icon.alt = '';
+    const icon = document.createElement('img'); icon.className = 'achievement-icon'; const secret = item.hidden && !item.unlocked; // logro oculto: no se enseña hasta conseguirlo
+    icon.src = secret ? achievementIconURLs.hidden : item.iconURL; icon.alt = '';
     const info = document.createElement('div');
-    const title = document.createElement('strong'); title.textContent = item.label;
-    const desc = document.createElement('small'); desc.textContent = item.desc;
+    const title = document.createElement('strong'); title.textContent = secret ? '???' : item.label;
+    const desc = document.createElement('small'); desc.textContent = secret ? 'Descúbrelo jugando' : item.desc;
     info.append(title,desc); li.append(icon,info);
-    if (!item.unlocked) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
+    if (secret) li.classList.add('hidden-achievement');
+    if (!item.unlocked && !secret) { const lock = document.createElement('span'); lock.className = 'achievement-lock'; lock.textContent = '🔒'; lock.setAttribute('aria-label', 'Bloqueado'); li.append(lock); }
     ui.achievements.appendChild(li);
   }
 }

@@ -10,7 +10,7 @@ export const ACHIEVEMENTS = {
   colorWings: { label: 'EL CUERVO', desc: 'Recoge 25 besos en una noche' },
   notDead: { label: 'NO ESTOY MUERTX', desc: 'Recupérate al límite' },
   madrid24: { label: 'MADRID NO DUERME', desc: 'Sobrevive una noche' },
-  secret17: { label: 'EL DORSAL 17', desc: '17 segundos sin recoger nada' },
+  secret17: { label: 'EL DORSAL 17', desc: '17 segundos sin recoger nada', hidden: true }, // logro oculto hasta conseguirlo
 };
 function read() {
   try {
