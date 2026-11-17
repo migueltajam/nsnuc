@@ -752,3 +752,4 @@ img.achievement-icon { width: 32px; height: 32px; flex: 0 0 auto; image-renderin
 .achievement-toast-icon img { width: 40px; height: 40px; display: block; image-rendering: pixelated; }
 .achievement.locked { padding-right: 18px; }
 .achievement.hidden-achievement { padding-right: 8px; opacity: .75; filter: none; }
+img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; top: 6px; right: 6px; }
