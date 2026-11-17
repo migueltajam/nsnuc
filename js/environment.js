@@ -965,6 +965,12 @@ export function renderEnvironment(
     );
   });
 
+  // 4b. Buhardillas del tejado central, con su propio horario como las de los lados
+  for (const [i, [bx, by, bw, bh]] of [[38, 47, 8, 12], [149, 47, 6, 11]].entries()) {
+    const sch = windowSchedule(4000 + i);
+    drawSideWindowLight(ctx, bx, by, bw, bh, sch.on, sch.off, hour, seconds, 900 + i);
+  }
+
   // 5. Siluetas interiores ocasionales.
   SHADOW_PEOPLE.forEach((shadow) => {
     const win = WINDOWS[shadow.windowIndex];
@@ -1239,6 +1245,13 @@ function rects(g, list, ox, oy) {
   }
 }
 
+// Vaivén de las plantas, el mismo que usan las jardineras del edificio central (drawPlanter):
+// cada planta se mueve 1 px a un lado u otro según su posición y el tiempo.
+let WIND_T = 0;
+function swayAt(key) {
+  return Math.round(Math.sin(WIND_T * 1.1 + key) * 0.6);
+}
+
 function fillRect(g, color, x, y, w, h) {
   g.fillStyle = color;
   g.fillRect(x, y, w, h);
@@ -1509,11 +1522,12 @@ function drawGeraniums(g, x, y, hang = false) {
     y += 6;
   }
   fillRect(g, '#b5684a', x, y + 31, 16, 5);
-  fillRect(g, '#6f8f5c', x - 1, y + 27, 18, 4);
-  fillRect(g, '#7f9a64', x + 3, y + 26, 9, 1);
+  const sw = swayAt(x + y * 0.37);
+  fillRect(g, '#6f8f5c', x - 1 + sw, y + 27, 18, 4);
+  fillRect(g, '#7f9a64', x + 3 + sw, y + 26, 9, 1);
   const seed = Math.abs(x * 7 + y * 3);
   for (const [k, fx] of [0, 4, 8, 11, 14].entries()) {
-    fillRect(g, BLOOMS[Math.floor(hash01(seed + k) * BLOOMS.length)], x + fx, y + 25 + (k % 2), 2, 2);
+    fillRect(g, BLOOMS[Math.floor(hash01(seed + k) * BLOOMS.length)], x + fx + swayAt(x + fx + y * 0.37), y + 25 + (k % 2), 2, 2);
   }
 }
 
@@ -1533,12 +1547,13 @@ const POTS = ['#b5684a', '#c9785a', '#a35a42', '#e9e4da', '#c9504a'];
 function drawVines(g, x, y, w, seed, maxLen = 14) {
   for (let i = 0, vx = x; vx < x + w; i++, vx += 3 + Math.floor(hash01(seed * 7 + i) * 4)) {
     const len = 4 + Math.floor(hash01(seed * 13 + i) * (maxLen - 4));
+    const sw = swayAt(vx + y * 0.37);
     for (let k = 0; k < len; k++) {
-      const dx = (k >> 2) % 2;
+      const dx = (k >> 2) % 2 + (k > len / 2 ? sw : 0);
       fillRect(g, k % 3 ? '#4f8557' : '#6f9a5c', vx + dx, y + k, 1, 1);
       if (k % 4 === 2) fillRect(g, '#6f9a5c', vx + dx + (i % 2 ? 1 : -1), y + k, 1, 1);
     }
-    if (hash01(seed * 3 + i) > 0.6) fillRect(g, BLOOMS[Math.floor(hash01(seed + i * 5) * BLOOMS.length)], vx, y + len, 1, 1);
+    if (hash01(seed * 3 + i) > 0.6) fillRect(g, BLOOMS[Math.floor(hash01(seed + i * 5) * BLOOMS.length)], vx + sw, y + len, 1, 1);
   }
 }
 
@@ -1562,6 +1577,9 @@ function drawPotRow(g, cx, base, n, seed, pw = 6, { first = 0, hang = false } = 
     fillRect(g, POTS[Math.floor(hash01(seed * 5 + i) * POTS.length)], px, base - 5, pw, 5);
     fillRect(g, 'rgba(42,22,38,0.25)', px, base - 1, pw, 1);
     const leaf = LEAVES[Math.floor(hash01(seed * 11 + i) * LEAVES.length)];
+    const sw = swayAt(px + base * 0.37);
+    const p0 = px;
+    px += sw; // las hojas y flores se dibujan desplazadas; la maceta ya está pintada
     if (r < 0.35) {
       // Planta alta: tallos con hojas a los lados y flores arriba
       const h = 9 + Math.floor(hash01(seed * 23 + i) * 6);
@@ -1583,8 +1601,9 @@ function drawPotRow(g, cx, base, n, seed, pw = 6, { first = 0, hang = false } = 
       // Planta colgante: poca altura y ramas que caen por delante
       fillRect(g, leaf, px - 1, base - 7, pw + 2, 2);
       fillRect(g, leaf, px + 1, base - 8, pw - 2, 1);
-      drawVines(g, px, base - 5, pw, seed * 41 + i, 10);
+      drawVines(g, p0, base - 5, pw, seed * 41 + i, 10);
     }
+    px = p0;
   }
 }
 
@@ -1594,16 +1613,17 @@ function drawTallPlant(g, cx, floor, seed, pot = null) {
   if (pot) fillRect(g, 'rgba(42,22,38,0.12)', cx + 2, floor - 7, 3, 7);
   const h = 18 + Math.floor(hash01(seed * 3) * 8);
   const palm = hash01(seed * 7) > 0.5;
+  const sw = swayAt(cx + floor * 0.37);
   fillRect(g, '#6b5440', cx, floor - 7 - h + 4, 1, h - 4);
   if (palm) {
     for (const [dx, dy, len] of [[-1, 0, 7], [1, 0, 7], [-1, 4, 5], [1, 4, 5], [0, -2, 4]]) {
-      for (let k = 0; k < len; k++) fillRect(g, k % 2 ? '#5f8a4e' : '#7fa65f', cx + dx * k, floor - 7 - h + dy + Math.floor(k / 2) - (dx === 0 ? k : 0), 1, 1);
+      for (let k = 0; k < len; k++) fillRect(g, k % 2 ? '#5f8a4e' : '#7fa65f', cx + sw + dx * k, floor - 7 - h + dy + Math.floor(k / 2) - (dx === 0 ? k : 0), 1, 1);
     }
   } else {
     for (let k = 0; k < 6; k++) {
       const lx = cx - 5 + Math.floor(hash01(seed * 13 + k) * 9);
       const ly = floor - 7 - h + Math.floor(hash01(seed * 17 + k) * (h - 6));
-      fillRect(g, LEAVES[k % 4], lx, ly, 4, 3);
+      fillRect(g, LEAVES[k % 4], lx + sw, ly, 4, 3);
     }
   }
 }
@@ -1633,8 +1653,9 @@ function drawLavender(g, cx, floor) {
     const sx = cx - 5 + Math.round(i * 1.4);
     const h = 13 + ((i * 7) % 5) * 2;
     const lean = i < 3 ? -1 : i > 5 ? 1 : 0;
-    for (let k = 0; k < h; k++) fillRect(g, k < 5 ? '#6f8f6a' : '#7f9a74', sx + Math.round(lean * k / 6), top - k, 1, 1);
-    const tx = sx + Math.round(lean * h / 6);
+    const sw = swayAt(sx + i * 0.9 + floor * 0.37);
+    for (let k = 0; k < h; k++) fillRect(g, k < 5 ? '#6f8f6a' : '#7f9a74', sx + Math.round(lean * k / 6) + (k > h / 2 ? sw : 0), top - k, 1, 1);
+    const tx = sx + Math.round(lean * h / 6) + sw;
     for (let k = 0; k < 5; k++) fillRect(g, k % 2 ? '#9a7ac8' : '#7a5aa8', tx + (k % 2 ? lean || 1 : 0) - (k % 2 ? 0 : 0), top - h - k, 1, 1);
     fillRect(g, '#b89ad8', tx, top - h - 4, 1, 1);
   }
@@ -2125,13 +2146,14 @@ function drawStreetTree(g, x) {
   const clusters = [[-17, 296, 12, 12], [7, 290, 13, 13], [-10, 280, 13, 11], [-1, 268, 12, 11],
     [-20, 308, 10, 8], [10, 302, 11, 9], [-5, 290, 10, 9], [6, 276, 10, 10], [-14, 286, 8, 8]];
   clusters.forEach(([cx, cy, cw, ch], k) => {
+    const sw = swayAt(x + k * 1.7);
     for (let yy = 0; yy < ch; yy++) {
       for (let xx = 0; xx < cw; xx++) {
         const dx = (xx - (cw - 1) / 2) / (cw / 2), dy = (yy - (ch - 1) / 2) / (ch / 2);
         const r = dx * dx + dy * dy;
         if (r > 1) continue;
         const h = (xx * 7 + yy * 13 + k * 5) % 11;
-        if (h < (r > 0.55 ? 5 : 9)) fillRect(g, TREE_LEAVES[(xx * 2 + yy * 3 + k) % 5], x + cx + xx, cy + top - 296 + yy, 1, 1);
+        if (h < (r > 0.55 ? 5 : 9)) fillRect(g, TREE_LEAVES[(xx * 2 + yy * 3 + k) % 5], x + cx + xx + sw, cy + top - 296 + yy, 1, 1);
       }
     }
   });
@@ -2225,12 +2247,13 @@ function drawAttic(g, x, w, night) {
   // Macetas y una mesita
   const pots = [[x - 3, '#b5684a'], [x + w - 14, '#c9504a'], [x + w + 1, '#b5684a']];
   for (const [px, c] of pots) {
+    const sw = swayAt(px + 0.5);
     fillRect(g, c, px, 56, 5, 5);
-    fillRect(g, '#5f8a4e', px - 1, 51, 7, 5);
-    fillRect(g, '#7fa65f', px, 50, 4, 2);
+    fillRect(g, '#5f8a4e', px - 1 + sw, 51, 7, 5);
+    fillRect(g, '#7fa65f', px + sw, 50, 4, 2);
   }
-  fillRect(g, '#f2d16b', x + w + 2, 50, 2, 1);
-  fillRect(g, '#e0708e', x - 2, 50, 2, 1);
+  fillRect(g, '#f2d16b', x + w + 2 + swayAt(x + w + 1.5), 50, 2, 1);
+  fillRect(g, '#e0708e', x - 2 + swayAt(x - 2.5), 50, 2, 1);
   fillRect(g, '#3a363e', x - 6, 52, w + 12, 1);
   for (let bx = x - 6; bx <= x + w + 6; bx += 3) fillRect(g, '#3a363e', bx, 52, 1, 10);
   roofExtras.push([x - 2, 24, w + 4, 22]);
@@ -2294,6 +2317,7 @@ export function renderSideBuildings(
   const x0 = -Math.max(left, MAX_SIDE_UNITS);
   const x1 = FIELD_W + Math.max(right, MAX_SIDE_UNITS);
 
+  WIND_T = seconds; // el viento de las plantas sigue el tiempo de la partida
   sideCanvas ||= document.createElement('canvas');
   const sw = x1 - x0;
   const sh = bottom - top;
