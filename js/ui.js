@@ -146,7 +146,7 @@ export function renderAchievements() {
     li.className = 'achievement' + (!item.unlocked ? ' locked' : '') + (item.isNew ? ' just-unlocked' : '');
     const icon = document.createElement('span'); icon.className='achievement-icon'; icon.textContent = item.icon;
     const info = document.createElement('div');
-    const level = document.createElement('em'); level.className = 'achievement-level level-' + item.level.toLowerCase().normalize('NFD').replace(/[^a-z]+/g, '-'); level.textContent = item.level;
+    const level = document.createElement('em'); level.className = 'achievement-level level-' + item.level.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]+/g, '-'); level.textContent = item.level;
     const title = document.createElement('strong'); title.textContent = item.label;
     const desc = document.createElement('small'); desc.textContent = item.desc;
     info.append(level,title,desc); li.append(icon,info);
