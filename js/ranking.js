@@ -6,7 +6,7 @@ function params_get(k) { return params.get(k); }
 // después, cada partida se puede subir al ranking compartido (Google Sheets).
 
 // Dirección de la aplicación web de Apps Script. Vacía = modo demo (solo este dispositivo).
-export const RANKING_URL = '';
+export const RANKING_URL = 'https://script.google.com/macros/s/AKfycbzJ2ZUV0QmNe31aUPtPUs2BWlZe7uPlEHs8v2NUc_4Z4FxJZ1hD2ho7uWt9d0bxyii0hA/exec';
 export const PRESAVE_URL = 'https://migueltajam.lnk.to/Nosoyniuncasi';
 export const PRESAVE_WAIT = 45; // segundos
 // Cierre del concurso: sale la canción y ya no hay pre-save (hora de Madrid).
