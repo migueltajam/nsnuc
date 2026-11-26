@@ -189,17 +189,17 @@ const shine = (rows, k) => {
 
 const ANIMS = {
   // Lanza un beso: un corazoncito sale volando
-  twoKisses: { ms: 170, frames: [[], heart(10, 4), heart(11, 2), heart(11, 0), [], []] },
+  twoKisses: { ms: 320, frames: [[], heart(10, 4), heart(11, 2), heart(11, 0), [], []] },
   // Fuego que titila
-  combo17: { ms: 140, frames: [
+  combo17: { ms: 280, frames: [
     [],
     [[7, 0, '.'], [6, 1, '.'], [7, 1, 'O'], [8, 1, 'O'], [6, 9, 'Y'], [9, 10, 'Y'], [13, 3, '.'], [12, 4, '.'], [13, 4, 'O']],
     [[5, 8, 'Y'], [7, 12, 'o'], [8, 12, 'o']],
   ] },
   // Brillo que cruza la copa
-  points8000: { ms: 90, frames: [[], ...[4, 6, 8, 10, 12, 14, 16].map((k) => shine(ICONS.points8000, k)), [[15, 0, 'T']], [], [], [], []] },
+  points8000: { ms: 170, frames: [[], ...[4, 6, 8, 10, 12, 14, 16].map((k) => shine(ICONS.points8000, k)), [[15, 0, 'T']], [], [], [], []] },
   // El cuervo bate las alas
-  colorWings: { ms: 160, frames: [[], {
+  colorWings: { ms: 340, frames: [[], {
     3: '...OO...OKKKO...',
     4: '..ObBO.OKKEKKOOO',
     5: '..ObBBOOKKKKKkkO',
@@ -210,7 +210,7 @@ const ANIMS = {
     10: 'OKKKKKKbbKKO....',
   }] },
   // La luna con las estrellas parpadeando
-  madrid24: { ms: 260, frames: [[], [[13, 3, '.'], [12, 9, 'T']], [[10, 7, '.'], [14, 6, 'T'], [13, 5, '.']]] },
+  madrid24: { ms: 520, frames: [[], [[13, 3, '.'], [12, 9, 'T']], [[10, 7, '.'], [14, 6, 'T'], [13, 5, '.']]] },
 };
 
 export const achievementIconFrames = {};

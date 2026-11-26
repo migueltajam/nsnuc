@@ -832,8 +832,8 @@ img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; 
 .hud-pause { grid-area: pause; }
 .achievement-toast, .easter-egg { top: calc(env(safe-area-inset-top) + 104px); }
 /* «No estoy muertx»: el corazón late */
-.achievement-toast-icon img.toast-icon-notDead { animation: icon-beat .9s steps(1) infinite; }
+.achievement-toast-icon img.toast-icon-notDead { animation: icon-beat 1.6s steps(1) infinite; }
 @keyframes icon-beat { 0% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } 60% { transform: scale(1); } }
 /* «Forajido»: la espada da un tajo */
-.achievement-toast-icon img.toast-icon-outlaw { animation: icon-slash 1.2s steps(1) infinite; transform-origin: 30% 75%; }
-@keyframes icon-slash { 0% { transform: rotate(0); } 10% { transform: rotate(-22deg); } 20% { transform: rotate(14deg); } 30% { transform: rotate(0); } }
+.achievement-toast-icon img.toast-icon-outlaw { animation: icon-slash 2.4s steps(1) infinite; transform-origin: 30% 75%; }
+@keyframes icon-slash { 0% { transform: rotate(0); } 8% { transform: rotate(-22deg); } 16% { transform: rotate(14deg); } 24% { transform: rotate(0); } }
