@@ -1,6 +1,6 @@
 import {
   PRESAVE_WAIT, markPresave, presaveRemaining, fetchRanking, submitScore,
-  normalizeHandle, isValidHandle,
+  normalizeHandle, isValidHandle, contestClosed,
 } from './ranking.js';
 
 const $ = (id) => document.getElementById(id);
@@ -32,7 +32,20 @@ export function saveHandle(handle) {
 const fmt = (n) => n.toLocaleString('es-ES');
 const clock = (s) => `0:${String(s).padStart(2, '0')}`;
 
+function setClosed() {
+  stopTimer();
+  el.wait.classList.add('hidden');
+  el.submit.classList.add('hidden');
+  el.presave.classList.remove('hidden');
+  el.presave.querySelector('small').textContent = 'YA HA SALIDO';
+  el.presave.querySelector('span').textContent = '♥ ESCÚCHALA';
+  el.text.textContent = 'El concurso del ranking ha terminado. ¡Gracias por jugar!';
+  document.querySelectorAll('.prize-note').forEach((n) => { n.textContent = '★ RANKING FINAL ★'; });
+  document.querySelectorAll('.leaderboard-note').forEach((n) => n.classList.add('hidden'));
+}
+
 function setGate() {
+  if (contestClosed() || lastRanking?.cerrado) { setClosed(); return; }
   const remaining = presaveRemaining();
   const handle = currentHandle();
   el.presave.classList.toggle('hidden', remaining !== null);
@@ -52,11 +65,6 @@ function setGate() {
     return;
   }
   stopTimer();
-  if (lastRanking?.cerrado) {
-    el.text.textContent = 'El concurso ya ha terminado. ¡Gracias por jugar!';
-    el.submit.classList.add('hidden');
-    return;
-  }
   if (!current || current.score <= 0) {
     el.text.textContent = 'Haz algún punto para poder subir la partida.';
     el.submit.disabled = true;
@@ -111,7 +119,8 @@ async function submit() {
   } catch (err) {
     status = 'error';
     errorText = ERRORS[err.code] || 'No hay conexión. Inténtalo otra vez.';
-    if (err.code === 'puntos' || err.code === 'cerrado') status = 'sent-failed';
+    if (err.code === 'cerrado') { lastRanking = {...lastRanking, cerrado: true}; setClosed(); return; }
+    if (err.code === 'puntos') status = 'sent-failed';
   }
   if (status === 'sent-failed') {
     el.text.textContent = errorText;
@@ -125,6 +134,7 @@ async function submit() {
 export function initRanking() {
   loadHandle();
   el.presave.addEventListener('click', () => {
+    if (contestClosed()) return;
     markPresave();
     setGate();
     startTimer();
@@ -132,6 +142,7 @@ export function initRanking() {
   el.submit.addEventListener('click', submit);
   // Al volver de la pestaña del pre-save el contador se pone al día al momento.
   document.addEventListener('visibilitychange', () => { if (!document.hidden && current) setGate(); });
+  if (contestClosed()) setClosed();
   refreshRanking();
 }
 
@@ -155,6 +166,7 @@ export async function refreshRanking() {
 
 function renderRanking(data) {
   if (data) lastRanking = data;
+  if (data?.cerrado) setClosed();
   const me = currentHandle();
   document.querySelectorAll('.ranking-list').forEach((list) => {
     list.replaceChildren();

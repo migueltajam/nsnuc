@@ -1,3 +1,6 @@
+const params = new URLSearchParams(location.search);
+function params_get(k) { return params.get(k); }
+
 // Ranking global con pre-save.
 // Al pulsar el pre-save empieza una espera de 45 s (una sola vez por móvil);
 // después, cada partida se puede subir al ranking compartido (Google Sheets).
@@ -6,12 +9,14 @@
 export const RANKING_URL = '';
 export const PRESAVE_URL = 'https://migueltajam.lnk.to/Nosoyniuncasi';
 export const PRESAVE_WAIT = 45; // segundos
+// Cierre del concurso: sale la canción y ya no hay pre-save (hora de Madrid).
+export const CONTEST_END = new Date(params_get('cierre') || '2027-01-21T23:59:59+01:00');
+export const contestClosed = () => Date.now() > CONTEST_END.getTime();
 
 const PRESAVE_KEY = 'nsnuc-presave-at';
 const DEVICE_KEY = 'nsnuc-device';
 const DEMO_KEY = 'nsnuc-ranking-demo';
 
-const params = new URLSearchParams(location.search);
 const url = params.get('ranking') || RANKING_URL;
 export const isDemo = !url;
 

@@ -12,7 +12,7 @@
 
 // Fecha y hora de cierre del concurso (hora de Madrid). Vacío = sin cierre.
 // Ejemplo: '2026-12-19T23:59:59+01:00'
-const CIERRE = '';
+const CIERRE = '2027-01-21T23:59:59+01:00'; // sale la canción
 
 const HOJA = 'Puntuaciones';
 const CABECERA = ['Fecha', 'Instagram', 'Puntos', 'Segundos', 'Besos', 'Corazones', 'Mejor racha', 'Dispositivo', 'Oculta'];
