@@ -65,6 +65,7 @@ facade.onload = () => {
   let countdownRemaining = 0;
   let lastCountdownValue = 3;
   let goTimer = 0;
+  let resumeMusic = false; // tras una pausa, la música sigue donde estaba
   let combo = 0;
   let bestCombo = 0;
   let timeSinceGood = 0;
@@ -326,6 +327,7 @@ facade.onload = () => {
     paddle.x = paddle.targetX = fieldX + BASKET_CX;
     updateHud(score, level, lives);
     state = 'countdown';
+    resumeMusic = false;
     countdownRemaining = 3;
     lastCountdownValue = 3;
     goTimer = 0;
@@ -351,11 +353,16 @@ facade.onload = () => {
 
   export function resume() {
     if (state !== 'paused') return;
-    state = pausedFrom;
+    // Al volver de la pausa, cuenta atrás de 3 s con el juego quieto, como al empezar.
+    if (pausedFrom === 'playing') resumeMusic = true;
+    state = 'countdown';
+    countdownRemaining = 3;
+    lastCountdownValue = 3;
+    goTimer = 0;
     lastTime = performance.now();
     showScreen(null);
-    if (state === 'countdown') showCountdown(lastCountdownValue);
-    else audio.startMusic(true);
+    showCountdown(3);
+    audio.sfx('tick');
   }
 
   export function toMenu() {
@@ -433,7 +440,8 @@ facade.onload = () => {
       showCountdown('GO');
       goTimer = .7;
       audio.sfx('go');
-      audio.startMusic();
+      audio.startMusic(resumeMusic);
+      resumeMusic = false;
     }
   }
 
