@@ -300,7 +300,7 @@ facade.onload = () => {
     if (!ensureNickname()) return;
     // El desbloqueo de audio se lanza en el propio click (gesto de usuario).
     void audio.unlock();
-    audio.stopMusic();
+    // La música no se corta entre partidas: sigue sonando desde el menú o el fin de partida.
     newRun();
     resetToasts();
     score = 0;
@@ -367,7 +367,7 @@ facade.onload = () => {
 
   export function toMenu() {
     state = 'menu';
-    audio.stopMusic();
+    audio.startMusic(true); // en el menú sigue sonando (también al salir desde la pausa)
     hideCountdown();
     hideEasterEgg();
     resetToasts();
@@ -382,7 +382,7 @@ facade.onload = () => {
 
   function gameOver() {
     state = 'over';
-    audio.stopMusic();
+    // La canción sigue de fondo mientras miras los puntos.
     hideCountdown();
     hideEasterEgg();
     stats.duration = elapsed;
