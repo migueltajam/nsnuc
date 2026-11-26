@@ -1,6 +1,6 @@
 // Iconos de los logros dibujados a píxel (16 x 16), con el mismo contorno que los objetos del juego.
 const PAL = {
- "Q": "#c8d8ea","O": "#290f1f", "R": "#d8406c", "r": "#8a1f42", "P": "#ec6a92", "p": "#ffc2d4", "S": "#d8dee8", "s": "#8f98a8", "H": "#7a4a30", "h": "#a8683e", "G": "#e2b14a", "g": "#f6dc8a", "d": "#a8782a", "Y": "#fee761", "o": "#feae34", "F": "#f77622", "f": "#c8431a", "K": "#1b1820", "N": "#2c2838", "B": "#56597c", "b": "#383a56", "E": "#e8ecf4", "k": "#4a4652", "L": "#ff3d6e", "l": "#e01f55", "W": "#f4f1ea", "w": "#c8c0b0", "M": "#f2e3a0", "m": "#d9c27a", "T": "#fff6c8", "C": "#4db7ea", "c": "#2f97cf", "V": "#ffffff", "A": "#9fdcf7"};
+ "Q": "#c8d8ea","O": "#290f1f", "R": "#d8406c", "r": "#8a1f42", "P": "#ec6a92", "p": "#ffc2d4", "S": "#d8dee8", "s": "#8f98a8", "H": "#7a4a30", "h": "#a8683e", "G": "#e2b14a", "g": "#f6dc8a", "d": "#a8782a", "Y": "#fee761", "o": "#feae34", "F": "#f77622", "f": "#c8431a", "K": "#1b1820", "N": "#2c2838", "B": "#56597c", "b": "#383a56", "E": "#e8ecf4", "k": "#4a4652", "L": "#ff3d6e", "l": "#e01f55", "W": "#f4f1ea", "w": "#c8c0b0", "M": "#f2e3a0", "m": "#d9c27a", "T": "#fff6c8", "C": "#4db7ea", "c": "#2f97cf", "V": "#ffffff", "A": "#74c9f1", "Z": "#1f6f9e"};
 const ICONS = {
  "lock": ["..OOOO..", ".OssssO.", ".Os..sO.", ".Os..sO.", "OOOOOOOO", "OGggGGdO", "OGgOOGdO", "OGGOOGdO", "OGGGGGdO", "OddddddO", "OOOOOOOO"],
  "hidden": ["................", ".....OOOOOO.....", "....OQQQQQQO....", "...OQQOOOOQQO...", "...OQQO..OQQO...", "...OOO...OQQO...", "........OQQO....", ".......OQQO.....", "......OQQO......", "......OQQO......", "......OOOO......", "......OOOO......", "......OQQO......", "......OQQO......", "......OOOO......", "................"],
@@ -136,15 +136,15 @@ const ICONS = {
   "..OACCOWWOCCcO..",
   ".OACCCCOOCCCCcO.",
   "OACCCCCCCCCCCCcO",
-  "OWACCCCCCCCCCcWO",
-  "OWWOACCCCCCcOWWO",
+  "OZACCCCCCCCCCcZO",
+  "OZZOACCCCCCcOZZO",
   ".OOOAVVCVVVcOOO.",
   "...OACVCCCVcO...",
   "...OACVCCVCcO...",
   "...OACVCCVCcO...",
   "...OAVVVCVCcO...",
   "...OACCCCCCcO...",
-  "...OWWWWWWWWO...",
+  "...OZZZZZZZZO...",
   "...OOOOOOOOOO...",
   "................"
  ]
