@@ -4,7 +4,7 @@
 const MUSIC_URL = './assets/audio/musica.mp3';
 const LOOP_START = 1.0;                 // segundos dentro del archivo
 const LOOP_END = 1.0 + 3347069 / 44100; // 37 compases exactos
-const MUSIC_VOLUME = 0.3;
+const MUSIC_VOLUME = 0.14; // de fondo: los efectos mandan
 const MUTE_KEY = 'nsnuc-muted-v2';
 const midiHz = (n) => 440 * 2 ** ((n - 69) / 12);
 let context = null;
