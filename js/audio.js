@@ -1,10 +1,11 @@
 // Música: la instrumental de «No soy ni un casi» en bucle (reintro + verso + estribillo, 117 BPM).
-// El archivo lleva 1 s de música antes y después del bucle para que el salto no se note en ningún navegador.
+// El archivo lleva 1 s de música antes y después del bucle para que el salto no se note en ningún navegador,
+// y va comprimido y limitado para que el estribillo no suba por encima del verso.
 // Los efectos siguen sintetizados con Web Audio. El audio solo arranca tras una interacción del usuario.
 const MUSIC_URL = './assets/audio/musica.mp3';
 const LOOP_START = 1.0;                 // segundos dentro del archivo
 const LOOP_END = 1.0 + 3347069 / 44100; // 37 compases exactos
-const MUSIC_VOLUME = 0.14; // de fondo: los efectos mandan
+const MUSIC_VOLUME = 0.24; // de fondo (el archivo ya va comprimido y más bajo): unos 4 dB menos que antes
 const MUTE_KEY = 'nsnuc-muted-v2';
 const midiHz = (n) => 440 * 2 ** ((n - 69) / 12);
 let context = null;
