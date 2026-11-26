@@ -6,7 +6,7 @@ import {
 const $ = (id) => document.getElementById(id);
 const el = {
   text: $('gate-text'), presave: $('btn-presave'), wait: $('gate-wait'), bar: $('gate-bar'),
-  submit: $('btn-submit'), submitSmall: $('submit-small'), submitLabel: $('submit-label'),
+  submit: $('btn-submit'), submitLabel: $('submit-label'),
   input: $('nickname'),
 };
 const HANDLE_KEY = 'nsnuc-instagram';
@@ -38,6 +38,7 @@ function setClosed() {
   el.submit.classList.add('hidden');
   el.presave.classList.remove('hidden');
   el.presave.querySelector('small').textContent = 'YA HA SALIDO';
+  el.presave.querySelector('small').classList.remove('handle-small');
   el.presave.querySelector('span').textContent = '♥ ESCÚCHALA';
   el.text.textContent = 'El concurso del ranking ha terminado. ¡Gracias por jugar!';
   document.querySelectorAll('.prize-note').forEach((n) => { n.textContent = '★ RANKING FINAL ★'; });
@@ -51,7 +52,7 @@ function setGate() {
   el.presave.classList.toggle('hidden', remaining !== null);
   el.wait.classList.toggle('hidden', !(remaining > 0));
   el.submit.classList.toggle('hidden', remaining === null);
-  el.submitSmall.textContent = `COMO @${handle.toUpperCase()}`;
+  document.querySelectorAll('.handle-small').forEach((n) => { n.textContent = `COMO @${handle.toUpperCase()}`; });
 
   if (remaining === null) {
     el.text.textContent = 'Haz el pre-save y sube tu puntuación al ranking global.';
@@ -87,9 +88,9 @@ function setGate() {
     el.submit.disabled = false;
     el.submitLabel.textContent = 'REINTENTAR';
   } else {
-    el.text.textContent = '¡Ranking desbloqueado! Sube tu partida.';
+    el.text.textContent = '¡Ranking desbloqueado! Confirma tu puntuación.';
     el.submit.disabled = false;
-    el.submitLabel.textContent = 'SUBIR AL RANKING';
+    el.submitLabel.textContent = 'CONFIRMAR PUNTOS';
   }
 }
 
