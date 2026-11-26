@@ -808,3 +808,42 @@ img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; 
 }
 .stat span { font-size: 9px; color: var(--shirt-mid); }
 .stat strong { font-size: 14px; }
+
+/* Secreto 17: la misma camiseta pixelada que en la lista de logros */
+.easter-egg .egg-icon {
+  grid-column: 1; grid-row: 1 / span 4; width: 48px; height: 48px;
+  image-rendering: pixelated; filter: drop-shadow(0 3px 0 var(--denim-ink));
+}
+.easter-egg.egg-appear .egg-icon { animation: jersey-bounce 2.5s ease-in-out .65s infinite alternate; }
+.easter-egg .egg-tag { grid-column: 2; font-size: 9px; color: var(--gold); letter-spacing: 1px; text-shadow: none; }
+
+/* HUD en móvil: vidas debajo de los puntos para que se vea el cuervo; cielo con degradado suave */
+#hud {
+  display: grid; grid-template-columns: auto auto 1fr auto auto;
+  grid-template-areas: "score middle . sound pause" "lives . . . .";
+  column-gap: 6px; row-gap: 4px; align-items: start;
+  background: linear-gradient(to bottom, rgba(26, 36, 64, .55) 0%, rgba(26, 36, 64, 0) 100%);
+  padding-bottom: 16px;
+}
+.hud-score-box { grid-area: score; }
+.hud-middle { grid-area: middle; flex: none; padding-left: 14px; align-self: center; }
+#lives { grid-area: lives; margin-top: 2px; }
+.hud-sound { grid-area: sound; }
+.hud-pause { grid-area: pause; }
+.achievement-toast, .easter-egg { top: calc(env(safe-area-inset-top) + 104px); }
+/* «No estoy muertx»: el corazón late */
+.achievement-toast-icon img.toast-icon-notDead { animation: icon-beat 1.6s steps(1) infinite; }
+@keyframes icon-beat { 0% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } 60% { transform: scale(1); } }
+/* «Forajido»: la espada da un tajo */
+.achievement-toast-icon img.toast-icon-outlaw { animation: icon-slash 2.4s steps(1) infinite; transform-origin: 30% 75%; }
+@keyframes icon-slash { 0% { transform: rotate(0); } 8% { transform: rotate(-22deg); } 16% { transform: rotate(14deg); } 24% { transform: rotate(0); } }
+/* Las tarjetas de logro dicen también qué has conseguido, como la del 17 */
+.achievement-toast div { gap: 4px; }
+.achievement-toast-desc { font-size: 10px; line-height: 1.3; color: var(--shirt-mid); text-transform: uppercase; }
+/* Tarjetas de logro un poco más anchas para que todos los nombres quepan en una línea (mismo tamaño de letra) */
+.achievement-toast, .easter-egg { width: min(94vw, 360px); }
+.achievement-toast strong { white-space: nowrap; }
+@media (max-width: 380px) {
+  .achievement-toast, .easter-egg { padding-left: 14px; padding-right: 14px; column-gap: 12px; }
+  .achievement-toast { gap: 12px; }
+}
