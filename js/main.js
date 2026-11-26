@@ -1,9 +1,11 @@
 import { initUi } from './ui.js';
+import { initRanking } from './ranking-ui.js';
 import { initGame, startGame, pause, resume, toMenu, isRunning } from './game.js';
 
 const byId = (id) => document.getElementById(id);
 
 initUi();
+initRanking();
 byId('btn-start').addEventListener('click', startGame);
 byId('btn-restart').addEventListener('click', startGame);
 byId('btn-pause').addEventListener('click', pause);

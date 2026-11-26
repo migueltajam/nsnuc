@@ -3,6 +3,8 @@ import { HUD_FULL, HUD_EMPTY, spriteURLs } from './sprites.js';
 import { audio } from './audio.js';
 import { getAchievements } from './achievements.js';
 import { achievementIconURLs } from './achievement-icons.js';
+import { normalizeHandle, isValidHandle } from './ranking.js';
+import { saveHandle } from './ranking-ui.js';
 
 const $ = (id) => document.getElementById(id);
 export const ui = {
@@ -11,7 +13,7 @@ export const ui = {
   bestStart: $('best-start'), bestOver: $('best-over'), newRecord: $('new-record'),
   recordCelebration: $('record-celebration'), btnRestart: $('btn-restart'),
   nickname: $('nickname'), nicknameError: $('nickname-error'),
-  leaderboard: $('leaderboard'), egg: $('easter-egg'),
+  egg: $('easter-egg'),
   countdown: $('countdown'), countdownValue: $('countdown-value'),
   achievementToast: $('achievement-toast'), achievementToastName: $('achievement-toast-name'),
   achievements: $('achievements'), achievementsCount: $('achievement-counter'),
@@ -20,19 +22,10 @@ export const ui = {
   screens: {start: $('screen-start'), pause: $('screen-pause'), over: $('screen-over')},
 };
 
-const NICKNAME_KEY = 'nsnuc-nickname';
-const SCORES_KEY = 'nsnuc-scores-local-v1';
 let eggTimeout = null;
 let toastTimeout = null;
 let toastQueue = [];
 
-function readLocalScores() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SCORES_KEY) || '[]');
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((s) => typeof s.nick === 'string' && Number.isFinite(s.score));
-  } catch { return []; }
-}
 export function updateSoundButtons() {
   document.querySelectorAll('.sound-toggle').forEach((el) => {
     const isOff = audio.muted;
@@ -43,26 +36,26 @@ export function updateSoundButtons() {
 }
 export function initUi() {
   document.querySelectorAll('img[data-sprite]').forEach((img) => { img.src = spriteURLs[img.dataset.sprite] || ''; });
-  try { ui.nickname.value = localStorage.getItem(NICKNAME_KEY) || ''; } catch {}
   ui.nickname.addEventListener('input', () => ui.nicknameError.classList.add('hidden'));
   document.querySelectorAll('.sound-toggle').forEach((btn) => btn.addEventListener('click', () => {
     audio.toggle(); updateSoundButtons();
   }));
   updateSoundButtons();
-  renderLocalLeaderboard();
   renderAchievements();
 }
 export function ensureNickname() {
-  const nick = ui.nickname.value.trim().replace(/\s+/g, ' ');
-  if (nick.length < 2 || nick.length > 16) {
-    ui.nicknameError.textContent = 'Escribe un apodo de 2 a 16 caracteres.';
+  const handle = normalizeHandle(ui.nickname.value);
+  if (!isValidHandle(handle)) {
+    ui.nicknameError.textContent = handle
+      ? 'Solo letras, números, puntos y guiones bajos, como en Instagram.'
+      : 'Escribe tu @ de Instagram para jugar.';
     ui.nicknameError.classList.remove('hidden');
     showScreen('start');
     ui.nickname.focus();
     return false;
   }
-  try { localStorage.setItem(NICKNAME_KEY, nick); } catch {}
-  ui.nickname.value = nick;
+  saveHandle(handle);
+  ui.nickname.value = handle;
   ui.nicknameError.classList.add('hidden');
   return true;
 }
@@ -102,33 +95,6 @@ export function showCountdown(value) {
 }
 export function hideCountdown() { ui.countdown.classList.add('hidden'); }
 
-// Clasificación SOLO local de demostración; no equivale a la futura clasificación global.
-export function recordLocalScore(points) {
-  const entries = readLocalScores();
-  entries.push({nick: ui.nickname.value.trim(), score: points, date: new Date().toISOString()});
-  try { localStorage.setItem(SCORES_KEY, JSON.stringify(entries.slice(-1000))); } catch {}
-  renderLocalLeaderboard();
-}
-export function renderLocalLeaderboard() {
-  if (!ui.leaderboard) return;
-  const top = readLocalScores().sort((a,b) => b.score - a.score).slice(0,10);
-  ui.leaderboard.replaceChildren();
-  if (!top.length) {
-    const li = document.createElement('li');
-    li.textContent = 'Todavía no hay partidas en este dispositivo.';
-    li.className = 'leaderboard-empty';
-    ui.leaderboard.appendChild(li);
-    return;
-  }
-  for (const [index, row] of top.entries()) {
-    const li = document.createElement('li');
-    const pos = document.createElement('span'); pos.textContent = String(index+1).padStart(2,'0');
-    const nick = document.createElement('span'); nick.textContent = row.nick; nick.className = 'leaderboard-name';
-    const points = document.createElement('strong'); points.textContent = row.score.toLocaleString('es-ES');
-    li.append(pos,nick,points);
-    ui.leaderboard.appendChild(li);
-  }
-}
 function duration(secs) { return `${Math.floor(secs/60)}:${String(Math.floor(secs%60)).padStart(2,'0')}`; }
 export function updateGameOverStats(stats, isRecord) {
   ui.statKisses.textContent = stats.kisses;

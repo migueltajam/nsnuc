@@ -5,10 +5,11 @@ import {
   BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
-import { ui, showScreen, updateHud, updateCombo, bumpScore, ensureNickname, recordLocalScore,
-  renderLocalLeaderboard, showEasterEgg, hideEasterEgg, showCountdown, hideCountdown,
+import { ui, showScreen, updateHud, updateCombo, bumpScore, ensureNickname,
+  showEasterEgg, hideEasterEgg, showCountdown, hideCountdown,
   updateGameOverStats, showAchievementToast, resetToasts } from './ui.js';
 import { audio } from './audio.js';
+import { rankingGameOver, refreshRanking } from './ranking-ui.js';
 import { unlockAchievement, newRun } from './achievements.js';
 import {
   prepareEnvironment,
@@ -368,7 +369,7 @@ facade.onload = () => {
     particles = [];
     texts = [];
     ui.bestStart.textContent = best;
-    renderLocalLeaderboard();
+    refreshRanking();
     showScreen('start');
   }
 
@@ -384,7 +385,6 @@ facade.onload = () => {
       best = score;
       saveBest();
     }
-    recordLocalScore(score);
     ui.finalScore.textContent = score.toLocaleString('es-ES');
     ui.bestOver.textContent = best.toLocaleString('es-ES');
     ui.newRecord.classList.toggle('hidden', !isRecord);
@@ -392,6 +392,7 @@ facade.onload = () => {
     audio.sfx(isRecord ? 'record' : 'over');
     vibrate([80, 60, 160]);
     showScreen('over');
+    rankingGameOver(score, stats);
 
     // Evita reiniciar sin querer con un toque que venía de la partida.
     ui.btnRestart.disabled = true;
@@ -843,7 +844,6 @@ export function initGame() {
   resize();
   ui.bestStart.textContent = best;
   updateHud(score, level, lives);
-  renderLocalLeaderboard();
   showScreen('start');
   requestAnimationFrame((t) => {
     lastTime = t;

@@ -765,3 +765,30 @@ img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; 
 }
 .btn-presave small { font-size: 10px; letter-spacing: 1px; color: #6b4a2a; }
 .btn-presave span { font-size: 20px; }
+
+/* Ranking global con pre-save */
+.handle-field { position: relative; width: 100%; }
+.handle-field span {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--shirt-mid); font-size: 16px; pointer-events: none;
+}
+.handle-field .nickname-input { padding-left: 34px; padding-right: 34px; text-transform: lowercase; }
+.ranking-gate { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.screen .gate-text { color: var(--cream); font-size: 10px; line-height: 1.7; padding: 0 6px; }
+.gate-wait {
+  width: min(100%, 258px); height: 14px; background: var(--denim-dark);
+  box-shadow: 0 0 0 3px var(--denim-ink);
+}
+.gate-wait span { display: block; height: 100%; width: 0; background: var(--gold); box-shadow: inset 0 -3px 0 #c99a5c; }
+.btn-submit:disabled { filter: none; opacity: 1; background: var(--denim-dark); color: var(--shirt-mid);
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--denim-light), inset 0 -6px 0 0 var(--denim-ink); }
+.btn-submit:disabled small { color: var(--shirt-deep); }
+.btn-submit:disabled:active { transform: none; }
+.screen .prize-note { color: var(--gold); font-size: 9px; margin: -4px 0 6px; }
+.leaderboard-pos { flex: 0 0 auto; min-width: 22px; }
+.leaderboard li.is-podium .leaderboard-pos { color: var(--gold); }
+.leaderboard li.is-me { box-shadow: inset 0 0 0 2px var(--embroidery); }
+.leaderboard li.is-outside { margin-top: 6px; }
+#screen-start .leaderboard-section { margin-top: 6px; }
