@@ -2,7 +2,7 @@ import { MAX_LIVES } from './config.js';
 import { HUD_FULL, HUD_EMPTY, spriteURLs } from './sprites.js';
 import { audio } from './audio.js';
 import { getAchievements } from './achievements.js';
-import { achievementIconURLs } from './achievement-icons.js';
+import { achievementIconURLs, achievementIconFrames } from './achievement-icons.js';
 import { normalizeHandle, isValidHandle } from './ranking.js';
 import { saveHandle } from './ranking-ui.js';
 
@@ -129,13 +129,26 @@ export function resetToasts() {
   clearTimeout(toastTimeout);
   toastTimeout=null;
   ui.achievementToast.classList.add('hidden');
+  stopIconAnim();
+}
+// Cada icono se mueve a su manera mientras está la alerta.
+let iconAnim = null;
+function stopIconAnim() { if (iconAnim) { clearInterval(iconAnim); iconAnim = null; } }
+function animateToastIcon(img, id) {
+  stopIconAnim();
+  img.className = `toast-icon-${id}`;
+  const anim = achievementIconFrames[id];
+  if (!anim) return;
+  let i = 0;
+  iconAnim = setInterval(() => { i = (i + 1) % anim.urls.length; img.src = anim.urls[i]; }, anim.ms);
 }
 function popToast() {
   const item = toastQueue.shift();
-  if (!item) { ui.achievementToast.classList.add('hidden'); toastTimeout=null; return; }
+  if (!item) { ui.achievementToast.classList.add('hidden'); toastTimeout=null; stopIconAnim(); return; }
   const toastIcon = ui.achievementToast.querySelector('.achievement-toast-icon');
   toastIcon.textContent = '';
   const img = document.createElement('img'); img.src = item.iconURL; img.alt = ''; toastIcon.append(img);
+  animateToastIcon(img, item.id);
   ui.achievementToastName.textContent = item.label;
   ui.achievementToast.classList.remove('hidden');
   toastTimeout=setTimeout(popToast,4000); // 4 s en pantalla

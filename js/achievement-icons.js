@@ -150,8 +150,7 @@ const ICONS = {
  ]
 };
 
-export const achievementIconURLs = {};
-for (const [id, rows] of Object.entries(ICONS)) {
+function draw(rows) {
   const c = document.createElement('canvas');
   c.width = rows[0].length;
   c.height = rows.length;
@@ -163,5 +162,58 @@ for (const [id, rows] of Object.entries(ICONS)) {
       g.fillRect(x, y, 1, 1);
     }
   });
-  achievementIconURLs[id] = c.toDataURL();
+  return c.toDataURL();
+}
+
+export const achievementIconURLs = {};
+for (const [id, rows] of Object.entries(ICONS)) achievementIconURLs[id] = draw(rows);
+
+// ---- Animaciones de las alertas de logro (fotogramas a píxel) ----
+// Cada fotograma parte del icono original: una lista de píxeles [x, y, color]
+// o un objeto {fila: 'nueva fila'} para redibujar filas enteras.
+function frame(base, edit) {
+  const rows = base.slice();
+  if (Array.isArray(edit)) {
+    for (const [x, y, ch] of edit) rows[y] = rows[y].slice(0, x) + ch + rows[y].slice(x + 1);
+  } else {
+    for (const [y, row] of Object.entries(edit)) rows[y] = row;
+  }
+  return rows;
+}
+const heart = (x, y) => [[x + 1, y, 'L'], [x + 3, y, 'L'], [x, y + 1, 'L'], [x + 1, y + 1, 'P'], [x + 2, y + 1, 'L'], [x + 3, y + 1, 'L'], [x + 4, y + 1, 'L'], [x + 1, y + 2, 'L'], [x + 2, y + 2, 'L'], [x + 3, y + 2, 'l'], [x + 2, y + 3, 'l']];
+const shine = (rows, k) => {
+  const out = [];
+  rows.forEach((row, y) => { for (let x = 0; x < row.length; x++) if ((x + y === k || x + y === k + 1) && 'Gg'.includes(row[x])) out.push([x, y, 'T']); });
+  return out;
+};
+
+const ANIMS = {
+  // Lanza un beso: un corazoncito sale volando
+  twoKisses: { ms: 170, frames: [[], heart(10, 4), heart(11, 2), heart(11, 0), [], []] },
+  // Fuego que titila
+  combo17: { ms: 140, frames: [
+    [],
+    [[7, 0, '.'], [6, 1, '.'], [7, 1, 'O'], [8, 1, 'O'], [6, 9, 'Y'], [9, 10, 'Y'], [13, 3, '.'], [12, 4, '.'], [13, 4, 'O']],
+    [[5, 8, 'Y'], [7, 12, 'o'], [8, 12, 'o']],
+  ] },
+  // Brillo que cruza la copa
+  points8000: { ms: 90, frames: [[], ...[4, 6, 8, 10, 12, 14, 16].map((k) => shine(ICONS.points8000, k)), [[15, 0, 'T']], [], [], [], []] },
+  // El cuervo bate las alas
+  colorWings: { ms: 160, frames: [[], {
+    3: '...OO...OKKKO...',
+    4: '..ObBO.OKKEKKOOO',
+    5: '..ObBBOOKKKKKkkO',
+    6: '...ObBBKKKKKOOO.',
+    7: '....OOKKKKKKO...',
+    8: '..OOKKKKKKKKO...',
+    9: 'OOKKKKKKKKKKO...',
+    10: 'OKKKKKKbbKKO....',
+  }] },
+  // La luna con las estrellas parpadeando
+  madrid24: { ms: 260, frames: [[], [[13, 3, '.'], [12, 9, 'T']], [[10, 7, '.'], [14, 6, 'T'], [13, 5, '.']]] },
+};
+
+export const achievementIconFrames = {};
+for (const [id, anim] of Object.entries(ANIMS)) {
+  achievementIconFrames[id] = { ms: anim.ms, urls: anim.frames.map((f) => draw(frame(ICONS[id], f))) };
 }
