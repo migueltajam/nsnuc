@@ -64,12 +64,18 @@
           <li class="danger"><img class="sprite" data-sprite="calabaza" alt=""><span>¡EVÍTALA!</span></li>
         </ul>
         <p class="hint">¡Que no te den calabazas, románticx!</p>
-        <label class="nickname-label" for="nickname">TU APODO</label>
-        <input id="nickname" name="nickname" class="nickname-input" type="text" minlength="2" maxlength="16" placeholder="MIGUEL17" autocomplete="nickname" spellcheck="false">
+        <label class="nickname-label" for="nickname">TU @ DE INSTAGRAM</label>
+        <div class="handle-field"><span aria-hidden="true">@</span><input id="nickname" name="instagram" class="nickname-input" type="text" maxlength="31" placeholder="tu.usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email"></div>
         <p id="nickname-error" class="nickname-error hidden" role="alert"></p>
         <button id="btn-start" class="btn">JUGAR <span aria-hidden="true">▶</span></button>
         <button class="sound-toggle sound-menu" aria-label="Silenciar música y efectos" aria-pressed="false">♪ SONIDO: ON</button>
         <p class="best">RÉCORD LOCAL <span id="best-start">0</span></p>
+        <div class="leaderboard-section">
+          <h3>TOP 10 GLOBAL</h3>
+          <p class="prize-note">★ EL TOP 3 GANA UNA CAJA SORPRESA ★</p>
+          <p class="leaderboard-note">Puedes ver el ranking, pero necesitas el pre-save para aparecer en él.</p>
+          <ol class="leaderboard ranking-list" aria-label="Ranking global"></ol>
+        </div>
         </div>
       </div>
     </section>
@@ -88,8 +94,10 @@
     <section id="screen-over" class="screen hidden">
       <div class="panel">
         <div class="panel-body">
-        <p class="over-eyebrow">TE HAN DADO CALABAZAS</p>
-        <h2>SE ACABÓ</h2>
+        <div class="over-title">
+          <p class="over-kicker">SE ACABÓ</p>
+          <h2 class="over-main"><span class="over-line">¡TE HAN DADO</span><span class="over-line">CALABAZAS!</span></h2>
+        </div>
         <p class="final">TU PUNTUACIÓN<strong id="final-score">0</strong></p>
         <div id="record-celebration" class="record-celebration hidden" aria-hidden="true">★ ★ ★</div>
         <div class="stats-grid" aria-label="Estadísticas de la partida">
@@ -100,12 +108,24 @@
         </div>
         <p class="best">RÉCORD LOCAL <span id="best-over">0</span></p>
         <p id="new-record" class="new-record hidden">¡NUEVO RÉCORD!</p>
+        <div id="ranking-gate" class="ranking-gate">
+          <p id="gate-text" class="gate-text"></p>
+          <a id="btn-presave" class="btn btn-presave" href="https://migueltajam.lnk.to/Nosoyniuncasi" target="_blank" rel="noopener">
+            <small class="handle-small">COMO @TU.USUARIO</small>
+            <span>SUBIR AL RANKING</span>
+          </a>
+          <div id="gate-wait" class="gate-wait hidden" aria-hidden="true"><span id="gate-bar"></span></div>
+          <button id="btn-submit" class="btn btn-presave btn-submit hidden">
+            <small class="handle-small">COMO @TU.USUARIO</small>
+            <span id="submit-label">SUBIR AL RANKING</span>
+          </button>
+        </div>
         <button id="btn-restart" class="btn">OTRA VEZ</button>
         <button id="btn-menu" class="btn btn-secondary">MENÚ</button>
         <div class="leaderboard-section">
-          <h3>TOP 10 · DEMO</h3>
-          <p class="leaderboard-note">Solo en este dispositivo. El ranking online con pre-save se conectará después.</p>
-          <ol id="leaderboard" class="leaderboard" aria-label="Clasificación local de prueba"></ol>
+          <h3>TOP 10 GLOBAL</h3>
+          <p class="prize-note">★ EL TOP 3 GANA UNA CAJA SORPRESA ★</p>
+          <ol class="leaderboard ranking-list" aria-label="Ranking global"></ol>
         </div>
         <div class="achievements-section">
           <h3>LOGROS SECRETOS <span id="achievement-counter">0/8</span></h3>

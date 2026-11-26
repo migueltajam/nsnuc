@@ -753,3 +753,58 @@ img.achievement-icon { width: 32px; height: 32px; flex: 0 0 auto; image-renderin
 .achievement.locked { padding-right: 18px; }
 .achievement.hidden-achievement { padding-right: 8px; opacity: .75; filter: none; }
 img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; top: 6px; right: 6px; }
+
+/* Botón del pre-save en el fin de partida: dorado, para que destaque sobre los demás */
+.btn-presave {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  text-decoration: none; padding-top: 12px; padding-bottom: 14px;
+  background: var(--gold); color: var(--denim-ink); text-shadow: none;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 #fbe2b8, inset 0 -6px 0 0 #c99a5c;
+}
+.btn-presave small { font-size: 10px; letter-spacing: 1px; color: #6b4a2a; }
+.btn-presave span { font-size: 20px; }
+
+/* Ranking global con pre-save */
+.handle-field { position: relative; width: 100%; }
+.handle-field span {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--shirt-mid); font-size: 16px; pointer-events: none;
+}
+.handle-field .nickname-input { padding-left: 34px; padding-right: 34px; text-transform: lowercase; }
+.ranking-gate { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.screen .gate-text { color: var(--cream); font-size: 10px; line-height: 1.7; padding: 0 6px; }
+.gate-wait {
+  width: min(100%, 258px); height: 14px; background: var(--denim-dark);
+  box-shadow: 0 0 0 3px var(--denim-ink);
+}
+.gate-wait span { display: block; height: 100%; width: 0; background: var(--gold); box-shadow: inset 0 -3px 0 #c99a5c; }
+.btn-submit:disabled { filter: none; opacity: 1; background: var(--denim-dark); color: var(--shirt-mid);
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 var(--denim-light), inset 0 -6px 0 0 var(--denim-ink); }
+.btn-submit:disabled small { color: var(--shirt-deep); }
+.btn-submit:disabled:active { transform: none; }
+.screen .prize-note { color: var(--gold); font-size: 9px; margin: -4px 0 6px; }
+.leaderboard-pos { flex: 0 0 auto; min-width: 22px; }
+.leaderboard li.is-podium .leaderboard-pos { color: var(--gold); }
+.leaderboard li.is-me { box-shadow: inset 0 0 0 2px var(--embroidery); }
+.leaderboard li.is-outside { margin-top: 6px; }
+#screen-start .leaderboard-section { margin-top: 6px; }
+.ranking-gate .btn-presave span { font-size: 18px; white-space: nowrap; }
+#screen-over .ranking-gate .btn, #btn-restart, #btn-menu { width: min(100%, 236px); min-width: 0; padding-left: 8px; padding-right: 8px; }
+
+/* Fin de partida: título «Te han dado calabazas» y estadísticas compactas */
+.over-title { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.screen .over-kicker { margin: 0; font-size: 11px; letter-spacing: 2px; color: var(--stitch); }
+#screen-over .over-main { display: flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.1; font-size: clamp(22px, 7vw, 30px); }
+.over-line { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.stats-grid { gap: 6px; }
+.stat {
+  flex-direction: row; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 4px 12px; min-height: 36px; border-bottom: none;
+  box-shadow: inset 0 -3px 0 var(--embroidery);
+}
+.stat span { font-size: 9px; color: var(--shirt-mid); }
+.stat strong { font-size: 14px; }
