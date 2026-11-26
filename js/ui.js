@@ -35,6 +35,8 @@ export function updateSoundButtons() {
   });
 }
 export function initUi() {
+  const eggIcon = document.querySelector('.egg-icon');
+  if (eggIcon) eggIcon.src = achievementIconURLs.secret17;
   document.querySelectorAll('img[data-sprite]').forEach((img) => { img.src = spriteURLs[img.dataset.sprite] || ''; });
   ui.nickname.addEventListener('input', () => ui.nicknameError.classList.add('hidden'));
   document.querySelectorAll('.sound-toggle').forEach((btn) => btn.addEventListener('click', () => {

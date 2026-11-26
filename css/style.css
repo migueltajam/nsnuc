@@ -808,3 +808,26 @@ img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; 
 }
 .stat span { font-size: 9px; color: var(--shirt-mid); }
 .stat strong { font-size: 14px; }
+
+/* Secreto 17: la misma camiseta pixelada que en la lista de logros */
+.easter-egg .egg-icon {
+  grid-column: 1; grid-row: 1 / span 4; width: 48px; height: 48px;
+  image-rendering: pixelated; filter: drop-shadow(0 3px 0 var(--denim-ink));
+}
+.easter-egg.egg-appear .egg-icon { animation: jersey-bounce 2.5s ease-in-out .65s infinite alternate; }
+.easter-egg .egg-tag { grid-column: 2; font-size: 9px; color: var(--gold); letter-spacing: 1px; text-shadow: none; }
+
+/* HUD en móvil: vidas debajo de los puntos para que se vea el cuervo; cielo con degradado suave */
+#hud {
+  display: grid; grid-template-columns: auto auto 1fr auto auto;
+  grid-template-areas: "score middle . sound pause" "lives . . . .";
+  column-gap: 6px; row-gap: 4px; align-items: start;
+  background: linear-gradient(to bottom, rgba(26, 36, 64, .55) 0%, rgba(26, 36, 64, 0) 100%);
+  padding-bottom: 16px;
+}
+.hud-score-box { grid-area: score; }
+.hud-middle { grid-area: middle; flex: none; padding-left: 14px; align-self: center; }
+#lives { grid-area: lives; margin-top: 2px; }
+.hud-sound { grid-area: sound; }
+.hud-pause { grid-area: pause; }
+.achievement-toast, .easter-egg { top: calc(env(safe-area-inset-top) + 104px); }
