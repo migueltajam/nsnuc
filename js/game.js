@@ -343,7 +343,7 @@ facade.onload = () => {
     if (state !== 'playing' && state !== 'countdown') return;
     pausedFrom = state;
     state = 'paused';
-    audio.stopMusic();
+    audio.pauseMusic();
     hideCountdown();
     keys.left = keys.right = false;
     showScreen('pause');
@@ -355,7 +355,7 @@ facade.onload = () => {
     lastTime = performance.now();
     showScreen(null);
     if (state === 'countdown') showCountdown(lastCountdownValue);
-    else audio.startMusic();
+    else audio.startMusic(true);
   }
 
   export function toMenu() {
