@@ -753,3 +753,15 @@ img.achievement-icon { width: 32px; height: 32px; flex: 0 0 auto; image-renderin
 .achievement.locked { padding-right: 18px; }
 .achievement.hidden-achievement { padding-right: 8px; opacity: .75; filter: none; }
 img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; top: 6px; right: 6px; }
+
+/* Botón del pre-save en el fin de partida: dorado, para que destaque sobre los demás */
+.btn-presave {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  text-decoration: none; padding-top: 12px; padding-bottom: 14px;
+  background: var(--gold); color: var(--denim-ink); text-shadow: none;
+  box-shadow: 0 -4px 0 0 var(--denim-ink), 0 4px 0 0 var(--denim-ink),
+    -4px 0 0 0 var(--denim-ink), 4px 0 0 0 var(--denim-ink),
+    inset 0 4px 0 0 #fbe2b8, inset 0 -6px 0 0 #c99a5c;
+}
+.btn-presave small { font-size: 10px; letter-spacing: 1px; color: #6b4a2a; }
+.btn-presave span { font-size: 20px; }
