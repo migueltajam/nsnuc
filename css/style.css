@@ -837,3 +837,13 @@ img.achievement-lock { width: 12px; height: 16.5px; image-rendering: pixelated; 
 /* «Forajido»: la espada da un tajo */
 .achievement-toast-icon img.toast-icon-outlaw { animation: icon-slash 2.4s steps(1) infinite; transform-origin: 30% 75%; }
 @keyframes icon-slash { 0% { transform: rotate(0); } 8% { transform: rotate(-22deg); } 16% { transform: rotate(14deg); } 24% { transform: rotate(0); } }
+/* Las tarjetas de logro dicen también qué has conseguido, como la del 17 */
+.achievement-toast div { gap: 4px; }
+.achievement-toast-desc { font-size: 10px; line-height: 1.3; color: var(--shirt-mid); text-transform: uppercase; }
+/* Tarjetas de logro un poco más anchas para que todos los nombres quepan en una línea (mismo tamaño de letra) */
+.achievement-toast, .easter-egg { width: min(94vw, 360px); }
+.achievement-toast strong { white-space: nowrap; }
+@media (max-width: 380px) {
+  .achievement-toast, .easter-egg { padding-left: 14px; padding-right: 14px; column-gap: 12px; }
+  .achievement-toast { gap: 12px; }
+}

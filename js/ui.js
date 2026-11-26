@@ -150,6 +150,7 @@ function popToast() {
   const img = document.createElement('img'); img.src = item.iconURL; img.alt = ''; toastIcon.append(img);
   animateToastIcon(img, item.id);
   ui.achievementToastName.textContent = item.label;
+  document.getElementById('achievement-toast-desc').textContent = item.desc || '';
   ui.achievementToast.classList.remove('hidden');
   toastTimeout=setTimeout(popToast,4000); // 4 s en pantalla
 }
