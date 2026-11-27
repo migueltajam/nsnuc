@@ -2,7 +2,7 @@ import {
   OUTLINE, SKY_TOP, ROAD, MARGIN, clamp, rand, vibrate,
   ITEM_TYPES, START_LIVES, MAX_LIVES, BEST_KEY, ITEM_R, LEVEL_TIME,
   FIELD_W, FIELD_H, GROUND_Y, BASKET_Y, BASKET_W, BASKET_CX, SPAWN_Y, MAX_TOP_CROP, MAX_SIDE_EXTEND, MAX_SIDE_UNITS, SIDE_TOLERANCE,
-  BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR
+  BASE_FALL_TIME, BASE_SPAWN_INTERVAL, SPEED_DOUBLING, MAX_SPEED_FACTOR, DIFFICULTY_PHASES
 } from './config.js';
 import { ART, sprites, player, drawText } from './sprites.js';
 import { ui, showScreen, updateHud, updateCombo, bumpScore, ensureNickname,
@@ -445,32 +445,61 @@ facade.onload = () => {
     }
   }
 
-  // ---------- Lógica de juego ----------
+  // ---------- Lógica de juego ----------  
+  function difficultyIndex() {
+    for (let i = DIFFICULTY_PHASES.length - 1; i >= 0; i--) {
+      if (elapsed >= DIFFICULTY_PHASES[i].from) {
+        return i;
+      }
+    }
+    return 0;
+  }
 
-  function speedFactor() {
-    return Math.min(MAX_SPEED_FACTOR, Math.pow(2, elapsed / SPEED_DOUBLING));
+  function currentDifficulty() {
+    return DIFFICULTY_PHASES[difficultyIndex()];
   }
 
   function spawnInterval() {
-    return Math.max(0.25, BASE_SPAWN_INTERVAL / Math.pow(speedFactor(), 0.7));
+    return currentDifficulty().spawnGap;
   }
 
-  function fallSpeed(spawnY) {
-    return ((paddle.y - spawnY) / BASE_FALL_TIME) * speedFactor();
+  function fallSpeed(spawnY, type) {
+    const phase = currentDifficulty();
+
+    const speed = (paddle.y - spawnY) / phase.fallTime;
+
+    return speed * (
+      type.kind === 'bomb' ? phase.bombSpeed : 1
+    );
   }
 
+  
   function pickType() {
-    const bombBoost = Math.min(elapsed / 90, 1);
-    const weights = ITEM_TYPES.map((t) => {
-      if (t.kind === 'bomb') return t.weight * (1 + bombBoost * 1.5);
-      if (t.kind === 'life' && lives >= MAX_LIVES) return 0;
-      return t.weight;
+    const phase = currentDifficulty();
+
+    const weights = ITEM_TYPES.map((type) => {
+      if (type.kind === 'bomb') {
+        return phase.bombWeight;
+      }
+
+      if (type.kind === 'life') {
+        return lives < MAX_LIVES ? phase.lifeWeight : 0;
+      }
+
+      return type.weight;
     });
-    let roll = Math.random() * weights.reduce((a, b) => a + b, 0);
+
+    let roll = Math.random() *
+      weights.reduce((total, weight) => total + weight, 0);
+
     for (let i = 0; i < ITEM_TYPES.length; i++) {
       roll -= weights[i];
-      if (roll <= 0) return ITEM_TYPES[i];
+
+      if (roll <= 0) {
+        return ITEM_TYPES[i];
+      }
     }
+
     return ITEM_TYPES[0];
   }
 
@@ -483,15 +512,28 @@ facade.onload = () => {
     return ((hud.bottom - rect.top) / rect.height) * canvas.height / scale;
   }
 
+  
   function spawn() {
     const type = pickType();
-    const y = Math.max(fieldY + SPAWN_Y, hudBottom() + 2);
+
+    // Conservamos la referencia original para no alterar
+    // la velocidad de caída ni la dificultad configurada.
+    const speedReferenceY = Math.max(
+      fieldY + SPAWN_Y,
+      hudBottom() + 2
+    );
+
+    // Los objetos aparecen completamente fuera
+    // del borde superior de la pantalla.
+    const y = -sprites[type.sprite].height / 2 - 2;
+
     const half = sprites[type.sprite].width / 2;
+
     items.push({
       type,
       x: fieldX + rand(half + 2, FIELD_W - half - 2),
       y,
-      vy: fallSpeed(y) * (type.speedMul || 1) * rand(0.85, 1.15),
+      vy: fallSpeed(speedReferenceY, type) * rand(0.90, 1.10),
     });
   }
 
@@ -620,7 +662,7 @@ facade.onload = () => {
       burst(paddle.x, paddle.y - 18, ['#fee761','#ffd2dc','#ffffff'], 45, 110);
       award('secret17');
     }
-    const newLevel = 1 + Math.floor(elapsed / LEVEL_TIME);
+    const newLevel = difficultyIndex() + 1;
     if (newLevel !== level) {
       level = newLevel;
       updateHud(score, level, lives);

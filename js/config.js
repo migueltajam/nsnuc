@@ -19,12 +19,36 @@
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
 
-  export const ITEM_TYPES = [
-    { sprite: 'corazon', points: 10, weight: 5, kind: 'good', colors: COLORS.corazon },
-    { sprite: 'beso', points: 20, weight: 3, kind: 'good', colors: COLORS.beso },
-    { sprite: 'vida', points: 0, weight: 0.25, kind: 'life', colors: COLORS.vida },
-    { sprite: 'calabaza', points: 0, weight: 1.2, kind: 'bomb', colors: COLORS.calabaza },
-  ];
+export const ITEM_TYPES = [
+  {
+    sprite: 'corazon',
+    points: 10,
+    weight: 4.8,
+    kind: 'good',
+    colors: COLORS.corazon
+  },
+  {
+    sprite: 'beso',
+    points: 20,
+    weight: 3.2,
+    kind: 'good',
+    colors: COLORS.beso
+  },
+  {
+    sprite: 'vida',
+    points: 0,
+    weight: 0.16,
+    kind: 'life',
+    colors: COLORS.vida
+  },
+  {
+    sprite: 'calabaza',
+    points: 0,
+    weight: 2.0,
+    kind: 'bomb',
+    colors: COLORS.calabaza
+  }
+];
 
   export const START_LIVES = 3;
   export const MAX_LIVES = 3;
@@ -54,8 +78,50 @@
   export const SIDE_TOLERANCE = 8;
 
   // Velocidad exponencial: el tiempo de caída se divide entre 2 cada SPEED_DOUBLING segundos.
-  export const BASE_FALL_TIME = 3.4;
-  export const BASE_SPAWN_INTERVAL = 1.0;
-  export const SPEED_DOUBLING = 45;
-  export const MAX_SPEED_FACTOR = 5;
+  export const BASE_FALL_TIME = 3.0;
+  export const BASE_SPAWN_INTERVAL = 0.85;
+  export const SPEED_DOUBLING = 60;
+  export const MAX_SPEED_FACTOR = 4.5;
 
+  export const DIFFICULTY_PHASES = [
+    {
+      from: 0,
+      fallTime: 2.8,
+      spawnGap: 0.95,
+      bombWeight: 1.3,
+      bombSpeed: 1.0,
+      lifeWeight: 0.20
+    },
+    {
+      from: 30,
+      fallTime: 2.15,
+      spawnGap: 0.78,
+      bombWeight: 1.7,
+      bombSpeed: 1.05,
+      lifeWeight: 0.17
+    },
+    {
+      from: 60,
+      fallTime: 1.60,
+      spawnGap: 0.62,
+      bombWeight: 2.4,
+      bombSpeed: 1.10,
+      lifeWeight: 0.14
+    },
+    {
+      from: 120,
+      fallTime: 1.10,
+      spawnGap: 0.50,
+      bombWeight: 3.4,
+      bombSpeed: 1.15,
+      lifeWeight: 0.10
+    },
+    {
+      from: 180,
+      fallTime: 0.83,
+      spawnGap: 0.42,
+      bombWeight: 4.4,
+      bombSpeed: 1.20,
+      lifeWeight: 0.07
+    }
+  ];
